@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuantPulse — Trading Lab</title>
+<style>
+  :root{
+    --bg0:#070b16; --bg1:#0c1426; --bg2:#0a1020;
+    --line:rgba(255,255,255,.08);
+    --txt:#e7ecf5; --muted:#8a96ad;
+    --blue:#3b82f6; --blue2:#60a5fa;
+    --coral:#e0855f; --coral2:#f0a886;
+    --ok:#10b981;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    color:var(--txt);
+    background:
+      radial-gradient(1200px 600px at 20% -10%, rgba(59,130,246,.10), transparent 60%),
+      radial-gradient(1000px 500px at 90% 110%, rgba(224,133,95,.08), transparent 55%),
+      linear-gradient(160deg,var(--bg0),var(--bg1) 55%,var(--bg2));
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:40px 24px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .mark{width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;
+        border-bottom:16px solid var(--blue);transform:translateY(-1px)}
+  .brand h1{font-size:1.5rem;font-weight:700;letter-spacing:.2px}
+  .brand h1 span{color:var(--blue2)}
+  .sub{color:var(--muted);font-size:.95rem;margin-bottom:6px;text-align:center}
+  .live{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:.8rem;margin-bottom:34px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(16,185,129,.5);
+       animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.45)}70%{box-shadow:0 0 0 9px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+  .cards{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;width:100%;max-width:880px}
+  .card{
+    flex:1 1 360px;position:relative;overflow:hidden;
+    background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+    border:1px solid var(--line);border-radius:18px;padding:30px 28px 26px;
+    text-decoration:none;color:inherit;backdrop-filter:blur(8px);
+    transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+  }
+  .card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;
+    background:linear-gradient(90deg,var(--blue),var(--blue2))}
+  .card.coral::before{background:linear-gradient(90deg,var(--coral),var(--coral2))}
+  .card:hover{transform:translateY(-5px);border-color:rgba(96,165,250,.5);
+    box-shadow:0 16px 50px rgba(59,130,246,.18)}
+  .card.coral:hover{border-color:rgba(240,168,134,.55);box-shadow:0 16px 50px rgba(224,133,95,.18)}
+  .pill{display:inline-block;font-size:.7rem;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
+    padding:5px 11px;border-radius:999px;margin-bottom:18px;
+    background:rgba(59,130,246,.14);color:var(--blue2)}
+  .card.coral .pill{background:rgba(224,133,95,.14);color:var(--coral2)}
+  .card h2{font-size:1.45rem;font-weight:700;margin-bottom:6px}
+  .card p{color:var(--muted);font-size:.9rem;line-height:1.5;margin-bottom:20px;min-height:40px}
+  .stack{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+  .tag{font-size:.74rem;font-weight:500;padding:5px 10px;border-radius:8px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);color:#c4cde0}
+  .go{display:inline-flex;align-items:center;gap:8px;font-weight:600;color:var(--blue2)}
+  .card.coral .go{color:var(--coral2)}
+  .go .arr{transition:transform .18s ease}
+  .card:hover .go .arr{transform:translateX(4px)}
+  footer{margin-top:34px;color:var(--muted);font-size:.78rem;text-align:center}
+  @media(max-width:560px){.card p{min-height:0}}
+</style>
+</head>
+<body>
+  <div class="brand"><div class="mark"></div><h1>Quant<span>Pulse</span> · Trading Lab</h1></div>
+  <div class="sub">Two parallel news-driven trading systems, running head to head.</div>
+  <div class="live"><span class="dot"></span> Both engines live · paper trading</div>
+
+  <div class="cards">
+    <a class="card coral" href="https://j2itamah.github.io/trading-dashboard/" target="_blank" rel="noopener">
+      <span class="pill">Build A</span>
+      <h2>Cursor&nbsp;+&nbsp;Claude</h2>
+      <p>Supabase-backed V2 pipeline. Claude scores the news; 10 books trade in parallel with auto-closing TP/SL exits.</p>
+      <div class="stack">
+        <span class="tag">Cursor</span><span class="tag">Claude</span>
+        <span class="tag">Supabase</span><span class="tag">n8n</span>
+      </div>
+      <span class="go">Open dashboard &rarr;</span>
+    </a>
+
+    <a class="card" href="https://news-trading-system-production-b13f.up.railway.app/" target="_blank" rel="noopener">
+      <span class="pill">Build B</span>
+      <h2>OpenAI&nbsp;+&nbsp;Antigravity</h2>
+      <p>FastAPI engine on Railway. OpenAI GPT scores sentiment; freshness &amp; move gates filter late entries before each trade.</p>
+      <div class="stack">
+        <span class="tag">Antigravity</span><span class="tag">OpenAI GPT</span>
+        <span class="tag">FastAPI</span><span class="tag">Railway</span>
+      </div>
+      <span class="go">Open dashboard &rarr;</span>
+    </a>
+  </div>
+
+  <footer>Paper trading only · not financial advice</footer>
+</body>
+</html>
