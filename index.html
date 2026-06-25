@@ -63,6 +63,16 @@
   .card.coral .go{color:var(--coral)}
   .go .arr{transition:transform .18s ease}
   .card:hover .go .arr{transform:translateX(4px)}
+  .card.dark{background:#0b0f1a;border-color:rgba(255,255,255,.10);
+    box-shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4)}
+  .card.dark::before{background:linear-gradient(90deg,var(--blue),var(--blue2))}
+  .card.dark h2{color:#f8fafc}
+  .card.dark p{color:#94a3b8}
+  .card.dark .pill{background:rgba(96,165,250,.18);color:#93c5fd}
+  .card.dark .tag{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);color:#cbd5e1}
+  .card.dark .go{color:#93c5fd}
+  .card.dark:hover{transform:translateY(-5px);border-color:rgba(96,165,250,.55);
+    box-shadow:0 2px 4px rgba(0,0,0,.3),0 18px 44px rgba(37,99,235,.32)}
   footer{margin-top:34px;color:#94a3b8;font-size:.78rem;text-align:center}
   @media(max-width:560px){.card p{min-height:0}}
 </style>
@@ -84,7 +94,7 @@
       <span class="go">Open dashboard <span class="arr">&rarr;</span></span>
     </a>
 
-    <a class="card" href="https://news-trading-system-production-b13f.up.railway.app/" target="_blank" rel="noopener">
+    <a class="card dark" href="https://news-trading-system-production-b13f.up.railway.app/" target="_blank" rel="noopener">
       <span class="pill">Build B</span>
       <h2>OpenAI&nbsp;+&nbsp;Antigravity</h2>
       <p>FastAPI engine on Railway. OpenAI GPT scores sentiment; freshness &amp; move gates filter late entries before each trade.</p>
