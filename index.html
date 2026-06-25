@@ -44,9 +44,9 @@
   .champ-name{font-size:1.5rem;font-weight:700;margin-bottom:18px;line-height:1.2}
   .champ-build{font-size:.8rem;font-weight:600;color:#93c5fd;background:rgba(96,165,250,.16);
     padding:3px 9px;border-radius:999px;margin-left:8px;vertical-align:middle;white-space:nowrap}
-  .champ-stats{display:flex;gap:36px;flex-wrap:wrap}
+  .champ-stats{display:flex;gap:32px;flex-wrap:wrap}
   .champ-cap{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:#8a96ad;margin-bottom:3px}
-  .champ-val{font-size:1.7rem;font-weight:700;font-variant-numeric:tabular-nums}
+  .champ-val{font-size:1.55rem;font-weight:700;font-variant-numeric:tabular-nums}
   .champ-val.up{color:#34d399}.champ-val.down{color:#f87171}
   .cards{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;width:100%;max-width:880px}
   .card{
@@ -87,7 +87,7 @@
   .card.dark:hover{transform:translateY(-5px);border-color:rgba(96,165,250,.55);
     box-shadow:0 2px 4px rgba(0,0,0,.3),0 18px 44px rgba(37,99,235,.32)}
   footer{margin-top:34px;color:#94a3b8;font-size:.78rem;text-align:center}
-  @media(max-width:560px){.card p{min-height:0}.champ-val{font-size:1.4rem}}
+  @media(max-width:560px){.card p{min-height:0}.champ-val{font-size:1.3rem}.champ-stats{gap:22px}}
 </style>
 </head>
 <body>
@@ -100,7 +100,8 @@
     <div class="champ-name" id="champName">Loading live results…</div>
     <div class="champ-stats">
       <div><span class="champ-cap">Account value</span><span class="champ-val" id="champValue">—</span></div>
-      <div><span class="champ-cap">Profit / loss</span><span class="champ-val" id="champPnl">—</span></div>
+      <div><span class="champ-cap">P/L today</span><span class="champ-val" id="champDay">—</span></div>
+      <div><span class="champ-cap">P/L since day 1</span><span class="champ-val" id="champAll">—</span></div>
     </div>
   </div>
 
@@ -135,11 +136,13 @@
   var CUR='https://j2itamah.github.io/trading-dashboard/data.v2.json';
   var NAMES={news_only:'News Only',trend_gate:'Trend Gate',strict_trend_gate:'Strict Trend',mean_reversion:'Mean Reversion',full_confluence:'Full Confluence'};
   function pretty(id){var e=/_vol$/.test(id)?'Volatility':/_fixed$/.test(id)?'Fixed':'';var b=id.replace(/_(vol|fixed)$/,'');return (NAMES[b]||b)+(e?' · '+e:'');}
-  function money(n){return (n==null||isNaN(n))?'—':'$'+Number(n).toLocaleString(undefined,{maximumFractionDigits:2});}
-  function pnlText(p,pct){if(p==null||isNaN(p))return '—';var s=p>=0?'+':'';return s+'$'+Math.abs(p).toLocaleString(undefined,{maximumFractionDigits:2})+' ('+s+Number(pct).toFixed(2)+'%)';}
-  function agBest(){return fetch(AG+'?t='+Date.now()).then(function(r){return r.json();}).then(function(d){var b=null;var s=d.strategies||{};for(var id in s){var p=+s[id].pnl_percentage;if(b===null||p>b.pct)b={build:'OpenAI + Antigravity',name:pretty(id),value:+s[id].total_value,pnl:+s[id].total_pnl,pct:p};}return b;}).catch(function(){return null;});}
-  function curBest(){return fetch(CUR+'?t='+Date.now()).then(function(r){return r.json();}).then(function(d){var bk=d.best_book||d.book_metrics||d.books||(d.summary&&d.summary.books)||null;if(!bk)return null;if(!Array.isArray(bk)&&(bk.name||bk.book_key))bk=[bk];var arr=Array.isArray(bk)?bk:Object.values(bk);var b=null;for(var i=0;i<arr.length;i++){var s=arr[i];var p=+(s.pnl_pct!=null?s.pnl_pct:(s.pnl_percentage!=null?s.pnl_percentage:s.return_pct));var v=+(s.equity!=null?s.equity:(s.total_value!=null?s.total_value:s.account_value));var pl=+(s.pnl!=null?s.pnl:(s.total_pnl!=null?s.total_pnl:s.realized_pnl));if(isNaN(p))continue;if(b===null||p>b.pct)b={build:'Cursor + Claude',name:(s.name||s.book_key||s.strategy||'book'),value:v,pnl:pl,pct:p};}return b;}).catch(function(){return null;});}
-  function refresh(){Promise.all([agBest(),curBest()]).then(function(res){var best=null;for(var i=0;i<res.length;i++){var x=res[i];if(x&&(best===null||x.pct>best.pct))best=x;}var nm=document.getElementById('champName');if(!best){nm.textContent='Waiting for live data…';return;}nm.innerHTML=best.name+' <span class="champ-build">'+best.build+'</span>';document.getElementById('champValue').textContent=money(best.value);var pe=document.getElementById('champPnl');pe.textContent=pnlText(best.pnl,best.pct);pe.className='champ-val '+(best.pnl>=0?'up':'down');});}
+  function num(v){return (v==null||v==='')?NaN:+v;}
+  function money(n){return isNaN(n)?'—':'$'+Number(n).toLocaleString(undefined,{maximumFractionDigits:2});}
+  function pnlText(p,pct){if(isNaN(p))return '—';var s=p>=0?'+':'-';var pc=isNaN(pct)?'':' ('+(pct>=0?'+':'')+Number(pct).toFixed(2)+'%)';return s+'$'+Math.abs(p).toLocaleString(undefined,{maximumFractionDigits:2})+pc;}
+  function setPnl(id,p,pct){var e=document.getElementById(id);if(isNaN(p)){e.textContent='—';e.className='champ-val';return;}e.textContent=pnlText(p,pct);e.className='champ-val '+(p>=0?'up':'down');}
+  function agBest(){return fetch(AG+'?t='+Date.now()).then(function(r){return r.json();}).then(function(d){var b=null;var s=d.strategies||{};for(var id in s){var x=s[id];var p=num(x.pnl_percentage);if(b===null||p>b.pctAll)b={build:'OpenAI + Antigravity',name:pretty(id),value:num(x.total_value),pnlDay:num(x.daily_pnl),pctDay:num(x.daily_pnl_pct),pnlAll:num(x.total_pnl),pctAll:p};}return b;}).catch(function(){return null;});}
+  function curBest(){return fetch(CUR+'?t='+Date.now()).then(function(r){return r.json();}).then(function(d){var bk=d.best_book||d.book_metrics||d.books||(d.summary&&d.summary.books)||null;if(!bk)return null;if(!Array.isArray(bk)&&(bk.name||bk.book_key))bk=[bk];var arr=Array.isArray(bk)?bk:Object.values(bk);var b=null;for(var i=0;i<arr.length;i++){var s=arr[i];var pAll=num(s.pnl_pct!=null?s.pnl_pct:(s.pnl_percentage!=null?s.pnl_percentage:s.return_pct));if(isNaN(pAll))continue;if(b===null||pAll>b.pctAll)b={build:'Cursor + Claude',name:(s.name||s.book_key||s.strategy||'book'),value:num(s.equity!=null?s.equity:(s.total_value!=null?s.total_value:s.account_value)),pnlDay:num(s.daily_pnl!=null?s.daily_pnl:s.pnl_day),pctDay:num(s.daily_pnl_pct!=null?s.daily_pnl_pct:s.pnl_pct_day),pnlAll:num(s.pnl!=null?s.pnl:(s.total_pnl!=null?s.total_pnl:s.realized_pnl)),pctAll:pAll};}return b;}).catch(function(){return null;});}
+  function refresh(){Promise.all([agBest(),curBest()]).then(function(res){var best=null;for(var i=0;i<res.length;i++){var x=res[i];if(x&&(best===null||x.pctAll>best.pctAll))best=x;}var nm=document.getElementById('champName');if(!best){nm.textContent='Waiting for live data…';return;}nm.innerHTML=best.name+' <span class="champ-build">'+best.build+'</span>';document.getElementById('champValue').textContent=money(best.value);setPnl('champDay',best.pnlDay,best.pctDay);setPnl('champAll',best.pnlAll,best.pctAll);});}
   refresh();setInterval(refresh,60000);
 </script>
 </body>
