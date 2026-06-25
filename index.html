@@ -11,7 +11,7 @@
     --txt:#0f172a; --muted:#64748b;
     --blue:#2563eb; --blue2:#3b82f6;
     --coral:#e0652f; --coral2:#ea7a48;
-    --ok:#16a34a;
+    --ok:#16a34a; --down:#dc2626;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -31,10 +31,23 @@
   .brand h1{font-size:1.5rem;font-weight:700;letter-spacing:.2px}
   .brand h1 span{color:var(--blue)}
   .sub{color:var(--muted);font-size:.95rem;margin-bottom:6px;text-align:center}
-  .live{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:.8rem;margin-bottom:34px}
+  .live{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:.8rem;margin-bottom:26px}
   .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(22,163,74,.5);
        animation:pulse 1.8s infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.4)}70%{box-shadow:0 0 0 9px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
+  .champ{width:100%;max-width:880px;margin-bottom:22px;background:#0b0f1a;color:#f8fafc;
+    border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:24px 28px;
+    box-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.4);position:relative;overflow:hidden}
+  .champ::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;
+    background:linear-gradient(90deg,#fbbf24,#f59e0b)}
+  .champ-label{font-size:.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fcd34d;margin-bottom:8px}
+  .champ-name{font-size:1.5rem;font-weight:700;margin-bottom:18px;line-height:1.2}
+  .champ-build{font-size:.8rem;font-weight:600;color:#93c5fd;background:rgba(96,165,250,.16);
+    padding:3px 9px;border-radius:999px;margin-left:8px;vertical-align:middle;white-space:nowrap}
+  .champ-stats{display:flex;gap:36px;flex-wrap:wrap}
+  .champ-cap{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:#8a96ad;margin-bottom:3px}
+  .champ-val{font-size:1.7rem;font-weight:700;font-variant-numeric:tabular-nums}
+  .champ-val.up{color:#34d399}.champ-val.down{color:#f87171}
   .cards{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;width:100%;max-width:880px}
   .card{
     flex:1 1 360px;position:relative;overflow:hidden;
@@ -74,13 +87,22 @@
   .card.dark:hover{transform:translateY(-5px);border-color:rgba(96,165,250,.55);
     box-shadow:0 2px 4px rgba(0,0,0,.3),0 18px 44px rgba(37,99,235,.32)}
   footer{margin-top:34px;color:#94a3b8;font-size:.78rem;text-align:center}
-  @media(max-width:560px){.card p{min-height:0}}
+  @media(max-width:560px){.card p{min-height:0}.champ-val{font-size:1.4rem}}
 </style>
 </head>
 <body>
   <div class="brand"><div class="mark"></div><h1>Quant<span>Pulse</span> · Trading Lab</h1></div>
   <div class="sub">Two parallel news-driven trading systems, running head to head.</div>
   <div class="live"><span class="dot"></span> Both engines live · paper trading</div>
+
+  <div class="champ">
+    <div class="champ-label">🏆 Top performer · live</div>
+    <div class="champ-name" id="champName">Loading live results…</div>
+    <div class="champ-stats">
+      <div><span class="champ-cap">Account value</span><span class="champ-val" id="champValue">—</span></div>
+      <div><span class="champ-cap">Profit / loss</span><span class="champ-val" id="champPnl">—</span></div>
+    </div>
+  </div>
 
   <div class="cards">
     <a class="card coral" href="https://j2itamah.github.io/trading-dashboard/" target="_blank" rel="noopener">
@@ -106,6 +128,19 @@
     </a>
   </div>
 
-  <footer>Paper trading only · not financial advice</footer>
+  <footer>Paper trading only · not financial advice · top performer updates live</footer>
+
+<script>
+  var AG='https://news-trading-system-production-b13f.up.railway.app/api/portfolio';
+  var CUR='https://j2itamah.github.io/trading-dashboard/data.v2.json';
+  var NAMES={news_only:'News Only',trend_gate:'Trend Gate',strict_trend_gate:'Strict Trend',mean_reversion:'Mean Reversion',full_confluence:'Full Confluence'};
+  function pretty(id){var e=/_vol$/.test(id)?'Volatility':/_fixed$/.test(id)?'Fixed':'';var b=id.replace(/_(vol|fixed)$/,'');return (NAMES[b]||b)+(e?' · '+e:'');}
+  function money(n){return (n==null||isNaN(n))?'—':'$'+Number(n).toLocaleString(undefined,{maximumFractionDigits:2});}
+  function pnlText(p,pct){if(p==null||isNaN(p))return '—';var s=p>=0?'+':'';return s+'$'+Math.abs(p).toLocaleString(undefined,{maximumFractionDigits:2})+' ('+s+Number(pct).toFixed(2)+'%)';}
+  function agBest(){return fetch(AG+'?t='+Date.now()).then(function(r){return r.json();}).then(function(d){var b=null;var s=d.strategies||{};for(var id in s){var p=+s[id].pnl_percentage;if(b===null||p>b.pct)b={build:'OpenAI + Antigravity',name:pretty(id),value:+s[id].total_value,pnl:+s[id].total_pnl,pct:p};}return b;}).catch(function(){return null;});}
+  function curBest(){return fetch(CUR+'?t='+Date.now()).then(function(r){return r.json();}).then(function(d){var bk=d.best_book||d.book_metrics||d.books||(d.summary&&d.summary.books)||null;if(!bk)return null;if(!Array.isArray(bk)&&(bk.name||bk.book_key))bk=[bk];var arr=Array.isArray(bk)?bk:Object.values(bk);var b=null;for(var i=0;i<arr.length;i++){var s=arr[i];var p=+(s.pnl_pct!=null?s.pnl_pct:(s.pnl_percentage!=null?s.pnl_percentage:s.return_pct));var v=+(s.equity!=null?s.equity:(s.total_value!=null?s.total_value:s.account_value));var pl=+(s.pnl!=null?s.pnl:(s.total_pnl!=null?s.total_pnl:s.realized_pnl));if(isNaN(p))continue;if(b===null||p>b.pct)b={build:'Cursor + Claude',name:(s.name||s.book_key||s.strategy||'book'),value:v,pnl:pl,pct:p};}return b;}).catch(function(){return null;});}
+  function refresh(){Promise.all([agBest(),curBest()]).then(function(res){var best=null;for(var i=0;i<res.length;i++){var x=res[i];if(x&&(best===null||x.pct>best.pct))best=x;}var nm=document.getElementById('champName');if(!best){nm.textContent='Waiting for live data…';return;}nm.innerHTML=best.name+' <span class="champ-build">'+best.build+'</span>';document.getElementById('champValue').textContent=money(best.value);var pe=document.getElementById('champPnl');pe.textContent=pnlText(best.pnl,best.pct);pe.className='champ-val '+(best.pnl>=0?'up':'down');});}
+  refresh();setInterval(refresh,60000);
+</script>
 </body>
 </html>
