@@ -34,7 +34,18 @@
   .brand h1{font-size:1.5rem;font-weight:700;letter-spacing:.2px}
   .brand h1 span{color:var(--blue)}
   .sub{color:var(--muted);font-size:.95rem;margin-bottom:6px;text-align:center}
-  .live{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:.8rem;margin-bottom:26px}
+  .live{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:.8rem;margin-bottom:14px}
+  /* Dashboard-accuracy health badge */
+  .health{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:600;
+    padding:7px 14px;border-radius:999px;margin-bottom:24px;border:1px solid var(--line);
+    background:#fff;color:var(--muted);box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .health-dot{width:9px;height:9px;border-radius:50%;background:#94a3b8;flex:none}
+  .health.ok{border-color:rgba(22,163,74,.30);color:#15803d;background:rgba(22,163,74,.06)}
+  .health.ok .health-dot{background:var(--ok)}
+  .health.warn{border-color:rgba(217,119,6,.30);color:#b45309;background:rgba(217,119,6,.06)}
+  .health.warn .health-dot{background:#d97706}
+  .health.bad{border-color:rgba(220,38,38,.30);color:#b91c1c;background:rgba(220,38,38,.06)}
+  .health.bad .health-dot{background:var(--down)}
   .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(22,163,74,.5);
        animation:pulse 1.8s infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.4)}70%{box-shadow:0 0 0 9px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
@@ -142,6 +153,10 @@
   <div class="brand"><div class="mark"></div><h1>Quant<span>Pulse</span> · Trading Lab</h1></div>
   <div class="sub">Two parallel news-driven trading systems, running head to head.</div>
   <div class="live"><span class="dot"></span> Both engines live · paper trading</div>
+
+  <div class="health" id="siteHealth" title="Reflects whether the live dashboard data is loading and accurate">
+    <span class="health-dot" id="healthDot"></span><span id="healthText">Checking dashboard health&hellip;</span>
+  </div>
 
   <div class="champ">
     <div class="champ-label">&#127942; Top performer · live</div>
@@ -295,16 +310,32 @@ function loadB(){
   }).catch(function(e){console.warn('loadB failed:',e);return[];});
 }
 
-/* --- Render leaderboard + top performer --- */
+var LB_CAP=10; /* show only the top 10 \u2014 never the full ~42-book wall */
+
+/* --- Render leaderboard + top performer. Returns a summary used for the health badge. --- */
 function renderBoard(all){
-  /* Sort by % return descending */
-  all.sort(function(a,b){return(b.pctAll||0)-(a.pctAll||0);});
-  /* Top performer */
-  var best=all[0]||null;
+  /* Rank only entries that have a valid numeric return */
+  var ranked=all.filter(function(r){return !isNaN(r.pctAll);});
+  /* Sort by % return desc; tie-break by account value desc, then name, so a tie of flat
+     0.00% books resolves deterministically instead of picking an arbitrary winner. */
+  ranked.sort(function(a,b){
+    var d=(b.pctAll||0)-(a.pctAll||0); if(Math.abs(d)>1e-9)return d;
+    var dv=(num(b.value)||0)-(num(a.value)||0); if(Math.abs(dv)>1e-9)return dv;
+    return String(a.name||'').localeCompare(String(b.name||''));
+  });
+  /* Top performer = best ranked book that has a usable account value */
+  var best=null;
+  for(var k=0;k<ranked.length;k++){ if(!isNaN(num(ranked[k].value))){ best=ranked[k]; break; } }
+  if(!best)best=ranked[0]||null;
+
   var nm=document.getElementById('champName');
   if(!best){
     nm.textContent='Waiting for live data\u2026';
-    return;
+    document.getElementById('champValue').textContent='\u2014';
+    setPnl('champDay',NaN,NaN);
+    document.getElementById('champAll').textContent='\u2014';
+    var le=document.getElementById('lbRows'); if(le)le.innerHTML='<div class="lb-empty">No live data available</div>';
+    return {count:0,allFlat:true,best:null,bestValid:false};
   }
   nm.innerHTML=best.name+' <span class="champ-build">'+best.build+'</span>';
   document.getElementById('champValue').textContent=money(best.value);
@@ -314,29 +345,62 @@ function renderBoard(all){
     allEl.textContent=(best.pctAll>=0?'+':'')+Number(best.pctAll).toFixed(2)+'%'+(isNaN(best.pnlAll)?'':' ('+pnlFmt(best.pnlAll,NaN)+')');
     allEl.className='champ-val '+(best.pctAll>=0?'up':'down');
   }
-  /* Leaderboard rows */
+  /* Leaderboard rows \u2014 capped to the top 10 */
   var el=document.getElementById('lbRows');
-  if(!el)return;
-  if(!all.length){el.innerHTML='<div class="lb-empty">No live data available</div>';return;}
-  var html='';
-  for(var i=0;i<all.length;i++){
-    var r=all[i];
-    var isLeader=i===0;
-    html+='<div class="lb-row'+(isLeader?' leader':'')+'">';
-    html+='<span class="lb-rank">'+(i+1)+'</span>';
-    html+='<span class="lb-name">'+r.name+'</span>';
-    html+='<span class="lb-build '+r.buildCls+'">'+r.build+'</span>';
-    html+='<span class="lb-pct '+(r.pctAll>=0?'up':'down')+'">'+(r.pctAll>=0?'+':'')+Number(r.pctAll).toFixed(2)+'%</span>';
-    html+='<span class="lb-val">'+money(r.value)+'</span>';
-    html+='</div>';
+  if(el){
+    if(!ranked.length){el.innerHTML='<div class="lb-empty">No live data available</div>';}
+    else{
+      var shown=Math.min(ranked.length,LB_CAP),html='';
+      for(var i=0;i<shown;i++){
+        var r=ranked[i],isLeader=i===0;
+        html+='<div class="lb-row'+(isLeader?' leader':'')+'">';
+        html+='<span class="lb-rank">'+(i+1)+'</span>';
+        html+='<span class="lb-name">'+r.name+'</span>';
+        html+='<span class="lb-build '+r.buildCls+'">'+r.build+'</span>';
+        html+='<span class="lb-pct '+(r.pctAll>=0?'up':'down')+'">'+(r.pctAll>=0?'+':'')+Number(r.pctAll).toFixed(2)+'%</span>';
+        html+='<span class="lb-val">'+money(r.value)+'</span>';
+        html+='</div>';
+      }
+      if(ranked.length>shown){
+        html+='<div class="lb-empty">+'+(ranked.length-shown)+' more books \u00b7 showing top '+LB_CAP+'</div>';
+      }
+      el.innerHTML=html;
+    }
   }
-  el.innerHTML=html;
+  var allFlat=ranked.every(function(r){return Math.abs(r.pctAll||0)<1e-9;});
+  return {count:ranked.length,allFlat:allFlat,best:best,bestValid:!isNaN(num(best.value))};
+}
+
+/* --- Dashboard-accuracy health badge: green only when data is loaded AND sane --- */
+function setHealth(state,msg){
+  var el=document.getElementById('siteHealth'),tx=document.getElementById('healthText');
+  if(!el||!tx)return;
+  el.className='health '+(state==='ok'?'ok':(state==='warn'?'warn':'bad'));
+  tx.textContent=msg;
 }
 
 function refresh(){
   Promise.all([loadA(),loadB()]).then(function(res){
-    var all=res[0].concat(res[1]);
-    renderBoard(all);
+    var aBooks=res[0]||[],bBooks=res[1]||[];
+    var all=aBooks.concat(bBooks);
+    var summary=renderBoard(all);
+    /* Health reflects whether the dashboard data is loaded and accurate:
+       - bad  : no data at all, or the top performer has no usable account value
+       - warn : a build failed to load, or every book is flat (no activity yet)
+       - ok   : both builds loaded, ranking populated, top performer valid */
+    var aOk=aBooks.length>0, bOk=bBooks.length>0;
+    if(!summary.count || !summary.bestValid){
+      setHealth('bad','Dashboard data unavailable — check Build A / Build B feeds');
+    }else if(!aOk||!bOk){
+      setHealth('warn','Partial data — '+(aOk?'Build B':'Build A')+' feed not responding ('+summary.count+' books shown)');
+    }else if(summary.allFlat){
+      setHealth('warn','Live · '+summary.count+' books loaded · all flat (no P&L moves yet)');
+    }else{
+      setHealth('ok','Live · '+summary.count+' books across both builds · top performer '+(summary.best.pctAll>=0?'+':'')+Number(summary.best.pctAll).toFixed(2)+'%');
+    }
+  }).catch(function(e){
+    console.warn('refresh failed:',e);
+    setHealth('bad','Dashboard failed to load live data');
   });
 }
 refresh();setInterval(refresh,60000);
