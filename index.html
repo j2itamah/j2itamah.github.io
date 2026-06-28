@@ -101,7 +101,7 @@
     <div class="champ-stats">
       <div><span class="champ-cap">Account value</span><span class="champ-val" id="champValue">—</span></div>
       <div><span class="champ-cap">P/L today</span><span class="champ-val" id="champDay">—</span></div>
-      <div><span class="champ-cap">P/L since Jun 25, 2026</span><span class="champ-val" id="champAll">—</span></div>
+      <div><span class="champ-cap">P/L since Jun 28, 2026</span><span class="champ-val" id="champAll">—</span></div>
     </div>
   </div>
 
@@ -144,17 +144,29 @@
   var AG='https://news-trading-system-production-b13f.up.railway.app/api/portfolio';
   var CUR='https://j2itamah.github.io/trading-dashboard/v2-preview/data.v2.json';
   var CUR_FALLBACK='https://j2itamah.github.io/trading-dashboard/data.v2.json';
-  var NAMES={news_only:'News Only',trend_gate:'Trend Gate',strict_trend_gate:'Strict Trend',mean_reversion:'Mean Reversion',full_confluence:'Full Confluence'};
-  function pretty(id){var e=/_vol$/.test(id)?'Volatility':/_fixed$/.test(id)?'Fixed':'';var b=id.replace(/_(vol|fixed)$/,'');return (NAMES[b]||b)+(e?' · '+e:'');}
+  var NAMES={news_only:'News Only',news_plus_ta:'News + TA',trend_gate:'Trend Gate',trend_strict:'Strict Trend',strict_trend_gate:'Strict Trend',mean_reversion:'Mean Reversion',mean_revert:'Mean Reversion',full_confluence:'Full Confluence',x_only:'X Only'};
+  function pretty(id){id=String(id||'');var fam='';for(var k in NAMES){if(new RegExp('(^|_)'+k+'(_|$)').test(id)&&k.length>fam.length)fam=k;}
+    var e=/volatility|_vol(_|$)/.test(id)?'Vol':/fixed/.test(id)?'Fixed':'';var hd=/24h|hold_24hr/.test(id)?' 24h':/eod|sell_eod/.test(id)?' EOD':'';
+    if(fam)return (NAMES[fam]||fam)+(e?' · '+e:'')+hd;
+    var b=id.replace(/^v2_/,'').replace(/_(vol|fixed)$/,'');return (NAMES[b]||b)+(e?' · '+e:'');}
   function num(v){return (v==null||v==='')?NaN:+v;}
   function money(n){return isNaN(n)?'—':'$'+Number(n).toLocaleString(undefined,{maximumFractionDigits:2});}
   function pnlText(p,pct){if(isNaN(p))return '—';var s=p>=0?'+':'-';var pc=isNaN(pct)?'':' ('+(pct>=0?'+':'')+Number(pct).toFixed(2)+'%)';return s+'$'+Math.abs(p).toLocaleString(undefined,{maximumFractionDigits:2})+pc;}
   function setPnl(id,p,pct){var e=document.getElementById(id);if(isNaN(p)){e.textContent='—';e.className='champ-val';return;}e.textContent=pnlText(p,pct);e.className='champ-val '+(p>=0?'up':'down');}
   function agBest(){return fetch(AG+'?t='+Date.now()).then(function(r){return r.json();}).then(function(d){var b=null;var s=d.strategies||{};for(var id in s){var x=s[id];var p=num(x.pnl_percentage);if(b===null||p>b.pctAll)b={build:'OpenAI + Antigravity',name:pretty(id),value:num(x.total_value),pnlDay:num(x.daily_pnl),pctDay:num(x.daily_pnl_pct),pnlAll:num(x.total_pnl),pctAll:p};}return b;}).catch(function(){return null;});}
-  function curParse(d){var bk=d.best_book||d.book_metrics||d.books||(d.summary&&d.summary.books)||null;if(!bk)return null;if(!Array.isArray(bk)&&(bk.name||bk.book_key))bk=[bk];var arr=Array.isArray(bk)?bk:Object.values(bk);var b=null;for(var i=0;i<arr.length;i++){var s=arr[i];var pAll=num(s.pnl_pct!=null?s.pnl_pct:(s.pnl_percentage!=null?s.pnl_percentage:s.return_pct));if(isNaN(pAll))continue;if(b===null||pAll>b.pctAll)b={build:'Cursor + Claude',name:(s.name||s.book_key||s.strategy||'book'),value:num(s.equity!=null?s.equity:(s.total_value!=null?s.total_value:s.account_value)),pnlDay:num(s.daily_pnl!=null?s.daily_pnl:s.pnl_day),pctDay:num(s.daily_pnl_pct!=null?s.daily_pnl_pct:s.pnl_pct_day),pnlAll:num(s.pnl!=null?s.pnl:(s.total_pnl!=null?s.total_pnl:s.realized_pnl)),pctAll:pAll};}return b;}
-  function getJSON(u){return fetch(u+'?t='+Date.now()).then(function(r){return r.json();});}
+  // Build A (Cursor static feed): matrix books + CryptoLab accounts are all contenders, ranked by % return (TRA-119)
+  function curParse(d){if(!d)return null;var b=null;
+    function consider(name,lab,eq,base,today){eq=num(eq);base=num(base);if(isNaN(eq)||isNaN(base)||base<=0)return;
+      var pct=(eq/base-1)*100;var cand={build:'Cursor + Claude',name:name,lab:!!lab,value:eq,pnlDay:num(today),pctDay:isNaN(num(today))?NaN:num(today)/base*100,pnlAll:eq-base,pctAll:pct};
+      if(b===null||pct>b.pctAll||(pct===b.pctAll&&lab&&!b.lab))b=cand;}
+    var bm=d.book_metrics||d.official_books||[];
+    for(var i=0;i<bm.length;i++){var s=bm[i];consider(pretty(s.portfolio||s.book_key),false,s.marked_equity,s.starting_balance,s.today_marked_pnl_approx);}
+    var ca=d.crypto_lab_accounts||[];
+    for(var j=0;j<ca.length;j++){var a=ca[j];consider('CryptoLab · '+pretty(a.strategy_family||a.account_key),true,a.marked_equity,a.starting_balance);}
+    return b;}
+  function getJSON(u){return fetch(u+'?t='+Date.now()).then(function(r){if(!r.ok)throw 0;return r.json();});}
   function curBest(){return getJSON(CUR).then(function(d){var b=curParse(d);if(b)return b;return getJSON(CUR_FALLBACK).then(curParse);}).catch(function(){return getJSON(CUR_FALLBACK).then(curParse).catch(function(){return null;});});}
-  function refresh(){Promise.all([agBest(),curBest()]).then(function(res){var best=null;for(var i=0;i<res.length;i++){var x=res[i];if(x&&(best===null||x.pctAll>best.pctAll))best=x;}var nm=document.getElementById('champName');if(!best){nm.textContent='Waiting for live data…';return;}nm.innerHTML=best.name+' <span class="champ-build">'+best.build+'</span>';document.getElementById('champValue').textContent=money(best.value);setPnl('champDay',best.pnlDay,best.pctDay);setPnl('champAll',best.pnlAll,best.pctAll);});}
+  function refresh(){Promise.all([agBest(),curBest()]).then(function(res){var best=null;for(var i=0;i<res.length;i++){var x=res[i];if(!x)continue;if(best===null||x.pctAll>best.pctAll||(x.pctAll===best.pctAll&&x.lab&&!best.lab))best=x;}var nm=document.getElementById('champName');if(!best){nm.textContent='Waiting for live data…';return;}nm.innerHTML=best.name+' <span class="champ-build">'+best.build+'</span>';document.getElementById('champValue').textContent=money(best.value);setPnl('champDay',best.pnlDay,best.pctDay);setPnl('champAll',best.pnlAll,best.pctAll);});}
   refresh();setInterval(refresh,60000);
 </script>
 </body>
