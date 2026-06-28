@@ -154,6 +154,15 @@
   .modal .ms{font-size:.7rem;color:var(--muted);margin-bottom:14px;font-family:var(--fm)}
   .modal pre{background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:9px;padding:12px;font-family:var(--fm);font-size:.64rem;color:#bde8df;white-space:pre-wrap;word-break:break-word;line-height:1.5}
   .modal .x{float:right;cursor:pointer;color:var(--muted);font-size:1.25rem;border:0;background:0}
+  .ttab{width:100%;border-collapse:collapse;font-family:var(--fm);font-size:.66rem}
+  .ttab th{text-align:left;color:var(--dim);font-weight:500;padding:5px 7px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.5px;font-size:.58rem}
+  .ttab td{padding:6px 7px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);white-space:nowrap}
+  .ttab td.r{text-align:right}.ttab td.up{color:var(--green)}.ttab td.down{color:var(--red)}
+  .ttab .side-L{color:var(--green)}.ttab .side-S{color:var(--red)}
+  .ttab a{color:var(--teal);text-decoration:none}.ttab a:hover{text-decoration:underline}
+  .mnote{font-size:.66rem;color:var(--dim);font-family:var(--fm);margin-top:4px}
+  .clickable{cursor:pointer}.clickable:hover{filter:brightness(1.12)}
+  .drill{font-size:.6rem;color:var(--teal);margin-left:4px}
 </style>
 </head>
 <body>
@@ -177,11 +186,12 @@
         <span class="hmeta" id="healthMeta"></span>
       </div>
       <div class="bar"><div class="trk"></div><div class="fl" id="healthFill"></div></div>
-      <div class="clab" id="clab" style="display:none">
+      <div class="clab clickable" id="clab" style="display:none" title="Open CryptoLab trades">
         <span class="t">CryptoLab P&amp;L</span>
         <span class="v mono" id="clVal">—</span>
         <span class="s mono" id="clSub"></span>
         <span class="s" style="color:var(--dim)">· Build B · live</span>
+        <span class="drill" id="clDrill">› open trades</span>
       </div>
     </div>
     <div class="live" id="liveStrip"><span class="b"></span><span id="liveText">connecting…</span></div>
@@ -225,7 +235,7 @@
   </footer>
 </div>
 
-<div class="modal" id="modal"><div class="box"><button class="x" id="modalX">&times;</button><h4 id="mTitle"></h4><div class="ms" id="mSum"></div><pre id="mJson"></pre></div></div>
+<div class="modal" id="modal"><div class="box"><button class="x" id="modalX">&times;</button><h4 id="mTitle"></h4><div class="ms" id="mSum"></div><div id="mBody"></div><pre id="mJson"></pre></div></div>
 
 <script>
 "use strict";
@@ -291,7 +301,7 @@ function loadA(){
       {n:"Marks",m:num(lp.mark_age_minutes),a:2,r:5},{n:"Intents",m:num(lp.intent_age_minutes),a:15,r:30},{n:"Publisher",m:num(dl.publisher_age_minutes),a:25,r:60}];
     var gates=[{n:"freshness",v:score(st("news_feed"))},{n:"relevance",v:score(st("assess_gate"))},{n:"sentiment",v:score(st("execute"))},{n:"duplicate",v:score(st("scanner"))}];
     return {build:"A",overall:d.overall||"amber",online:true,newsFeed:newsFeed,cols:cols,nodes:nodes,details:details,lats:lats,gates:gates,
-      equity:NaN,equityCurve:[],equitySub:"Cursor feed is health-only — see Build A dashboard for equity",cryptolab:null,opens:NaN,rejects:NaN};
+      equity:NaN,equityCurve:[],equitySub:"Cursor feed is health-only — see Build A dashboard for equity",cryptolab:null,cryptolabPositions:[],cryptolabAvail:false,opens:NaN,rejects:NaN};
   });
 }
 
@@ -330,6 +340,7 @@ function loadB(){
     };
     var clab=null;
     if(cl&&cl.portfolio&&!isNaN(num(cl.portfolio.total_pnl))){var p=cl.portfolio;clab={pnl:num(p.total_pnl),pct:num(p.pnl_pct),equity:num(p.equity)};}
+    var clpos=(cl&&Array.isArray(cl.positions))?cl.positions.map(function(q){return {ticker:q.ticker,direction:q.direction,shares:num(q.shares),stake:num(q.actual_stake),entry:num(q.entry_price),cur:num(q.current_price),pnl:num(q.unrealized_pnl),pnlpct:num(q.pnl_pct),conf:num(q.signal_confidence),src:(q.tags&&q.tags.source)||"",url:q.news_url||(q.tags&&q.tags.tweet_url)||"",book:q.strategy||"cryptolab"};}):[];
     var nodes=[
       {id:"news_feed",label:"News Feed",ico:"📰",status:feedS,summary:"scan_age="+ageStr(scanMin)+(inSess?" · in-session":" · idle (off-hours)"),signals:{scanner_age_sec:hz.scanner_age_sec,in_session:inSess}},
       {id:"scanner",label:"Scanner",ico:"🛰️",status:scanS,summary:"age="+ageStr(scanMin)+" · X poll "+ageStr(xpollMin),signals:{scanner_age_sec:hz.scanner_age_sec,x_last_poll:xc.last_poll,handles:xc.handles}},
@@ -357,7 +368,7 @@ function loadB(){
     return {build:"B",overall:nodes.reduce(function(o,n){return ORD[n.status]>ORD[o]?n.status:o;},"green"),online:true,
       newsFeed:newsFeed,cols:cols,nodes:nodes,details:details,lats:lats,gates:gates,
       equity:num(pf.total_equity),equityCurve:curve,equitySub:havePf?((pf.historical_daily_equities||[]).length+" day curve · live"):"—",
-      cryptolab:clab,opens:num(xc.opened),rejects:num(xc.rejected)};
+      cryptolab:clab,cryptolabPositions:clpos,cryptolabAvail:!!cl,opens:num(xc.opened),rejects:num(xc.rejected)};
   });
 }
 
@@ -465,7 +476,33 @@ function drawSpark(cv,data,color){
 }
 
 /* ---------- modal ---------- */
-function openModal(n){$("#mTitle").textContent=(n.ico?n.ico+" ":"")+n.label+" · "+n.status.toUpperCase();$("#mSum").textContent=n.summary||"";$("#mJson").textContent=JSON.stringify(n.signals||{},null,2);$("#modal").classList.add("open");}
+function openModal(n){$("#mTitle").textContent=(n.ico?n.ico+" ":"")+n.label+" · "+n.status.toUpperCase();$("#mSum").textContent=n.summary||"";$("#mBody").innerHTML="";$("#mJson").style.display="";$("#mJson").textContent=JSON.stringify(n.signals||{},null,2);$("#modal").classList.add("open");}
+function showCryptolab(model){
+  $("#mTitle").textContent="🧪 CryptoLab · open trades";
+  $("#mJson").style.display="none";$("#mJson").textContent="";
+  var b=$("#mBody");var build=model&&model.build;
+  var pos=(model&&model.cryptolabPositions)||[];
+  var sub=model&&model.cryptolab?("P&L "+money(model.cryptolab.pnl)+" ("+(model.cryptolab.pct>=0?"+":"")+model.cryptolab.pct.toFixed(2)+"%) · equity "+money(model.cryptolab.equity)+" · Build "+build):"Build "+build;
+  $("#mSum").textContent=sub;
+  if(!model||!model.cryptolabAvail){b.innerHTML='<div class="mnote">'+(build==="A"?"Cursor feed hasn\'t exposed CryptoLab positions yet — drill-down is wired and will populate automatically once the v2 feed returns positions.":"feed unavailable")+'</div>';$("#modal").classList.add("open");return;}
+  if(!pos.length){b.innerHTML='<div class="mnote">No open CryptoLab positions right now.</div>';$("#modal").classList.add("open");return;}
+  var rows=pos.map(function(p){
+    var sd=(p.direction||"").toUpperCase().charAt(0);
+    var pcls=p.pnl>=0?"up":"down";
+    var link=p.url?'<a href="'+p.url+'" target="_blank" rel="noopener">'+(p.src==="x"?"tweet":"news")+'↗</a>':(p.src||"—");
+    return '<tr><td>'+(p.ticker||"—")+'</td><td class="side-'+sd+'">'+(p.direction||"—")+'</td><td class="r">'+(isNaN(p.shares)?"—":p.shares.toFixed(4))+'</td><td class="r">'+money(p.stake)+'</td><td class="r">'+(isNaN(p.entry)?"—":"$"+p.entry.toLocaleString(undefined,{maximumFractionDigits:2}))+'</td><td class="r">'+(isNaN(p.cur)?"—":"$"+p.cur.toLocaleString(undefined,{maximumFractionDigits:2}))+'</td><td class="r '+pcls+'">'+(isNaN(p.pnl)?"—":(p.pnl>=0?"+":"")+money(p.pnl)+(isNaN(p.pnlpct)?"":" ("+(p.pnlpct>=0?"+":"")+p.pnlpct.toFixed(1)+"%)"))+'</td><td>'+link+'</td></tr>';
+  }).join("");
+  b.innerHTML='<table class="ttab"><thead><tr><th>Asset</th><th>Side</th><th class="r">Size</th><th class="r">Stake</th><th class="r">Entry</th><th class="r">Mark</th><th class="r">P&L</th><th>Src</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  $("#modal").classList.add("open");
+}
+function showNewsFeed(){
+  var A=S.model.A,B=S.model.B;
+  $("#mTitle").textContent="📰 Shared News Feed";
+  $("#mJson").style.display="none";$("#mJson").textContent="";$("#mSum").textContent="News ingestion freshness per build (read-only)";
+  function row(lbl,m){if(!m||!m.newsFeed)return '<tr><td>'+lbl+'</td><td>—</td><td>offline</td></tr>';var nf=m.nodes.filter(function(x){return x.id==="news_feed";})[0]||{};return '<tr><td>'+lbl+'</td><td class="side-'+(m.newsFeed.status==="green"?"L":"S")+'">'+m.newsFeed.status+'</td><td>'+(nf.summary||"—")+'</td></tr>';}
+  $("#mBody").innerHTML='<table class="ttab"><thead><tr><th>Build</th><th>Status</th><th>Detail</th></tr></thead><tbody>'+row("A · Cursor",A)+row("B · AG",B)+'</tbody></table>';
+  $("#modal").classList.add("open");
+}
 $("#modalX").onclick=function(){$("#modal").classList.remove("open");};
 $("#modal").onclick=function(e){if(e.target===this)this.classList.remove("open");};
 
@@ -496,6 +533,11 @@ $("#viewToggle").addEventListener("click",function(e){var btn=e.target.closest("
   if(S.view==="glance")renderGlance();else renderDeep();});
 $("#buildToggle").addEventListener("click",function(e){var btn=e.target.closest("button");if(!btn)return;S.build=btn.getAttribute("data-build");
   [].forEach.call(this.children,function(c){c.classList.toggle("on",c===btn);});renderDeep();});
+
+// TRA-89: CryptoLab P&L + shared News Feed are clickable → drill-downs
+$("#clab").addEventListener("click",function(){showCryptolab(S.model.B);});
+$("#newsFeed").addEventListener("click",showNewsFeed);
+$("#newsFeed").classList.add("clickable");
 
 $("#pollSec").textContent=Math.round(POLL_MS/1000);
 poll();setInterval(poll,POLL_MS);setInterval(setLive,1000);
