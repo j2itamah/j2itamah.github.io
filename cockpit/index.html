@@ -253,6 +253,7 @@ function score(s){return s==="green"?100:s==="amber"?55:s==="red"?16:50;}
 function ageStr(m){if(isNaN(m))return "—";if(m<1)return Math.round(m*60)+"s";if(m<90)return (m<10?m.toFixed(1):Math.round(m))+"m";var h=m/60;if(h<48)return h.toFixed(1)+"h";return (h/24).toFixed(1)+"d";}
 function hms(){var d=new Date();return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+":"+("0"+d.getSeconds()).slice(-2);}
 function healthPct(nodes){var g=0,a=0;nodes.forEach(function(n){if(n.status==="green")g++;else if(n.status==="amber")a++;});return nodes.length?Math.round((g+a*0.5)/nodes.length*100):0;}
+function parseTs(s){if(!s)return NaN;return (/[zZ]$|[+\-]\d\d:?\d\d$/.test(s))?Date.parse(s):Date.parse(s+"Z");} // AG sends UTC w/o 'Z'
 function fetchT(url,opts,ms){ms=ms||8000;var c=new AbortController();var to=setTimeout(function(){c.abort();},ms);
   var o=opts||{};o.signal=c.signal;o.cache="no-store";
   return fetch(url,o).then(function(r){clearTimeout(to);return r;},function(e){clearTimeout(to);throw e;});}
@@ -307,7 +308,8 @@ function loadB(){
     if(!hz&&!pf&&!xc)throw new Error("AG unreachable");
     hz=hz||{};pf=pf||{};xc=xc||{};
     var inSess=!!hz.in_session, scanMin=num(hz.scanner_age_sec)/60;
-    var xpollMin=xc.last_poll?(Date.now()-Date.parse(xc.last_poll))/60000:NaN;
+    var xpollMin=xc.last_poll?(Date.now()-parseTs(xc.last_poll))/60000:NaN;
+    if(xpollMin<0)xpollMin=0;
     var strat=pf.strategies||{},openPos=0,driftBooks=0,viol=0,nb=0;
     for(var k in strat){if(!strat.hasOwnProperty(k))continue;var s=strat[k];nb++;openPos+=num(s.open_positions_count)||0;if(Math.abs(num(s.drift)||0)>0.01)driftBooks++;if(s.accounting_ok===false)viol++;}
     var haveHz=!!a[0],havePf=!!a[1],haveXc=!!a[2];
