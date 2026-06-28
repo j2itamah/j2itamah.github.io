@@ -214,8 +214,7 @@ function stratLabel(key){
   else if(parts.length>=2&&parts[1]==='reversion')pf=parts[0]+'_'+parts[1];
   else if(parts.length>=2&&parts[1]==='confluence')pf=parts[0]+'_'+parts[1];
   else if(parts.length>=2&&parts[1]==='strict')pf=parts[0]+'_'+parts[1];
-  else if(parts.length>=2&&parts[1]==='plus')pf=parts[0]+'_'+parts[1]+'_'+parts[2];
-  else if(parts.length>=3&&parts[1]==='plus'&&parts[2]==='ta')pf=parts[0]+'_'+parts[1]+'_'+parts[2];
+  else if(parts.length>=3&&parts[1]==='plus')pf=parts[0]+'_'+parts[1]+'_'+parts[2];
   return NAMES[pf]||pf.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
 }
 

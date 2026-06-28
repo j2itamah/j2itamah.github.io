@@ -287,6 +287,7 @@ function loadA(){
   var dataP=fetchT(CUR_DATA+'?t='+Date.now()).then(function(r){if(!r.ok)throw new Error("data "+r.status);return r.json();}).catch(function(){return null;});
   return Promise.all([healthP,dataP]).then(function(res){
     var d=res[0],dv=res[1];
+    if(!d&&!dv)throw new Error("Build A unreachable");
     if(Array.isArray(d))d=d[0];
     if(!d)d={};
     var pipe={};(d.pipeline||[]).forEach(function(n){pipe[n.id]=n;});
