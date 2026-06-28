@@ -272,7 +272,7 @@ function stMin(m,a,r){if(isNaN(m))return "red";if(m>=r)return "red";if(m>=a)retu
 function score(s){return s==="green"?100:s==="amber"?55:s==="red"?16:50;}
 function ageStr(m){if(isNaN(m))return "—";if(m<1)return Math.round(m*60)+"s";if(m<90)return (m<10?m.toFixed(1):Math.round(m))+"m";var h=m/60;if(h<48)return h.toFixed(1)+"h";return (h/24).toFixed(1)+"d";}
 function hms(){var d=new Date();return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+":"+("0"+d.getSeconds()).slice(-2);}
-function healthPct(nodes){var g=0,a=0;nodes.forEach(function(n){if(n.status==="green")g++;else if(n.status==="amber")a++;});return nodes.length?Math.round((g+a*0.5)/nodes.length*100):0;}
+function healthPct(nodes){var g=0,a=0;(nodes||[]).forEach(function(n){if(!n)return;if(n.status==="green")g++;else if(n.status==="amber")a++;});return nodes.length?Math.round((g+a*0.5)/nodes.length*100):0;}
 function parseTs(s){if(!s)return NaN;return (/[zZ]$|[+\-]\d\d:?\d\d$/.test(s))?Date.parse(s):Date.parse(s+"Z");} // AG sends UTC w/o 'Z'
 function fetchT(url,opts,ms){ms=ms||8000;var c=new AbortController();var to=setTimeout(function(){c.abort();},ms);
   var o=opts||{};o.signal=c.signal;o.cache="no-store";
