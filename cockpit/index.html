@@ -278,12 +278,17 @@ function fetchT(url,opts,ms){ms=ms||8000;var c=new AbortController();var to=setT
   var o=opts||{};o.signal=c.signal;o.cache="no-store";
   return fetch(url,o).then(function(r){clearTimeout(to);return r;},function(e){clearTimeout(to);throw e;});}
 
-/* ---------- Build A: Cursor RPC ---------- */
+/* ---------- Build A: Cursor RPC + data.v2.json for equity/CryptoLab ---------- */
+var CUR_DATA='https://j2itamah.github.io/trading-dashboard/data.v2.json';
 function loadA(){
-  return fetchT(CUR_RPC,{method:"POST",headers:{"apikey":CUR_KEY,"Authorization":"Bearer "+CUR_KEY,"Content-Type":"application/json"},body:"{}"})
-  .then(function(r){if(!r.ok)throw new Error("rpc "+r.status);return r.json();})
-  .then(function(d){
+  var healthP=fetchT(CUR_RPC,{method:"POST",headers:{"apikey":CUR_KEY,"Authorization":"Bearer "+CUR_KEY,"Content-Type":"application/json"},body:"{}"})
+    .then(function(r){if(!r.ok)throw new Error("rpc "+r.status);return r.json();})
+    .catch(function(){return null;});
+  var dataP=fetchT(CUR_DATA+'?t='+Date.now()).then(function(r){if(!r.ok)throw new Error("data "+r.status);return r.json();}).catch(function(){return null;});
+  return Promise.all([healthP,dataP]).then(function(res){
+    var d=res[0],dv=res[1];
     if(Array.isArray(d))d=d[0];
+    if(!d)d={};
     var pipe={};(d.pipeline||[]).forEach(function(n){pipe[n.id]=n;});
     var nodes=DEEP_NODES.map(function(n){var p=pipe[n.id]||{};return {id:n.id,label:n.label,ico:n.ico,status:p.status||"amber",summary:p.summary||"",signals:p.signals||{}};});
     var acc=d.accounting||{},lp=d.loop||{},sc=d.scanner||{},tg=d.telegram||{},lt=d.last_trade||{},mk=d.market||{};
@@ -310,8 +315,48 @@ function loadA(){
     var lats=[{n:"RSS feed",m:num(nf.rss_age_minutes),a:10,r:30},{n:"Scanner",m:num(sc.scan_age_minutes),a:10,r:30},
       {n:"Marks",m:num(lp.mark_age_minutes),a:2,r:5},{n:"Intents",m:num(lp.intent_age_minutes),a:15,r:30},{n:"Publisher",m:num(dl.publisher_age_minutes),a:25,r:60}];
     var gates=[{n:"freshness",v:score(st("news_feed"))},{n:"relevance",v:score(st("assess_gate"))},{n:"sentiment",v:score(st("execute"))},{n:"duplicate",v:score(st("scanner"))}];
+    /* Wire data.v2.json: equity, CryptoLab, positions, leader */
+    var eq=NaN,eqCurve=[],eqSub="Connecting…",clab=null,clpos=[],clAvail=false,leader=null,opens=NaN;
+    if(dv){
+      var os=dv.official_summary||{};
+      eq=num(os.total_marked_equity||0);
+      opens=num(os.total_open_count||(dv.open_positions||[]).length);
+      eqSub=eq?"$"+Number(eq).toLocaleString(undefined,{maximumFractionDigits:0})+" across "+(os.account_count||"—")+" accounts":"—";
+      /* Compute leader from book_metrics */
+      var bm=dv.book_metrics||[];
+      for(var i=0;i<bm.length;i++){
+        var b=bm[i];var bEq=num(b.marked_equity);var bStart=num(b.starting_balance||10000);
+        if(isNaN(bEq)||bEq===0)continue;
+        var bPct=(bEq-bStart)/bStart*100;
+        if(leader===null||bPct>leader.pct)leader={name:b.book_key||b.portfolio||"book",pct:bPct,usd:bEq-bStart,val:bEq};
+      }
+      /* CryptoLab from data.v2.json */
+      var cl=dv.cryptolab||{};
+      var clAcct=cl.account||{};
+      var clTrades=cl.trades||[];
+      if(clAcct.marked_equity||clAcct.starting_balance){
+        clAvail=true;
+        var clEq=num(clAcct.marked_equity||clAcct.free_cash);
+        var clStart=num(clAcct.starting_balance||100000);
+        var clPnl=clEq-clStart;
+        var clPctVal=clStart?clPnl/clStart*100:0;
+        clab={pnl:clPnl,pct:clPctVal,equity:clEq,trades:clTrades.length};
+        if(leader===null||clPctVal>leader.pct)leader={name:"cryptolab",pct:clPctVal,usd:clPnl,val:clEq};
+        /* Map CryptoLab trades to positions format */
+        clpos=clTrades.filter(function(t){return t.status==='OPEN';}).map(function(t){
+          return {ticker:t.asset||t.ticker,direction:t.direction,shares:num(t.shares),stake:num(t.stake_amount||t.deployed_cost),
+            entry:num(t.entry_price),cur:num(t.current_price||t.entry_price),pnl:num(t.unrealized_pnl||0),pnlpct:NaN,
+            conf:NaN,src:t.feed_id||"",url:"",book:"cryptolab"};
+        });
+      }
+      /* Add CryptoLab P&L to details */
+      if(clab){
+        details.push({c:"CryptoLab P&L",v:money(clab.pnl),s:(clab.pct>=0?"+":"")+clab.pct.toFixed(2)+"% · "+clab.trades+" trades",cls:clab.pnl>=0?"up":"down"});
+      }
+      details.push({c:"Open positions",v:String(isNaN(opens)?0:opens),s:"across all books"});
+    }
     return {build:"A",overall:d.overall||"amber",online:true,newsFeed:newsFeed,cols:cols,nodes:nodes,details:details,lats:lats,gates:gates,
-      equity:NaN,equityCurve:[],equitySub:"Cursor feed is health-only — see Build A dashboard for equity",cryptolab:null,cryptolabPositions:[],cryptolabAvail:false,opens:NaN,rejects:NaN};
+      equity:eq,equityCurve:eqCurve,equitySub:eqSub,cryptolab:clab,cryptolabPositions:clpos,cryptolabAvail:clAvail,leader:leader,opens:opens,rejects:NaN};
   });
 }
 
@@ -452,18 +497,23 @@ function renderHeader(){
   else if(combined==="amber"){pill.className="pill a";pill.textContent="Degraded";}
   else{pill.className="pill r";pill.textContent="Major outage";}
   $("#healthMeta").textContent=(A&&A.online?"A "+A.overall:"A —")+" · "+(B&&B.online?"B "+B.overall:"B —")+" · "+hms();
-  // cryptolab P&L (Build B, real)
-  var cl=B&&B.cryptolab;
+  // cryptolab P&L — show from whichever build has it (prefer A since it has 50 trades)
+  var cl=(A&&A.cryptolab)||((B&&B.cryptolab)||null);
+  var clBuild=(A&&A.cryptolab)?"A":"B";
   if(cl){$("#clab").style.display="flex";$("#clVal").textContent=money(cl.pnl);$("#clVal").className="v mono "+(cl.pnl>=0?"up":"down");
-    $("#clSub").textContent=(cl.pct>=0?"+":"")+cl.pct.toFixed(2)+"% · equity "+money(cl.equity);}
+    $("#clSub").textContent=(cl.pct>=0?"+":"")+cl.pct.toFixed(2)+"% · equity "+money(cl.equity)+" · Build "+clBuild+(cl.trades?" · "+cl.trades+" trades":"");}
   else $("#clab").style.display="none";
-  // 🏆 Leader — real % return across available books (Build B live; cross-build + epoch via TRA-119)
-  var ld=B&&B.leader;
+  // 🏆 Leader — cross-build: compare A and B leaders, pick best by % return (TRA-119)
+  var ldA=A&&A.leader,ldB=B&&B.leader;
+  var ld=null,ldBuild="";
+  if(ldA&&ldB){ld=ldA.pct>=ldB.pct?ldA:ldB;ldBuild=ldA.pct>=ldB.pct?"A":"B";}
+  else if(ldA){ld=ldA;ldBuild="A";}
+  else if(ldB){ld=ldB;ldBuild="B";}
   if(ld&&!isNaN(ld.pct)){$("#leaderRow").style.display="flex";
     $("#leaderName").textContent=prettyBook(ld.name);
     $("#leaderPct").textContent=(ld.pct>=0?"+":"")+ld.pct.toFixed(2)+"% · "+(ld.usd>=0?"+":"")+money(ld.usd);
     $("#leaderPct").className="s mono "+(ld.pct>=0?"up":"down");
-    $("#leaderScope").textContent="· Build B · % return (lifetime)";}
+    $("#leaderScope").textContent="· Build "+ldBuild+" · % return (cross-build)";}
   else $("#leaderRow").style.display="none";
 }
 function prettyBook(id){var m={news_only:"News Only",trend_gate:"Trend Gate",strict_trend_gate:"Strict Trend",mean_reversion:"Mean Reversion",full_confluence:"Full Confluence",cryptolab:"CryptoLab"};
@@ -561,13 +611,13 @@ $("#viewToggle").addEventListener("click",function(e){var btn=e.target.closest("
 $("#buildToggle").addEventListener("click",function(e){var btn=e.target.closest("button");if(!btn)return;S.build=btn.getAttribute("data-build");
   [].forEach.call(this.children,function(c){c.classList.toggle("on",c===btn);});renderDeep();});
 
-// TRA-89: CryptoLab P&L + shared News Feed are clickable → drill-downs
-$("#clab").addEventListener("click",function(){showCryptolab(S.model.B);});
+// TRA-89: CryptoLab P&L + shared News Feed are clickable → drill-downs (prefer A which has 50 trades from data.v2.json)
+$("#clab").addEventListener("click",function(){var m=(S.model.A&&S.model.A.cryptolabAvail)?S.model.A:S.model.B;showCryptolab(m);});
 $("#newsFeed").addEventListener("click",showNewsFeed);
 $("#newsFeed").classList.add("clickable");
 
 // TRA-89: build stamp + auto-refresh when a newer cockpit is deployed (defeats GitHub Pages HTML caching)
-var BUILD="2026-06-28T07:35Z-r2";
+var BUILD="2026-06-28T08:00Z-r3";
 $("#buildStamp").textContent="cockpit build "+BUILD;
 function checkVersion(){
   fetch("./index.html?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
