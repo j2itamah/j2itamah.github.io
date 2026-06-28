@@ -409,11 +409,11 @@ function refresh(){
     if(!summary.count || !summary.bestValid){
       setHealth('bad','Dashboard data unavailable — check Build A / Build B feeds');
     }else if(!aOk||!bOk){
-      setHealth('warn','Partial data — '+(aOk?'Build B':'Build A')+' feed not responding ('+summary.count+' books shown)');
+      setHealth('warn','Partial data — '+(aOk?'Build B':'Build A')+' feed not responding');
     }else if(summary.allFlat){
-      setHealth('warn','Live · '+summary.count+' books loaded · all flat (no P&L moves yet)');
+      setHealth('warn','Live · both builds loaded · all flat (no P&L moves yet)');
     }else{
-      setHealth('ok','Live · '+summary.count+' books across both builds · top performer '+(summary.best.pctAll>=0?'+':'')+Number(summary.best.pctAll).toFixed(2)+'%');
+      setHealth('ok','Live · both builds active · top performer '+(summary.best.pctAll>=0?'+':'')+Number(summary.best.pctAll).toFixed(2)+'%');
     }
   }).catch(function(e){
     console.warn('refresh failed:',e);
