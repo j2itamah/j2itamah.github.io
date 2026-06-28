@@ -606,6 +606,7 @@ function crossLeaderboard(){
   lb.sort(function(x,y){
     if(y.pct!==x.pct)return y.pct-x.pct;
     if((y.group==="cryptolab")!==(x.group==="cryptolab"))return (y.group==="cryptolab"?1:0)-(x.group==="cryptolab"?1:0);
+    if((num(y.equity)||0)!==(num(x.equity)||0))return (num(y.equity)||0)-(num(x.equity)||0);
     return (num(y.usd)||0)-(num(x.usd)||0);});
   return lb;
 }

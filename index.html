@@ -158,7 +158,9 @@
   function curParse(d){if(!d)return null;var b=null;
     function consider(name,lab,eq,base,today){eq=num(eq);base=num(base);if(isNaN(eq)||isNaN(base)||base<=0)return;
       var pct=(eq/base-1)*100;var cand={build:'Cursor + Claude',name:name,lab:!!lab,value:eq,pnlDay:num(today),pctDay:isNaN(num(today))?NaN:num(today)/base*100,pnlAll:eq-base,pctAll:pct};
-      if(b===null||pct>b.pctAll||(pct===b.pctAll&&lab&&!b.lab))b=cand;}
+      if(b===null){b=cand;return;}
+      if(pct>b.pctAll){b=cand;return;}
+      if(pct===b.pctAll){if(cand.lab&&!b.lab){b=cand;return;}if(cand.lab===b.lab&&cand.value>b.value){b=cand;return;}}}
     var bm=d.book_metrics||d.official_books||[];
     for(var i=0;i<bm.length;i++){var s=bm[i];consider(pretty(s.portfolio||s.book_key),false,s.marked_equity,s.starting_balance,s.today_marked_pnl_approx);}
     var ca=d.crypto_lab_accounts||[];
@@ -166,7 +168,7 @@
     return b;}
   function getJSON(u){return fetch(u+'?t='+Date.now()).then(function(r){if(!r.ok)throw 0;return r.json();});}
   function curBest(){return getJSON(CUR).then(function(d){var b=curParse(d);if(b)return b;return getJSON(CUR_FALLBACK).then(curParse);}).catch(function(){return getJSON(CUR_FALLBACK).then(curParse).catch(function(){return null;});});}
-  function refresh(){Promise.all([agBest(),curBest()]).then(function(res){var best=null;for(var i=0;i<res.length;i++){var x=res[i];if(!x)continue;if(best===null||x.pctAll>best.pctAll||(x.pctAll===best.pctAll&&x.lab&&!best.lab))best=x;}var nm=document.getElementById('champName');if(!best){nm.textContent='Waiting for live data…';return;}nm.innerHTML=best.name+' <span class="champ-build">'+best.build+'</span>';document.getElementById('champValue').textContent=money(best.value);setPnl('champDay',best.pnlDay,best.pctDay);setPnl('champAll',best.pnlAll,best.pctAll);});}
+  function refresh(){Promise.all([agBest(),curBest()]).then(function(res){var best=null;for(var i=0;i<res.length;i++){var x=res[i];if(!x)continue;if(best===null){best=x;continue;}if(x.pctAll>best.pctAll){best=x;continue;}if(x.pctAll===best.pctAll){if(x.lab&&!best.lab){best=x;continue;}if(!!x.lab===!!best.lab&&num(x.value)>num(best.value)){best=x;}}}var nm=document.getElementById('champName');if(!best){nm.textContent='Waiting for live data…';return;}nm.innerHTML=best.name+' <span class="champ-build">'+best.build+'</span>';document.getElementById('champValue').textContent=money(best.value);setPnl('champDay',best.pnlDay,best.pctDay);setPnl('champAll',best.pnlAll,best.pctAll);});}
   refresh();setInterval(refresh,60000);
 </script>
 </body>
