@@ -318,8 +318,7 @@ function renderBoard(all){
   if(!el)return;
   if(!all.length){el.innerHTML='<div class="lb-empty">No live data available</div>';return;}
   var html='';
-  var shown=Math.min(all.length,12);
-  for(var i=0;i<shown;i++){
+  for(var i=0;i<all.length;i++){
     var r=all[i];
     var isLeader=i===0;
     html+='<div class="lb-row'+(isLeader?' leader':'')+'">';
