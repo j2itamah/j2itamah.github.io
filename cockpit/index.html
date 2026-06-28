@@ -58,6 +58,16 @@
   .clab .v{font-family:var(--fm);font-size:1.02rem;font-weight:500}
   .clab .v.up{color:var(--green)}.clab .v.down{color:var(--red)}
   .clab .s{font-size:.66rem;color:var(--dim);font-family:var(--fm)}
+  /* both-builds CryptoLab head-to-head */
+  .clabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px;padding-top:12px;border-top:1px solid var(--border)}
+  .clchip{display:flex;flex-direction:column;gap:3px;background:rgba(255,255,255,.022);border:1px solid var(--border);border-radius:11px;padding:10px 12px;transition:border-color .18s,background .18s}
+  .clchip:hover{background:var(--card2);border-color:var(--border2)}
+  .clchip .ct{font-family:var(--fd);font-size:.62rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+  .clchip .ct b{color:var(--teal);font-weight:700}
+  .clchip .cv{font-family:var(--fm);font-size:1.06rem;font-weight:500}
+  .clchip .cv.up{color:var(--green)}.clchip .cv.down{color:var(--red)}
+  .clchip .cs{font-size:.64rem;color:var(--dim);font-family:var(--fm)}
+  .clchip .drill{font-size:.58rem;color:var(--teal);margin-top:2px}
   .live{display:inline-flex;align-items:center;gap:7px;font-size:.7rem;color:var(--muted);margin:14px 2px 2px}
   .live .b{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 var(--green-s);animation:beat 2s infinite}
   @keyframes beat{0%{box-shadow:0 0 0 0 var(--green-s)}70%{box-shadow:0 0 0 7px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
@@ -166,6 +176,31 @@
   .mnote{font-size:.66rem;color:var(--dim);font-family:var(--fm);margin-top:4px}
   .clickable{cursor:pointer}.clickable:hover{filter:brightness(1.12)}
   .drill{font-size:.6rem;color:var(--teal);margin-left:4px}
+  /* leaderboard table */
+  .lbtab{width:100%;border-collapse:collapse;font-family:var(--fm);font-size:.66rem}
+  .lbtab th{text-align:left;color:var(--dim);font-weight:500;padding:5px 7px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.5px;font-size:.56rem}
+  .lbtab td{padding:6px 7px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);white-space:nowrap}
+  .lbtab td.r{text-align:right}.lbtab td.up{color:var(--green)}.lbtab td.down{color:var(--red)}
+  .lbtab tr.lab{background:rgba(45,212,191,.06)}
+  .lbtab tr.top td:first-child{color:var(--amber);font-weight:600}
+  .bdg{font-family:var(--fd);font-size:.56rem;font-weight:600;padding:1px 6px;border-radius:999px;letter-spacing:.3px}
+  .bdg.A{color:#fcd34d;background:rgba(251,191,36,.13)}
+  .bdg.B{color:#93c5fd;background:rgba(96,165,250,.16)}
+  .bdg.lab{color:#5eead4;background:rgba(45,212,191,.14);margin-left:5px}
+  /* ===== mobile ===== */
+  @media(max-width:560px){
+    body{padding:18px 12px 56px;font-size:13px}
+    .toprow{gap:9px}
+    h1{font-size:1rem}
+    .seg button{padding:6px 10px;font-size:.7rem}
+    .clab{gap:7px}
+    .clabs{grid-template-columns:1fr;gap:8px}
+    .leaderRow .v,.clab .v{font-size:.95rem}
+    .modal .box{padding:16px 14px;max-height:84vh}
+    .ttab,.lbtab{font-size:.62rem}
+    .ttab td,.lbtab td{padding:5px 5px}
+    .ttab{display:block;overflow-x:auto;white-space:nowrap}
+  }
 </style>
 </head>
 <body>
@@ -189,18 +224,26 @@
         <span class="hmeta" id="healthMeta"></span>
       </div>
       <div class="bar"><div class="trk"></div><div class="fl" id="healthFill"></div></div>
-      <div class="clab" id="leaderRow" style="display:none">
-        <span class="t">🏆 Leader</span>
+      <div class="clab clickable" id="leaderRow" style="display:none" title="Open full leaderboard">
+        <span class="t">🏆 Top Performer</span>
         <span class="v mono" id="leaderName">—</span>
         <span class="s mono" id="leaderPct"></span>
         <span class="s" style="color:var(--dim)" id="leaderScope"></span>
+        <span class="drill" id="leaderDrill">› leaderboard</span>
       </div>
-      <div class="clab clickable" id="clab" style="display:none" title="Open CryptoLab trades">
-        <span class="t">CryptoLab P&amp;L</span>
-        <span class="v mono" id="clVal">—</span>
-        <span class="s mono" id="clSub"></span>
-        <span class="s" style="color:var(--dim)">· Build B · live</span>
-        <span class="drill" id="clDrill">› open trades</span>
+      <div class="clabs" id="clabHead" style="display:none">
+        <div class="clchip clickable" id="clabA" title="Open Build A CryptoLab trades">
+          <span class="ct">🧪 CryptoLab · <b>A</b> Cursor</span>
+          <span class="cv mono" id="clValA">—</span>
+          <span class="cs mono" id="clSubA"></span>
+          <span class="drill">› trades</span>
+        </div>
+        <div class="clchip clickable" id="clabB" title="Open Build B CryptoLab trades">
+          <span class="ct">🧪 CryptoLab · <b>B</b> AG</span>
+          <span class="cv mono" id="clValB">—</span>
+          <span class="cs mono" id="clSubB"></span>
+          <span class="drill">› trades</span>
+        </div>
       </div>
     </div>
     <div class="live" id="liveStrip"><span class="b"></span><span id="liveText">connecting…</span></div>
@@ -253,6 +296,8 @@ var POLL_MS=5000;
 var AG="https://news-trading-system-production-b13f.up.railway.app";
 var CUR_RPC="https://alxtkdebryheweqbqlts.supabase.co/rest/v1/rpc/v2_system_health_feed";
 var CUR_KEY="sb_publishable_NHWa8EN8tJwhHvJnejvaZQ_PvbejkOL";
+// Build A static feed fallback (TRA-125) — same Cursor/Supabase source, snapshot JSON
+var CUR_STATIC=["https://j2itamah.github.io/trading-dashboard/data.v2.json","../data.v2.json"];
 var ORD={green:0,amber:1,red:2};
 var COLNODES=[{id:"scanner",label:"Scanner"},{id:"assess_gate",label:"Scores / Gates"},{id:"size",label:"Risk & Sizing"},{id:"execute",label:"Execute"},{id:"ledger",label:"Ledger"}];
 var DEEP_NODES=[{id:"news_feed",label:"News Feed",ico:"📰"},{id:"scanner",label:"Scanner",ico:"🛰️"},{id:"assess_gate",label:"Assess+Gate",ico:"⚖️"},{id:"size",label:"Size",ico:"📐"},{id:"execute",label:"Execute",ico:"⚡"},{id:"ledger",label:"Ledger",ico:"📒"},{id:"dashboard",label:"Dashboard",ico:"📊"}];
@@ -266,6 +311,8 @@ function num(v){return (v===null||v===undefined||v==="")?NaN:+v;}
 function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
 function fmt(v){var n=num(v);return isNaN(n)?"—":(n%1===0?String(n):n.toFixed(2));}
 function money(n){return isNaN(num(n))?"—":"$"+Number(n).toLocaleString(undefined,{maximumFractionDigits:0});}
+function pctStr(n){return isNaN(num(n))?"—":(n>=0?"+":"")+Number(n).toFixed(2)+"%";}
+function usdSign(n){return isNaN(num(n))?"":(n>=0?"+":"")+money(n);}
 function sev(s){return s==="green"?"g":s==="amber"?"a":s==="red"?"r":"";}
 function worst(a,b){return ORD[a]>=ORD[b]?a:b;}
 function stMin(m,a,r){if(isNaN(m))return "red";if(m>=r)return "red";if(m>=a)return "amber";return "green";}
@@ -278,41 +325,110 @@ function fetchT(url,opts,ms){ms=ms||8000;var c=new AbortController();var to=setT
   var o=opts||{};o.signal=c.signal;o.cache="no-store";
   return fetch(url,o).then(function(r){clearTimeout(to);return r;},function(e){clearTimeout(to);throw e;});}
 
-/* ---------- Build A: Cursor RPC ---------- */
+/* ---------- Build A: Cursor RPC (live) → static data.v2.json (fallback) ---------- */
 function loadA(){
   return fetchT(CUR_RPC,{method:"POST",headers:{"apikey":CUR_KEY,"Authorization":"Bearer "+CUR_KEY,"Content-Type":"application/json"},body:"{}"})
   .then(function(r){if(!r.ok)throw new Error("rpc "+r.status);return r.json();})
-  .then(function(d){
-    if(Array.isArray(d))d=d[0];
-    var pipe={};(d.pipeline||[]).forEach(function(n){pipe[n.id]=n;});
-    var nodes=DEEP_NODES.map(function(n){var p=pipe[n.id]||{};return {id:n.id,label:n.label,ico:n.ico,status:p.status||"amber",summary:p.summary||"",signals:p.signals||{}};});
-    var acc=d.accounting||{},lp=d.loop||{},sc=d.scanner||{},tg=d.telegram||{},lt=d.last_trade||{},mk=d.market||{};
-    var nf=(pipe.news_feed||{}).signals||{},dl=(pipe.dashboard||{}).signals||{};
-    var st=function(id){return (pipe[id]||{}).status||"amber";};
-    var newsFeed={status:st("news_feed"),stats:[["rss",ageStr(num(nf.rss_age_minutes))],["pending",fmt(nf.rss_pending)]]};
-    var cols={
-      scanner:{status:st("scanner"),stats:[["scan",ageStr(num(sc.scan_age_minutes))],["today",fmt(sc.headlines_today)]]},
-      assess_gate:{status:st("assess_gate"),stats:[["signals",fmt(sc.signals_today)]]},
-      size:{status:st("size"),stats:[["intents",fmt(lp.open_intents)]]},
-      execute:{status:st("execute"),stats:[["open",fmt(lp.open_intents)],["mark",ageStr(num(lp.mark_age_minutes))]]},
-      ledger:{status:st("ledger"),stats:[["drift",fmt(acc.books_with_drift)],["viol",fmt(acc.invariant_violations_24h)]]}
-    };
-    var details=[
-      {c:"Overall",v:(d.overall||"—").toUpperCase(),sev:sev(d.overall)},
-      {c:"Open intents",v:fmt(lp.open_intents)},{c:"Active books",v:fmt(acc.active_books)},
-      {c:"Books w/ drift",v:fmt(acc.books_with_drift),sev:num(acc.books_with_drift)>0?"a":"g"},
-      {c:"Ledger viol. 24h",v:fmt(acc.invariant_violations_24h),sev:num(acc.invariant_violations_24h)>0?"r":"g"},
-      {c:"Headlines today",v:fmt(sc.headlines_today)},
-      {c:"Last trade",v:ageStr(num(lt.age_minutes))+(isNaN(num(lt.age_minutes))?"":" ago"),s:lt.at?String(lt.at).slice(5,16).replace("T"," "):""},
-      {c:"Telegram",v:tg.configured?(tg.on?"ON":"cfg"):"off",sev:tg.configured?"g":"a"},
-      {c:"US session",v:mk.in_us_cash_session?"OPEN":"closed",sev:mk.in_us_cash_session?"g":"a"}
-    ];
-    var lats=[{n:"RSS feed",m:num(nf.rss_age_minutes),a:10,r:30},{n:"Scanner",m:num(sc.scan_age_minutes),a:10,r:30},
-      {n:"Marks",m:num(lp.mark_age_minutes),a:2,r:5},{n:"Intents",m:num(lp.intent_age_minutes),a:15,r:30},{n:"Publisher",m:num(dl.publisher_age_minutes),a:25,r:60}];
-    var gates=[{n:"freshness",v:score(st("news_feed"))},{n:"relevance",v:score(st("assess_gate"))},{n:"sentiment",v:score(st("execute"))},{n:"duplicate",v:score(st("scanner"))}];
-    return {build:"A",overall:d.overall||"amber",online:true,newsFeed:newsFeed,cols:cols,nodes:nodes,details:details,lats:lats,gates:gates,
-      equity:NaN,equityCurve:[],equitySub:"Cursor feed is health-only — see Build A dashboard for equity",cryptolab:null,cryptolabPositions:[],cryptolabAvail:false,opens:NaN,rejects:NaN};
+  .then(function(d){if(Array.isArray(d))d=d[0];return modelARpc(d);})
+  .catch(function(){return loadAStatic(0);});
+}
+function modelARpc(d){
+  var pipe={};(d.pipeline||[]).forEach(function(n){pipe[n.id]=n;});
+  var nodes=DEEP_NODES.map(function(n){var p=pipe[n.id]||{};return {id:n.id,label:n.label,ico:n.ico,status:p.status||"amber",summary:p.summary||"",signals:p.signals||{}};});
+  var acc=d.accounting||{},lp=d.loop||{},sc=d.scanner||{},tg=d.telegram||{},lt=d.last_trade||{},mk=d.market||{};
+  var nf=(pipe.news_feed||{}).signals||{},dl=(pipe.dashboard||{}).signals||{};
+  var st=function(id){return (pipe[id]||{}).status||"amber";};
+  // ---- TRA-119/125: real Build A leaderboard, equity, CryptoLab ----
+  var lb=(d.performance_leaderboard||[]).map(function(x){
+    return {build:"A",label:x.label,book:x.book_key,group:x.build_group,target:x.target_model,life:x.lifecycle,
+      pct:num(x.return_pct),usd:num(x.return_usd),equity:num(x.current_equity),openEq:num(x.opening_equity)};
   });
+  var epoch=d.performance_epoch||{};
+  var clEq=0,clBase=0,clHas=false;
+  lb.forEach(function(b){if(b.group==="cryptolab"){clHas=true;if(!isNaN(b.equity))clEq+=b.equity;if(!isNaN(b.openEq))clBase+=b.openEq;}});
+  var clA=clHas?{pnl:clEq-clBase,pct:clBase>0?(clEq-clBase)/clBase*100:0,equity:clEq}:null;
+  var clPos=((d.cryptolab_positions||{}).positions||[]).map(function(q){
+    return {ticker:q.asset,direction:q.direction||q.side,shares:num(q.shares),stake:num(q.stake_amount),
+      entry:num(q.entry_price),cur:num(q.current_price),pnl:num(q.unrealized_pnl),pnlpct:num(q.unrealized_pnl_pct),
+      conf:num(q.signal_confidence),src:q.source||"",url:q.news_url||(q.tags&&q.tags.tweet_url)||"",book:q.account_key||q.book_key||"cryptolab"};
+  });
+  var totEq=lb.reduce(function(s,b){return s+(isNaN(b.equity)?0:b.equity);},0);
+  var totBase=lb.reduce(function(s,b){return s+(isNaN(b.openEq)?0:b.openEq);},0);
+  var newsFeed={status:st("news_feed"),stats:[["rss",ageStr(num(nf.rss_age_minutes))],["pending",fmt(nf.rss_pending)]]};
+  var cols={
+    scanner:{status:st("scanner"),stats:[["scan",ageStr(num(sc.scan_age_minutes))],["today",fmt(sc.headlines_today)]]},
+    assess_gate:{status:st("assess_gate"),stats:[["signals",fmt(sc.signals_today)]]},
+    size:{status:st("size"),stats:[["intents",fmt(lp.open_intents)]]},
+    execute:{status:st("execute"),stats:[["open",fmt(lp.open_intents)],["mark",ageStr(num(lp.mark_age_minutes))]]},
+    ledger:{status:st("ledger"),stats:[["drift",fmt(acc.books_with_drift)],["viol",fmt(acc.invariant_violations_24h)]]}
+  };
+  var details=[
+    {c:"Overall",v:(d.overall||"—").toUpperCase(),sev:sev(d.overall)},
+    {c:"Total equity",v:money(totEq),s:lb.length?lb.length+" books · live":""},
+    {c:"CryptoLab P&L",v:clA?money(clA.pnl):"—",s:clA?pctStr(clA.pct)+" · eq "+money(clA.equity):"",cls:clA&&clA.pnl>=0?"up":"down"},
+    {c:"Open intents",v:fmt(lp.open_intents)},{c:"Active books",v:fmt(acc.active_books)},
+    {c:"Books w/ drift",v:fmt(acc.books_with_drift),sev:num(acc.books_with_drift)>0?"a":"g"},
+    {c:"Ledger viol. 24h",v:fmt(acc.invariant_violations_24h),sev:num(acc.invariant_violations_24h)>0?"r":"g"},
+    {c:"Headlines today",v:fmt(sc.headlines_today)},
+    {c:"Last trade",v:ageStr(num(lt.age_minutes))+(isNaN(num(lt.age_minutes))?"":" ago"),s:lt.at?String(lt.at).slice(5,16).replace("T"," "):""},
+    {c:"Telegram",v:tg.configured?(tg.on?"ON":"cfg"):"off",sev:tg.configured?"g":"a"},
+    {c:"US session",v:mk.in_us_cash_session?"OPEN":"closed",sev:mk.in_us_cash_session?"g":"a"}
+  ];
+  var lats=[{n:"RSS feed",m:num(nf.rss_age_minutes),a:10,r:30},{n:"Scanner",m:num(sc.scan_age_minutes),a:10,r:30},
+    {n:"Marks",m:num(lp.mark_age_minutes),a:2,r:5},{n:"Intents",m:num(lp.intent_age_minutes),a:15,r:30},{n:"Publisher",m:num(dl.publisher_age_minutes),a:25,r:60}];
+  var gates=[{n:"freshness",v:score(st("news_feed"))},{n:"relevance",v:score(st("assess_gate"))},{n:"sentiment",v:score(st("execute"))},{n:"duplicate",v:score(st("scanner"))}];
+  return {build:"A",overall:d.overall||"amber",online:true,newsFeed:newsFeed,cols:cols,nodes:nodes,details:details,lats:lats,gates:gates,
+    equity:totEq>0?totEq:NaN,equityCurve:(totBase>0&&totEq>0)?[totBase,totEq]:[],
+    equitySub:lb.length?(lb.length+" books · CryptoLab + matrix"+(epoch.epoch_date?" · epoch "+epoch.epoch_date:"")):"live",
+    cryptolab:clA,cryptolabPositions:clPos,cryptolabAvail:clHas,leaderboard:lb,epoch:epoch,opens:NaN,rejects:NaN};
+}
+/* fallback: build the same model from the static data.v2.json snapshot */
+function loadAStatic(i){
+  if(i>=CUR_STATIC.length)return Promise.reject(new Error("Build A feed unreachable"));
+  return fetchT(CUR_STATIC[i]).then(function(r){if(!r.ok)throw new Error("static "+r.status);return r.json();})
+    .then(function(d){return modelAStatic(d);})
+    .catch(function(){return loadAStatic(i+1);});
+}
+function modelAStatic(d){
+  var bm=d.book_metrics||d.official_books||[];
+  var ca=d.crypto_lab_accounts||[];
+  var lb=[];
+  bm.forEach(function(b){var eq=num(b.marked_equity),base=num(b.starting_balance);
+    lb.push({build:"A",label:b.portfolio||b.book_key,book:b.book_key,group:"matrix",target:b.target_model,life:b.lifecycle,
+      pct:num(b.since_start_return)*100,usd:num(b.since_start_pnl),equity:eq,openEq:base});});
+  ca.forEach(function(a){if(!a.active&&num(a.marked_equity)===num(a.starting_balance)&&num(a.realized_pnl)===0)return;
+    var eq=num(a.marked_equity),base=num(a.starting_balance);
+    lb.push({build:"A",label:(a.strategy_family||a.account_key),book:a.account_key,group:"cryptolab",target:a.target_model,life:"cryptolab",
+      pct:base>0?(eq-base)/base*100:0,usd:eq-base,equity:eq,openEq:base});});
+  lb.sort(function(x,y){return (y.pct||0)-(x.pct||0);});
+  var clEq=0,clBase=0,clHas=false;
+  ca.forEach(function(a){clHas=true;if(!isNaN(num(a.marked_equity)))clEq+=num(a.marked_equity);if(!isNaN(num(a.starting_balance)))clBase+=num(a.starting_balance);});
+  var clA=clHas?{pnl:clEq-clBase,pct:clBase>0?(clEq-clBase)/clBase*100:0,equity:clEq}:null;
+  var cltr=((d.cryptolab||{}).trades)||[];
+  var clPos=cltr.filter(function(t){return (t.status||"").toUpperCase()==="OPEN";}).map(function(t){
+    return {ticker:t.asset,direction:t.direction,shares:num(t.shares),stake:num(t.stake_amount),entry:num(t.entry_price),
+      cur:num(t.current_price),pnl:num(t.unrealized_pnl),pnlpct:(num(t.stake_amount)>0?num(t.unrealized_pnl)/num(t.stake_amount)*100:NaN),
+      conf:NaN,src:t.current_price_source||"",url:"",book:(d.cryptolab.account&&d.cryptolab.account.account_key)||"cryptolab"};});
+  var totEq=lb.reduce(function(s,b){return s+(isNaN(b.equity)?0:b.equity);},0);
+  var totBase=lb.reduce(function(s,b){return s+(isNaN(b.openEq)?0:b.openEq);},0);
+  var hh=d.health||{},okBooks=num(hh.active_books),drift=num(hh.books_with_drift);
+  var gnodes=DEEP_NODES.map(function(n){return {id:n.id,label:n.label,ico:n.ico,status:"amber",summary:"from static snapshot "+(d.generated_at||""),signals:{}};});
+  var newsFeed={status:"amber",stats:[["src","static"],["@",String(d.generated_at||"").slice(5,16).replace("T"," ")]]};
+  var cols={scanner:{status:"amber",stats:[["src","snapshot"]]},assess_gate:{status:"amber",stats:[["books",fmt(okBooks)]]},
+    size:{status:"amber",stats:[["books",fmt(okBooks)]]},execute:{status:"amber",stats:[["pos",String(clPos.length)]]},
+    ledger:{status:drift>0?"a":"green",stats:[["drift",fmt(drift)]]}};
+  var details=[
+    {c:"Source",v:"static",s:String(d.generated_at||"").slice(0,16).replace("T"," ")},
+    {c:"Total equity",v:money(totEq),s:lb.length+" books · snapshot"},
+    {c:"CryptoLab P&L",v:clA?money(clA.pnl):"—",s:clA?pctStr(clA.pct)+" · eq "+money(clA.equity):"",cls:clA&&clA.pnl>=0?"up":"down"},
+    {c:"Active books",v:fmt(okBooks)},{c:"Books w/ drift",v:fmt(drift),sev:drift>0?"a":"g"},
+    {c:"Open crypto pos",v:String(clPos.length)}
+  ];
+  return {build:"A",overall:"amber",online:true,newsFeed:newsFeed,cols:cols,nodes:gnodes,details:details,
+    lats:[{n:"Snapshot",m:NaN,a:10,r:30}],gates:[{n:"freshness",v:55},{n:"relevance",v:55},{n:"sentiment",v:55},{n:"duplicate",v:55}],
+    equity:totEq>0?totEq:NaN,equityCurve:(totBase>0&&totEq>0)?[totBase,totEq]:[],
+    equitySub:"static snapshot · "+(lb.length)+" books",cryptolab:clA,cryptolabPositions:clPos,cryptolabAvail:clHas,
+    leaderboard:lb,epoch:{epoch_date:String(d.generated_at||"").slice(0,10)},opens:NaN,rejects:NaN,stale:true};
 }
 
 /* ---------- Build B: AG public endpoints (resilient) ---------- */
@@ -331,11 +447,15 @@ function loadB(){
     var xpollMin=xc.last_poll?(Date.now()-parseTs(xc.last_poll))/60000:NaN;
     if(xpollMin<0)xpollMin=0;
     var strat=pf.strategies||{},openPos=0,driftBooks=0,viol=0,nb=0;
-    var leader=null;
+    var leader=null,lbB=[];
     for(var k in strat){if(!strat.hasOwnProperty(k))continue;var s=strat[k];nb++;openPos+=num(s.open_positions_count)||0;if(Math.abs(num(s.drift)||0)>0.01)driftBooks++;if(s.accounting_ok===false)viol++;
-      var rp=num(s.pnl_percentage);if(!isNaN(rp)&&(leader===null||rp>leader.pct))leader={name:k,pct:rp,usd:num(s.total_pnl),val:num(s.total_value)};}
-    // CryptoLab (lab book) competes for leader too
-    if(cl&&cl.portfolio&&!isNaN(num(cl.portfolio.pnl_pct))){var cp=num(cl.portfolio.pnl_pct);if(leader===null||cp>leader.pct)leader={name:"cryptolab",pct:cp,usd:num(cl.portfolio.total_pnl),val:num(cl.portfolio.equity)};}
+      var rp=num(s.pnl_percentage),sv=num(s.total_value),su=num(s.total_pnl);
+      lbB.push({build:"B",label:k,book:k,group:"matrix",target:"",life:"",pct:rp,usd:su,equity:sv,openEq:(isNaN(sv)||isNaN(su))?NaN:sv-su});
+      if(!isNaN(rp)&&(leader===null||rp>leader.pct))leader={name:k,pct:rp,usd:su,val:sv};}
+    // CryptoLab (lab book) competes for leader too — first-class contender (TRA-119)
+    if(cl&&cl.portfolio&&!isNaN(num(cl.portfolio.pnl_pct))){var cp=num(cl.portfolio.pnl_pct);
+      lbB.push({build:"B",label:"CryptoLab",book:"cryptolab",group:"cryptolab",target:"",life:"cryptolab",pct:cp,usd:num(cl.portfolio.total_pnl),equity:num(cl.portfolio.equity),openEq:num(cl.portfolio.initial_cash)});
+      if(leader===null||cp>leader.pct)leader={name:"cryptolab",pct:cp,usd:num(cl.portfolio.total_pnl),val:num(cl.portfolio.equity)};}
     var haveHz=!!a[0],havePf=!!a[1],haveXc=!!a[2];
     var feedS=!haveHz?"red":(inSess?stMin(scanMin,10,30):(isNaN(scanMin)?"red":"green"));
     var scanS=!haveHz?"red":(inSess?stMin(scanMin,10,30):(isNaN(scanMin)?"red":(scanMin>240?"amber":"green")));
@@ -382,7 +502,7 @@ function loadB(){
     return {build:"B",overall:nodes.reduce(function(o,n){return ORD[n.status]>ORD[o]?n.status:o;},"green"),online:true,
       newsFeed:newsFeed,cols:cols,nodes:nodes,details:details,lats:lats,gates:gates,
       equity:num(pf.total_equity),equityCurve:curve,equitySub:havePf?((pf.historical_daily_equities||[]).length+" day curve · live"):"—",
-      cryptolab:clab,cryptolabPositions:clpos,cryptolabAvail:!!cl,leader:leader,opens:num(xc.opened),rejects:num(xc.rejected)};
+      cryptolab:clab,cryptolabPositions:clpos,cryptolabAvail:!!cl,leader:leader,leaderboard:lbB,opens:num(xc.opened),rejects:num(xc.rejected)};
   });
 }
 
@@ -452,23 +572,52 @@ function renderHeader(){
   else if(combined==="amber"){pill.className="pill a";pill.textContent="Degraded";}
   else{pill.className="pill r";pill.textContent="Major outage";}
   $("#healthMeta").textContent=(A&&A.online?"A "+A.overall:"A —")+" · "+(B&&B.online?"B "+B.overall:"B —")+" · "+hms();
-  // cryptolab P&L (Build B, real)
-  var cl=B&&B.cryptolab;
-  if(cl){$("#clab").style.display="flex";$("#clVal").textContent=money(cl.pnl);$("#clVal").className="v mono "+(cl.pnl>=0?"up":"down");
-    $("#clSub").textContent=(cl.pct>=0?"+":"")+cl.pct.toFixed(2)+"% · equity "+money(cl.equity);}
-  else $("#clab").style.display="none";
-  // 🏆 Leader — real % return across available books (Build B live; cross-build + epoch via TRA-119)
-  var ld=B&&B.leader;
-  if(ld&&!isNaN(ld.pct)){$("#leaderRow").style.display="flex";
-    $("#leaderName").textContent=prettyBook(ld.name);
-    $("#leaderPct").textContent=(ld.pct>=0?"+":"")+ld.pct.toFixed(2)+"% · "+(ld.usd>=0?"+":"")+money(ld.usd);
-    $("#leaderPct").className="s mono "+(ld.pct>=0?"up":"down");
-    $("#leaderScope").textContent="· Build B · % return (lifetime)";}
+  // 🧪 Both builds' CryptoLab, side by side (head-to-head)
+  var clA=A&&A.cryptolab,clB=B&&B.cryptolab;
+  if(clA||clB)$("#clabHead").style.display="grid";else $("#clabHead").style.display="none";
+  setChip("clValA","clSubA",clA);
+  setChip("clValB","clSubB",clB);
+  // 🏆 Top Performer — cross-build leaderboard #1 by % return since epoch (TRA-119)
+  var lb=crossLeaderboard();
+  S.leaderboard=lb;
+  if(lb.length){var top=lb[0];$("#leaderRow").style.display="flex";
+    $("#leaderName").textContent=lbName(top);
+    $("#leaderPct").textContent=pctStr(top.pct)+(isNaN(top.usd)?"":" · "+usdSign(top.usd));
+    $("#leaderPct").className="s mono "+(top.pct>=0?"up":"down");
+    $("#leaderScope").textContent="· Build "+top.build+" · "+(top.group==="cryptolab"?"CryptoLab":"matrix")+" · % return"+(S.epoch?" since "+S.epoch:"");}
   else $("#leaderRow").style.display="none";
 }
-function prettyBook(id){var m={news_only:"News Only",trend_gate:"Trend Gate",strict_trend_gate:"Strict Trend",mean_reversion:"Mean Reversion",full_confluence:"Full Confluence",cryptolab:"CryptoLab"};
-  var ex=/_vol/.test(id)?" · Vol":/_fixed/.test(id)?" · Fixed":"";var hd=/_24h/.test(id)?" 24h":/_eod/.test(id)?" EOD":"";
-  var base=id.replace(/_(vol|fixed)(_24h|_eod)?$/,"");return (m[base]||base)+ex+hd;}
+function setChip(valId,subId,cl){
+  if(cl&&!isNaN(num(cl.pnl))){$("#"+valId).textContent=money(cl.pnl);$("#"+valId).className="cv mono "+(cl.pnl>=0?"up":"down");
+    $("#"+subId).textContent=pctStr(cl.pct)+" · eq "+money(cl.equity);}
+  else{$("#"+valId).textContent="—";$("#"+valId).className="cv mono";$("#"+subId).textContent="no data";}
+}
+function lbName(b){var nm=prettyBook(b.book||b.label||"");
+  if(b.group==="cryptolab"&&!/CryptoLab/i.test(nm))nm="CryptoLab · "+nm;
+  return nm;}
+/* merge both builds' contenders, rank by % return; CryptoLab is first-class and
+   breaks ties (head-to-head experiment), then by $ return */
+function crossLeaderboard(){
+  var A=S.model.A,B=S.model.B,lb=[];
+  if(A&&A.leaderboard)lb=lb.concat(A.leaderboard);
+  if(B&&B.leaderboard)lb=lb.concat(B.leaderboard);
+  lb=lb.filter(function(x){return !isNaN(num(x.pct));});
+  S.epoch=(A&&A.epoch&&A.epoch.epoch_date)||"";
+  lb.sort(function(x,y){
+    if(y.pct!==x.pct)return y.pct-x.pct;
+    if((y.group==="cryptolab")!==(x.group==="cryptolab"))return (y.group==="cryptolab"?1:0)-(x.group==="cryptolab"?1:0);
+    if((num(y.equity)||0)!==(num(x.equity)||0))return (num(y.equity)||0)-(num(x.equity)||0);
+    return (num(y.usd)||0)-(num(x.usd)||0);});
+  return lb;
+}
+function prettyBook(id){id=String(id||"");
+  var m={news_only:"News Only",news_plus_ta:"News + TA",trend_gate:"Trend Gate",trend_strict:"Strict Trend",strict_trend_gate:"Strict Trend",mean_reversion:"Mean Reversion",mean_revert:"Mean Reversion",full_confluence:"Full Confluence",x_only:"X Only",cryptolab:"CryptoLab"};
+  // long Cursor keys: v2_<family>_<lifecycle>_<target>_... ; crypto_<family>
+  var fam="";for(var k in m){if(new RegExp("(^|_)"+k+"(_|$)").test(id)){if(k.length>fam.length)fam=k;}}
+  var ex=/volatility|_vol(_|$)/.test(id)?" · Vol":/fixed/.test(id)?" · Fixed":"";
+  var hd=/24h|hold_24hr/.test(id)?" 24h":/eod|sell_eod/.test(id)?" EOD":"";
+  if(fam)return (m[fam]||fam)+ex+hd;
+  var base=id.replace(/^v2_/,"").replace(/_(vol|fixed)(_24h|_eod)?$/,"");return (m[base]||base)+ex+hd;}
 
 /* ---------- render deep dive ---------- */
 function renderDeep(){
@@ -511,7 +660,7 @@ function showCryptolab(model){
   var pos=(model&&model.cryptolabPositions)||[];
   var sub=model&&model.cryptolab?("P&L "+money(model.cryptolab.pnl)+" ("+(model.cryptolab.pct>=0?"+":"")+model.cryptolab.pct.toFixed(2)+"%) · equity "+money(model.cryptolab.equity)+" · Build "+build):"Build "+build;
   $("#mSum").textContent=sub;
-  if(!model||!model.cryptolabAvail){b.innerHTML='<div class="mnote">'+(build==="A"?"Cursor feed hasn\'t exposed CryptoLab positions yet — drill-down is wired and will populate automatically once the v2 feed returns positions.":"feed unavailable")+'</div>';$("#modal").classList.add("open");return;}
+  if(!model||!model.cryptolabAvail){b.innerHTML='<div class="mnote">CryptoLab feed unavailable for Build '+build+' right now.</div>';$("#modal").classList.add("open");return;}
   if(!pos.length){b.innerHTML='<div class="mnote">No open CryptoLab positions right now.</div>';$("#modal").classList.add("open");return;}
   var rows=pos.map(function(p){
     var sd=(p.direction||"").toUpperCase().charAt(0);
@@ -520,6 +669,23 @@ function showCryptolab(model){
     return '<tr><td>'+(p.ticker||"—")+'</td><td class="side-'+sd+'">'+(p.direction||"—")+'</td><td class="r">'+(isNaN(p.shares)?"—":p.shares.toFixed(4))+'</td><td class="r">'+money(p.stake)+'</td><td class="r">'+(isNaN(p.entry)?"—":"$"+p.entry.toLocaleString(undefined,{maximumFractionDigits:2}))+'</td><td class="r">'+(isNaN(p.cur)?"—":"$"+p.cur.toLocaleString(undefined,{maximumFractionDigits:2}))+'</td><td class="r '+pcls+'">'+(isNaN(p.pnl)?"—":(p.pnl>=0?"+":"")+money(p.pnl)+(isNaN(p.pnlpct)?"":" ("+(p.pnlpct>=0?"+":"")+p.pnlpct.toFixed(1)+"%)"))+'</td><td>'+link+'</td></tr>';
   }).join("");
   b.innerHTML='<table class="ttab"><thead><tr><th>Asset</th><th>Side</th><th class="r">Size</th><th class="r">Stake</th><th class="r">Entry</th><th class="r">Mark</th><th class="r">P&L</th><th>Src</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  $("#modal").classList.add("open");
+}
+function showLeaderboard(){
+  $("#mTitle").textContent="\uD83C\uDFC6 Leaderboard · cross-build";
+  $("#mJson").style.display="none";$("#mJson").textContent="";
+  var lb=S.leaderboard||crossLeaderboard();
+  $("#mSum").textContent="Ranked by % return"+(S.epoch?" since "+S.epoch:"")+" · CryptoLab is a first-class contender · both builds";
+  if(!lb.length){$("#mBody").innerHTML='<div class="mnote">No leaderboard data yet — waiting for both feeds.</div>';$("#modal").classList.add("open");return;}
+  var rows=lb.map(function(b,i){
+    var pc=b.pct>=0?"up":"down";var lab=b.group==="cryptolab";
+    return '<tr class="'+(i===0?"top ":"")+(lab?"lab":"")+'"><td>'+(i+1)+'</td>'+
+      '<td>'+lbName(b)+'<span class="bdg '+b.build+'">'+b.build+'</span>'+(lab?'<span class="bdg lab">LAB</span>':'')+'</td>'+
+      '<td class="r '+pc+'">'+pctStr(b.pct)+'</td>'+
+      '<td class="r '+pc+'">'+(isNaN(b.usd)?"—":usdSign(b.usd))+'</td>'+
+      '<td class="r">'+money(b.equity)+'</td></tr>';
+  }).join("");
+  $("#mBody").innerHTML='<table class="lbtab"><thead><tr><th>#</th><th>Book</th><th class="r">Return</th><th class="r">P&L</th><th class="r">Equity</th></tr></thead><tbody>'+rows+'</tbody></table>';
   $("#modal").classList.add("open");
 }
 function showNewsFeed(){
@@ -561,13 +727,15 @@ $("#viewToggle").addEventListener("click",function(e){var btn=e.target.closest("
 $("#buildToggle").addEventListener("click",function(e){var btn=e.target.closest("button");if(!btn)return;S.build=btn.getAttribute("data-build");
   [].forEach.call(this.children,function(c){c.classList.toggle("on",c===btn);});renderDeep();});
 
-// TRA-89: CryptoLab P&L + shared News Feed are clickable → drill-downs
-$("#clab").addEventListener("click",function(){showCryptolab(S.model.B);});
+// TRA-125: head-to-head CryptoLab chips, Top Performer → leaderboard, News Feed drill-downs
+$("#clabA").addEventListener("click",function(){showCryptolab(S.model.A);});
+$("#clabB").addEventListener("click",function(){showCryptolab(S.model.B);});
+$("#leaderRow").addEventListener("click",showLeaderboard);
 $("#newsFeed").addEventListener("click",showNewsFeed);
 $("#newsFeed").classList.add("clickable");
 
 // TRA-89: build stamp + auto-refresh when a newer cockpit is deployed (defeats GitHub Pages HTML caching)
-var BUILD="2026-06-28T07:35Z-r2";
+var BUILD="2026-06-28T08:10Z-tra125";
 $("#buildStamp").textContent="cockpit build "+BUILD;
 function checkVersion(){
   fetch("./index.html?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
