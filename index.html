@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QuantPulse — Trading Lab</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <style>
   :root{
     --bg0:#ffffff; --bg1:#f1f5f9; --bg2:#e9eef5;
@@ -22,7 +25,7 @@
       radial-gradient(1100px 560px at 18% -10%, rgba(37,99,235,.07), transparent 60%),
       radial-gradient(900px 480px at 92% 112%, rgba(224,101,47,.06), transparent 55%),
       linear-gradient(160deg,var(--bg0),var(--bg1) 60%,var(--bg2));
-    min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;
     padding:40px 24px;
   }
   .brand{display:flex;align-items:center;gap:10px;margin-bottom:8px}
@@ -35,19 +38,45 @@
   .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(22,163,74,.5);
        animation:pulse 1.8s infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.4)}70%{box-shadow:0 0 0 9px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
+
+  /* Top Performer card — mobile-safe */
   .champ{width:100%;max-width:880px;margin-bottom:22px;background:#0b0f1a;color:#f8fafc;
     border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:24px 28px;
-    box-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.4);position:relative;overflow:hidden}
+    box-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.4);position:relative;overflow:hidden;
+    min-height:120px}
   .champ::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;
     background:linear-gradient(90deg,#fbbf24,#f59e0b)}
   .champ-label{font-size:.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fcd34d;margin-bottom:8px}
-  .champ-name{font-size:1.5rem;font-weight:700;margin-bottom:18px;line-height:1.2}
+  .champ-name{font-size:1.5rem;font-weight:700;margin-bottom:18px;line-height:1.3;word-wrap:break-word;overflow-wrap:break-word}
   .champ-build{font-size:.8rem;font-weight:600;color:#93c5fd;background:rgba(96,165,250,.16);
-    padding:3px 9px;border-radius:999px;margin-left:8px;vertical-align:middle;white-space:nowrap}
+    padding:3px 9px;border-radius:999px;margin-left:8px;vertical-align:middle;white-space:nowrap;display:inline-block;margin-top:4px}
   .champ-stats{display:flex;gap:32px;flex-wrap:wrap}
   .champ-cap{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:#8a96ad;margin-bottom:3px}
-  .champ-val{font-size:1.55rem;font-weight:700;font-variant-numeric:tabular-nums}
+  .champ-val{font-size:1.55rem;font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
   .champ-val.up{color:#34d399}.champ-val.down{color:#f87171}
+
+  /* Leaderboard */
+  .leaderboard{width:100%;max-width:880px;margin-bottom:22px;background:#fff;
+    border:1px solid var(--line);border-radius:18px;padding:20px 24px;
+    box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.05);
+    overflow-anchor:none}
+  .lb-title{font-size:.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+  .lb-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:4px;transition:background .15s}
+  .lb-row:hover{background:#f8fafc}
+  .lb-row.leader{background:linear-gradient(90deg,rgba(251,191,36,.08),rgba(251,191,36,.02))}
+  .lb-rank{font-weight:800;font-size:.9rem;color:var(--muted);min-width:24px;text-align:center}
+  .lb-row.leader .lb-rank{color:#d97706}
+  .lb-name{flex:1;font-weight:600;font-size:.9rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lb-build{font-size:.68rem;font-weight:600;padding:3px 8px;border-radius:999px;white-space:nowrap}
+  .lb-build.a{background:rgba(224,101,47,.10);color:var(--coral)}
+  .lb-build.b{background:rgba(37,99,235,.10);color:var(--blue)}
+  .lb-build.crypto{background:rgba(251,191,36,.10);color:#92400e}
+  .lb-pct{font-weight:700;font-size:.9rem;font-variant-numeric:tabular-nums;min-width:70px;text-align:right}
+  .lb-pct.up{color:var(--ok)}.lb-pct.down{color:var(--down)}
+  .lb-val{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums;min-width:80px;text-align:right}
+  .lb-empty{color:var(--muted);font-size:.85rem;text-align:center;padding:16px}
+
+  /* Build cards */
   .cards{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;width:100%;max-width:880px}
   .card{
     flex:1 1 360px;position:relative;overflow:hidden;
@@ -87,7 +116,26 @@
   .card.dark:hover{transform:translateY(-5px);border-color:rgba(96,165,250,.55);
     box-shadow:0 2px 4px rgba(0,0,0,.3),0 18px 44px rgba(37,99,235,.32)}
   footer{margin-top:34px;color:#94a3b8;font-size:.78rem;text-align:center}
-  @media(max-width:560px){.card p{min-height:0}.champ-val{font-size:1.3rem}.champ-stats{gap:22px}}
+
+  /* Mobile fixes */
+  @media(max-width:600px){
+    body{padding:20px 14px}
+    .champ{padding:18px 16px;min-height:100px}
+    .champ-name{font-size:1.15rem;margin-bottom:12px}
+    .champ-build{margin-left:0;display:block;margin-top:6px;width:fit-content}
+    .champ-val{font-size:1.2rem}
+    .champ-stats{gap:16px}
+    .leaderboard{padding:14px 12px}
+    .lb-row{padding:8px 8px;gap:8px}
+    .lb-name{font-size:.8rem}
+    .lb-val{display:none}
+    .card p{min-height:0}
+    .brand h1{font-size:1.2rem}
+  }
+  @media(max-width:380px){
+    .champ-stats{flex-direction:column;gap:10px}
+    .champ-val{font-size:1.1rem}
+  }
 </style>
 </head>
 <body>
@@ -96,23 +144,29 @@
   <div class="live"><span class="dot"></span> Both engines live · paper trading</div>
 
   <div class="champ">
-    <div class="champ-label">🏆 Top performer · live</div>
-    <div class="champ-name" id="champName">Loading live results…</div>
+    <div class="champ-label">&#127942; Top performer · live</div>
+    <div class="champ-name" id="champName">Loading live results&hellip;</div>
     <div class="champ-stats">
-      <div><span class="champ-cap">Account value</span><span class="champ-val" id="champValue">—</span></div>
-      <div><span class="champ-cap">P/L today</span><span class="champ-val" id="champDay">—</span></div>
-      <div><span class="champ-cap">P/L since Jun 25, 2026</span><span class="champ-val" id="champAll">—</span></div>
+      <div><span class="champ-cap">Account value</span><span class="champ-val" id="champValue">&mdash;</span></div>
+      <div><span class="champ-cap">P/L today</span><span class="champ-val" id="champDay">&mdash;</span></div>
+      <div><span class="champ-cap">% return since baseline</span><span class="champ-val" id="champAll">&mdash;</span></div>
     </div>
+  </div>
+
+  <div class="leaderboard">
+    <div class="lb-title">Cross-Build Leaderboard · ranked by % return</div>
+    <div id="lbRows"><div class="lb-empty">Loading leaderboard&hellip;</div></div>
   </div>
 
   <div class="cards">
     <a class="card coral" href="https://j2itamah.github.io/trading-dashboard/" target="_blank" rel="noopener">
       <span class="pill">Build A</span>
       <h2>Cursor&nbsp;+&nbsp;Claude</h2>
-      <p>Supabase-backed V2 pipeline. Claude scores the news; 10 books trade in parallel with auto-closing TP/SL exits.</p>
+      <p>Supabase-backed V2 pipeline. Claude scores the news; 20 books trade in parallel with auto-closing TP/SL exits + CryptoLab.</p>
       <div class="stack">
         <span class="tag">Cursor</span><span class="tag">Claude</span>
         <span class="tag">Supabase</span><span class="tag">n8n</span>
+        <span class="tag">CryptoLab</span>
       </div>
       <span class="go">Open dashboard <span class="arr">&rarr;</span></span>
     </a>
@@ -132,30 +186,160 @@
   <a href="cockpit/" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:880px;margin-top:22px;
      padding:16px 22px;border-radius:16px;text-decoration:none;background:#0b0f1a;color:#f8fafc;border:1px solid rgba(45,212,191,.28);
      box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 22px rgba(45,212,191,.10);font-weight:600;font-size:.95rem;transition:transform .18s,border-color .18s">
-    <span style="color:#2dd4bf;text-shadow:0 0 12px rgba(45,212,191,.5)">⬡</span>
+    <span style="color:#2dd4bf;text-shadow:0 0 12px rgba(45,212,191,.5)">&#x2B21;</span>
     Master System Health Cockpit
-    <span style="color:#94a3b8;font-weight:500;font-size:.84rem">— live pipeline map · both builds</span>
+    <span style="color:#94a3b8;font-weight:500;font-size:.84rem">&mdash; live pipeline map &middot; both builds</span>
     <span style="color:#2dd4bf">&rarr;</span>
   </a>
 
-  <footer>Paper trading only · not financial advice · top performer updates live</footer>
+  <footer>Paper trading only &middot; not financial advice &middot; BUILD 20260628-02 &middot; top performer updates live</footer>
 
 <script>
-  var AG='https://news-trading-system-production-b13f.up.railway.app/api/portfolio';
-  var CUR='https://j2itamah.github.io/trading-dashboard/v2-preview/data.v2.json';
-  var CUR_FALLBACK='https://j2itamah.github.io/trading-dashboard/data.v2.json';
-  var NAMES={news_only:'News Only',trend_gate:'Trend Gate',strict_trend_gate:'Strict Trend',mean_reversion:'Mean Reversion',full_confluence:'Full Confluence'};
-  function pretty(id){var e=/_vol$/.test(id)?'Volatility':/_fixed$/.test(id)?'Fixed':'';var b=id.replace(/_(vol|fixed)$/,'');return (NAMES[b]||b)+(e?' · '+e:'');}
-  function num(v){return (v==null||v==='')?NaN:+v;}
-  function money(n){return isNaN(n)?'—':'$'+Number(n).toLocaleString(undefined,{maximumFractionDigits:2});}
-  function pnlText(p,pct){if(isNaN(p))return '—';var s=p>=0?'+':'-';var pc=isNaN(pct)?'':' ('+(pct>=0?'+':'')+Number(pct).toFixed(2)+'%)';return s+'$'+Math.abs(p).toLocaleString(undefined,{maximumFractionDigits:2})+pc;}
-  function setPnl(id,p,pct){var e=document.getElementById(id);if(isNaN(p)){e.textContent='—';e.className='champ-val';return;}e.textContent=pnlText(p,pct);e.className='champ-val '+(p>=0?'up':'down');}
-  function agBest(){return fetch(AG+'?t='+Date.now()).then(function(r){return r.json();}).then(function(d){var b=null;var s=d.strategies||{};for(var id in s){var x=s[id];var p=num(x.pnl_percentage);if(b===null||p>b.pctAll)b={build:'OpenAI + Antigravity',name:pretty(id),value:num(x.total_value),pnlDay:num(x.daily_pnl),pctDay:num(x.daily_pnl_pct),pnlAll:num(x.total_pnl),pctAll:p};}return b;}).catch(function(){return null;});}
-  function curParse(d){var bk=d.best_book||d.book_metrics||d.books||(d.summary&&d.summary.books)||null;if(!bk)return null;if(!Array.isArray(bk)&&(bk.name||bk.book_key))bk=[bk];var arr=Array.isArray(bk)?bk:Object.values(bk);var b=null;for(var i=0;i<arr.length;i++){var s=arr[i];var pAll=num(s.pnl_pct!=null?s.pnl_pct:(s.pnl_percentage!=null?s.pnl_percentage:s.return_pct));if(isNaN(pAll))continue;if(b===null||pAll>b.pctAll)b={build:'Cursor + Claude',name:(s.name||s.book_key||s.strategy||'book'),value:num(s.equity!=null?s.equity:(s.total_value!=null?s.total_value:s.account_value)),pnlDay:num(s.daily_pnl!=null?s.daily_pnl:s.pnl_day),pctDay:num(s.daily_pnl_pct!=null?s.daily_pnl_pct:s.pnl_pct_day),pnlAll:num(s.pnl!=null?s.pnl:(s.total_pnl!=null?s.total_pnl:s.realized_pnl)),pctAll:pAll};}return b;}
-  function getJSON(u){return fetch(u+'?t='+Date.now()).then(function(r){return r.json();});}
-  function curBest(){return getJSON(CUR).then(function(d){var b=curParse(d);if(b)return b;return getJSON(CUR_FALLBACK).then(curParse);}).catch(function(){return getJSON(CUR_FALLBACK).then(curParse).catch(function(){return null;});});}
-  function refresh(){Promise.all([agBest(),curBest()]).then(function(res){var best=null;for(var i=0;i<res.length;i++){var x=res[i];if(x&&(best===null||x.pctAll>best.pctAll))best=x;}var nm=document.getElementById('champName');if(!best){nm.textContent='Waiting for live data…';return;}nm.innerHTML=best.name+' <span class="champ-build">'+best.build+'</span>';document.getElementById('champValue').textContent=money(best.value);setPnl('champDay',best.pnlDay,best.pctDay);setPnl('champAll',best.pnlAll,best.pctAll);});}
-  refresh();setInterval(refresh,60000);
+/* === BUILD 20260628-02 === cache-bust */
+var BUILD='20260628-02';
+var AG_URL='https://news-trading-system-production-b13f.up.railway.app/api/portfolio';
+var CUR_URL='https://j2itamah.github.io/trading-dashboard/data.v2.json';
+var CUR_FALLBACK='https://j2itamah.github.io/trading-dashboard/v2-preview/data.v2.json';
+
+var NAMES={news_only:'News Only',news_plus_ta:'Trend Gate',trend_strict:'Strict Trend',
+  mean_reversion:'Mean Reversion',full_confluence:'Full Confluence'};
+
+function num(v){return(v==null||v==='')?NaN:+v;}
+function money(n){return isNaN(n)?'—':'$'+Number(n).toLocaleString(undefined,{maximumFractionDigits:2});}
+function pnlFmt(p,pct){if(isNaN(p))return'—';var s=p>=0?'+':'-';var pc=isNaN(pct)?'':' ('+(pct>=0?'+':'')+Number(pct).toFixed(2)+'%)';return s+'$'+Math.abs(p).toLocaleString(undefined,{maximumFractionDigits:2})+pc;}
+function setPnl(id,p,pct){var e=document.getElementById(id);if(!e)return;if(isNaN(p)){e.textContent='—';e.className='champ-val';return;}e.textContent=pnlFmt(p,pct);e.className='champ-val '+(p>=0?'up':'down');}
+function stratLabel(key){
+  var parts=(key||'').replace(/^v2_/,'').split('_');
+  var pf=parts[0]||'';
+  if(parts.length>=2&&NAMES[parts[0]+'_'+parts[1]])pf=parts[0]+'_'+parts[1];
+  else if(parts.length>=2&&parts[1]==='reversion')pf=parts[0]+'_'+parts[1];
+  else if(parts.length>=2&&parts[1]==='confluence')pf=parts[0]+'_'+parts[1];
+  else if(parts.length>=2&&parts[1]==='strict')pf=parts[0]+'_'+parts[1];
+  else if(parts.length>=3&&parts[1]==='plus')pf=parts[0]+'_'+parts[1]+'_'+parts[2];
+  return NAMES[pf]||pf.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+}
+
+/* --- Load Build A (Cursor + Claude / data.v2.json) --- */
+function loadA(){
+  return fetch(CUR_URL+'?t='+Date.now()).then(function(r){
+    if(!r.ok)throw new Error('not ok');return r.json();
+  }).catch(function(){
+    return fetch(CUR_FALLBACK+'?t='+Date.now()).then(function(r){return r.json();});
+  }).then(function(d){
+    var results=[];
+    /* Parse book_metrics for prop books */
+    var bm=d.book_metrics||d.official_books||[];
+    for(var i=0;i<bm.length;i++){
+      var b=bm[i];
+      var eq=num(b.marked_equity);
+      var start=num(b.starting_balance||b.book_starting_balance||10000);
+      if(isNaN(eq)||eq===0)continue;
+      var pctAll=(eq-start)/start*100;
+      var todayPnl=num(b.today_marked_pnl_approx||b.today_realized_pnl||0);
+      var todayPct=start?todayPnl/start*100:0;
+      var portfolio=b.portfolio||'unknown';
+      var exitModel=b.target_model||'fixed';
+      var label=stratLabel(b.book_key||portfolio)+(exitModel==='volatility'?' ATR':' Fixed');
+      results.push({
+        build:'Build A',buildCls:'a',
+        name:label,
+        value:eq,
+        pnlDay:todayPnl,pctDay:todayPct,
+        pnlAll:eq-start,pctAll:pctAll
+      });
+    }
+    /* Parse CryptoLab as first-class contender */
+    var cl=d.cryptolab||{};
+    var acct=cl.account||{};
+    var clEq=num(acct.marked_equity||acct.free_cash);
+    var clStart=num(acct.starting_balance||100000);
+    var clTrades=cl.trades||[];
+    if(!isNaN(clEq)&&clEq>0){
+      var clPnl=clEq-clStart;
+      var clPct=clStart?clPnl/clStart*100:0;
+      var clRealized=clTrades.filter(function(t){return t.status==='CLOSED';}).reduce(function(s,t){return s+num(t.realized_pnl||0);},0);
+      var clUnrealized=clTrades.filter(function(t){return t.status==='OPEN';}).reduce(function(s,t){return s+num(t.unrealized_pnl||0);},0);
+      results.push({
+        build:'CryptoLab',buildCls:'crypto',
+        name:'CryptoLab ('+clTrades.length+' trades)',
+        value:clEq,
+        pnlDay:num(clRealized+clUnrealized)||0,pctDay:clStart?(clRealized+clUnrealized)/clStart*100:0,
+        pnlAll:clPnl,pctAll:clPct
+      });
+    }
+    return results;
+  }).catch(function(e){console.warn('loadA failed:',e);return[];});
+}
+
+/* --- Load Build B (OpenAI + Antigravity) --- */
+function loadB(){
+  return fetch(AG_URL+'?t='+Date.now()).then(function(r){
+    if(!r.ok)throw new Error('AG '+r.status);return r.json();
+  }).then(function(d){
+    var results=[];
+    var strats=d.strategies||{};
+    for(var id in strats){
+      if(!strats.hasOwnProperty(id))continue;
+      var x=strats[id];
+      var pctAll=num(x.pnl_percentage);
+      if(isNaN(pctAll))continue;
+      results.push({
+        build:'Build B',buildCls:'b',
+        name:(NAMES[id]||id.replace(/_/g,' '))+(x.target_model?' '+x.target_model:''),
+        value:num(x.total_value),
+        pnlDay:num(x.daily_pnl),pctDay:num(x.daily_pnl_pct),
+        pnlAll:num(x.total_pnl),pctAll:pctAll
+      });
+    }
+    return results;
+  }).catch(function(e){console.warn('loadB failed:',e);return[];});
+}
+
+/* --- Render leaderboard + top performer --- */
+function renderBoard(all){
+  /* Sort by % return descending */
+  all.sort(function(a,b){return(b.pctAll||0)-(a.pctAll||0);});
+  /* Top performer */
+  var best=all[0]||null;
+  var nm=document.getElementById('champName');
+  if(!best){
+    nm.textContent='Waiting for live data\u2026';
+    return;
+  }
+  nm.innerHTML=best.name+' <span class="champ-build">'+best.build+'</span>';
+  document.getElementById('champValue').textContent=money(best.value);
+  setPnl('champDay',best.pnlDay,best.pctDay);
+  var allEl=document.getElementById('champAll');
+  if(allEl){
+    allEl.textContent=(best.pctAll>=0?'+':'')+Number(best.pctAll).toFixed(2)+'%'+(isNaN(best.pnlAll)?'':' ('+pnlFmt(best.pnlAll,NaN)+')');
+    allEl.className='champ-val '+(best.pctAll>=0?'up':'down');
+  }
+  /* Leaderboard rows */
+  var el=document.getElementById('lbRows');
+  if(!el)return;
+  if(!all.length){el.innerHTML='<div class="lb-empty">No live data available</div>';return;}
+  var html='';
+  for(var i=0;i<all.length;i++){
+    var r=all[i];
+    var isLeader=i===0;
+    html+='<div class="lb-row'+(isLeader?' leader':'')+'">';
+    html+='<span class="lb-rank">'+(i+1)+'</span>';
+    html+='<span class="lb-name">'+r.name+'</span>';
+    html+='<span class="lb-build '+r.buildCls+'">'+r.build+'</span>';
+    html+='<span class="lb-pct '+(r.pctAll>=0?'up':'down')+'">'+(r.pctAll>=0?'+':'')+Number(r.pctAll).toFixed(2)+'%</span>';
+    html+='<span class="lb-val">'+money(r.value)+'</span>';
+    html+='</div>';
+  }
+  el.innerHTML=html;
+}
+
+function refresh(){
+  Promise.all([loadA(),loadB()]).then(function(res){
+    var all=res[0].concat(res[1]);
+    renderBoard(all);
+  });
+}
+refresh();setInterval(refresh,60000);
 </script>
 </body>
 </html>
