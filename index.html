@@ -17,7 +17,6 @@
     --ok:#16a34a; --down:#dc2626;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
   body{
     font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
     color:var(--txt);
@@ -27,6 +26,7 @@
       linear-gradient(160deg,var(--bg0),var(--bg1) 60%,var(--bg2));
     min-height:100vh;display:flex;flex-direction:column;align-items:center;
     padding:40px 24px;
+    -webkit-overflow-scrolling:touch;
   }
   .brand{display:flex;align-items:center;gap:10px;margin-bottom:8px}
   .mark{width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;
@@ -63,7 +63,7 @@
     padding:3px 9px;border-radius:999px;margin-left:8px;vertical-align:middle;white-space:nowrap;display:inline-block;margin-top:4px}
   .champ-stats{display:flex;gap:32px;flex-wrap:wrap}
   .champ-cap{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:#8a96ad;margin-bottom:3px}
-  .champ-val{font-size:1.55rem;font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+  .champ-val{font-size:1.55rem;font-weight:700;font-variant-numeric:tabular-nums;word-break:break-word;display:block;-webkit-text-size-adjust:100%}
   .champ-val.up{color:#34d399}.champ-val.down{color:#f87171}
 
   /* Leaderboard */
@@ -71,7 +71,11 @@
     border:1px solid var(--line);border-radius:18px;padding:20px 24px;
     box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.05);
     overflow-anchor:none}
-  .lb-title{font-size:.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+  .lb-title{font-size:.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:0;display:flex;align-items:center;justify-content:space-between}
+  .lb-toggle{font-size:.78rem;font-weight:600;color:var(--blue);background:none;border:1px solid var(--blue);
+    border-radius:8px;padding:5px 14px;cursor:pointer;transition:background .15s,color .15s}
+  .lb-toggle:hover{background:var(--blue);color:#fff}
+  .lb-rows-wrap{overflow:hidden;max-height:0;transition:max-height .35s ease;}
   .lb-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:4px;transition:background .15s}
   .lb-row:hover{background:#f8fafc}
   .lb-row.leader{background:linear-gradient(90deg,rgba(251,191,36,.08),rgba(251,191,36,.02))}
@@ -169,8 +173,12 @@
   </div>
 
   <div class="leaderboard">
-    <div class="lb-title">Cross-Build Leaderboard · ranked by % return</div>
-    <div id="lbRows"><div class="lb-empty">Loading leaderboard&hellip;</div></div>
+    <div class="lb-title">Cross-Build Leaderboard · ranked by % return
+      <button class="lb-toggle" id="lbToggle" onclick="var w=document.getElementById('lbRowsWrap');var open=w.style.maxHeight!=='0px'&&w.style.maxHeight;w.style.maxHeight=open?'0px':'2000px';this.textContent=open?'Show standings':'Hide standings'">Show standings</button>
+    </div>
+    <div class="lb-rows-wrap" id="lbRowsWrap">
+      <div id="lbRows" style="padding-top:12px"><div class="lb-empty">Loading leaderboard&hellip;</div></div>
+    </div>
   </div>
 
   <div class="cards">
@@ -207,11 +215,11 @@
     <span style="color:#2dd4bf">&rarr;</span>
   </a>
 
-  <footer>Paper trading only &middot; not financial advice &middot; BUILD 20260628-02 &middot; top performer updates live</footer>
+  <footer>Paper trading only &middot; not financial advice &middot; BUILD 20260628-03 &middot; top performer updates live</footer>
 
 <script>
 /* === BUILD 20260628-02 === cache-bust */
-var BUILD='20260628-02';
+var BUILD='20260628-03';
 var AG_URL='https://news-trading-system-production-b13f.up.railway.app/api/portfolio';
 var CUR_URL='https://j2itamah.github.io/trading-dashboard/data.v2.json';
 var CUR_FALLBACK='https://j2itamah.github.io/trading-dashboard/v2-preview/data.v2.json';
