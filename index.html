@@ -338,12 +338,21 @@ function renderBoard(all){
     return {count:0,allFlat:true,best:null,bestValid:false};
   }
   nm.innerHTML=best.name+' <span class="champ-build">'+best.build+'</span>';
-  document.getElementById('champValue').textContent=money(best.value);
-  setPnl('champDay',best.pnlDay,best.pctDay);
+  /* Bulletproof the three card values so they can NEVER render blank when a leader exists:
+     derive Account Value from initial+lifetime P&L if the raw value is missing, and treat a
+     missing daily/return figure as 0 rather than an em-dash. */
+  var initGuess=10000; // matrix/whitehouse books start at 10k; CryptoLab carries its own value
+  var bVal=!isNaN(num(best.value))?num(best.value):(initGuess+(num(best.pnlAll)||0));
+  var bDay=isNaN(num(best.pnlDay))?0:num(best.pnlDay);
+  var bDayPct=isNaN(num(best.pctDay))?0:num(best.pctDay);
+  var bAll=isNaN(num(best.pctAll))?0:num(best.pctAll);
+  var bAllUsd=isNaN(num(best.pnlAll))?(bVal-initGuess):num(best.pnlAll);
+  document.getElementById('champValue').textContent=money(bVal);
+  setPnl('champDay',bDay,bDayPct);
   var allEl=document.getElementById('champAll');
   if(allEl){
-    allEl.textContent=(best.pctAll>=0?'+':'')+Number(best.pctAll).toFixed(2)+'%'+(isNaN(best.pnlAll)?'':' ('+pnlFmt(best.pnlAll,NaN)+')');
-    allEl.className='champ-val '+(best.pctAll>=0?'up':'down');
+    allEl.textContent=(bAll>=0?'+':'')+Number(bAll).toFixed(2)+'%'+' ('+pnlFmt(bAllUsd,NaN)+')';
+    allEl.className='champ-val '+(bAll>=0?'up':'down');
   }
   /* Leaderboard rows \u2014 capped to the top 10 */
   var el=document.getElementById('lbRows');
