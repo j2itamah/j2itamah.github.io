@@ -272,7 +272,7 @@ function stMin(m,a,r){if(isNaN(m))return "red";if(m>=r)return "red";if(m>=a)retu
 function score(s){return s==="green"?100:s==="amber"?55:s==="red"?16:50;}
 function ageStr(m){if(isNaN(m))return "—";if(m<1)return Math.round(m*60)+"s";if(m<90)return (m<10?m.toFixed(1):Math.round(m))+"m";var h=m/60;if(h<48)return h.toFixed(1)+"h";return (h/24).toFixed(1)+"d";}
 function hms(){var d=new Date();return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+":"+("0"+d.getSeconds()).slice(-2);}
-function healthPct(nodes){var g=0,a=0;(nodes||[]).forEach(function(n){if(!n)return;if(n.status==="green")g++;else if(n.status==="amber")a++;});return nodes.length?Math.round((g+a*0.5)/nodes.length*100):0;}
+function healthPct(nodes){if(!nodes||!nodes.length)return 0;var g=0,a=0;nodes.forEach(function(n){if(!n)return;var s=n.status||"";if(s==="green")g++;else if(s==="amber")a++;});return Math.round((g+a*0.5)/nodes.length*100);}
 function parseTs(s){if(!s)return NaN;return (/[zZ]$|[+\-]\d\d:?\d\d$/.test(s))?Date.parse(s):Date.parse(s+"Z");} // AG sends UTC w/o 'Z'
 function fetchT(url,opts,ms){ms=ms||8000;var c=new AbortController();var to=setTimeout(function(){c.abort();},ms);
   var o=opts||{};o.signal=c.signal;o.cache="no-store";
@@ -437,16 +437,18 @@ function loadB(){
 /* ---------- events ---------- */
 function pushEv(b,cls,msg){var arr=S.events[b];arr.unshift({t:hms(),cls:cls,msg:msg});if(arr.length>60)arr.pop();}
 function diff(b,m){
+  if(!m)return;
+  var mo=(m.overall||"").toUpperCase();
   var p=S.prev[b];
-  if(!p)pushEv(b,"x","Connected to Build "+b+" · overall "+m.overall.toUpperCase());
+  if(!p)pushEv(b,"x","Connected to Build "+b+" · overall "+mo);
   else{
-    if(p.overall!==m.overall)pushEv(b,sev(m.overall),"Overall "+p.overall+" → "+m.overall.toUpperCase());
-    var pm={};p.nodes.forEach(function(n){pm[n.id]=n.status;});
-    m.nodes.forEach(function(n){if(pm[n.id]&&pm[n.id]!==n.status)pushEv(b,sev(n.status),n.label+": "+pm[n.id]+" → "+n.status);});
+    if(p.overall!==m.overall)pushEv(b,sev(m.overall||""),"Overall "+(p.overall||"")+" → "+mo);
+    var pm={};(p.nodes||[]).forEach(function(n){if(n)pm[n.id]=n.status||"";});
+    (m.nodes||[]).forEach(function(n){if(!n)return;var ns=n.status||"";if(pm[n.id]&&pm[n.id]!==ns)pushEv(b,sev(ns),(n.label||"")+": "+pm[n.id]+" → "+ns);});
     if(b==="B"&&!isNaN(m.opens)&&!isNaN(p.opens)&&m.opens>p.opens)pushEv(b,"x","X→CryptoLab: "+(m.opens-p.opens)+" new fill(s) (total "+m.opens+")");
     if(b==="B"&&!isNaN(m.rejects)&&!isNaN(p.rejects)&&m.rejects>p.rejects)pushEv(b,"a","X signals: "+(m.rejects-p.rejects)+" rejected (CryptoLab-only routing)");
   }
-  if(Date.now()-S.lastBeat[b]>30000){S.lastBeat[b]=Date.now();pushEv(b,m.overall==="green"?"g":sev(m.overall),"heartbeat · "+healthPct(m.nodes)+"% healthy");}
+  if(Date.now()-S.lastBeat[b]>30000){S.lastBeat[b]=Date.now();pushEv(b,(m.overall||"")==="green"?"g":sev(m.overall||""),"heartbeat · "+healthPct(m.nodes)+"% healthy");}
   S.prev[b]=m;
 }
 
@@ -457,12 +459,12 @@ function buildColumn(containerId,model){
   var box=$("#"+containerId);box.innerHTML="";
   if(!model||!model.online){box.innerHTML='<div class="gnode r"><div class="gn"><span class="gd"></span><span class="gnm">offline</span></div><div class="gst"><span>feed unreachable</span></div></div>';return;}
   COLNODES.forEach(function(cn,i){
-    var c=model.cols[cn.id]||{status:"",stats:[]};
-    var node=el("div","gnode "+colDot(c.status));
+    var c=(model&&model.cols?model.cols[cn.id]:null)||{status:"",stats:[]};
+    var node=el("div","gnode "+colDot(c.status||""));
     node.innerHTML='<div class="gn"><span class="gd"></span><span class="gnm">'+cn.label+'</span></div><div class="gst">'+statHtml(c.stats)+'</div>';
     node.onclick=(function(id){return function(){var nd=model.nodes.filter(function(x){return x.id===id;})[0];if(nd)openModal(nd);};})(cn.id);
     box.appendChild(node);
-    if(i<COLNODES.length-1){var nx=model.cols[COLNODES[i+1].id]||{};var p=el("div","vpipe "+colDot(nx.status));box.appendChild(p);}
+    if(i<COLNODES.length-1){var nx=(model&&model.cols?model.cols[COLNODES[i+1].id]:null)||{};var p=el("div","vpipe "+colDot(nx.status||""));box.appendChild(p);}
   });
 }
 function renderGlance(){
@@ -472,8 +474,8 @@ function renderGlance(){
   var nf=$("#newsFeed");nf.className="nf";
   $("#newsFeed .dot").className="dot gd "+colDot(nfState);
   $("#newsFeed .dot").style.cssText="width:8px;height:8px;border-radius:50%;margin-left:auto;background:"+(nfState==="green"?"var(--green)":nfState==="amber"?"var(--amber)":"var(--red)")+";box-shadow:0 0 7px currentColor";
-  var nfa=A&&A.newsFeed?'<span class="kv">A&nbsp;<b>'+A.newsFeed.stats[0][1]+'</b> rss</span>':'<span class="kv">A&nbsp;<b>—</b></span>';
-  var nfb=B&&B.newsFeed?'<span class="kv">B&nbsp;<b>'+B.newsFeed.stats[0][1]+'</b> scan</span>':'<span class="kv">B&nbsp;<b>—</b></span>';
+  var nfa=A&&A.newsFeed&&A.newsFeed.stats&&A.newsFeed.stats[0]?'<span class="kv">A&nbsp;<b>'+A.newsFeed.stats[0][1]+'</b> rss</span>':'<span class="kv">A&nbsp;<b>—</b></span>';
+  var nfb=B&&B.newsFeed&&B.newsFeed.stats&&B.newsFeed.stats[0]?'<span class="kv">B&nbsp;<b>'+B.newsFeed.stats[0][1]+'</b> scan</span>':'<span class="kv">B&nbsp;<b>—</b></span>';
   $("#nfSub").innerHTML=nfa+nfb;
   // branch pulse color
   $("#branchPulse").setAttribute("stroke",nfState==="red"?"#f87171":nfState==="amber"?"#fbbf24":"#2dd4bf");
@@ -556,7 +558,7 @@ function drawSpark(cv,data,color){
 }
 
 /* ---------- modal ---------- */
-function openModal(n){$("#mTitle").textContent=(n.ico?n.ico+" ":"")+n.label+" · "+n.status.toUpperCase();$("#mSum").textContent=n.summary||"";$("#mBody").innerHTML="";$("#mJson").style.display="";$("#mJson").textContent=JSON.stringify(n.signals||{},null,2);$("#modal").classList.add("open");}
+function openModal(n){if(!n)return;$("#mTitle").textContent=(n.ico?n.ico+" ":"")+(n.label||"")+" · "+(n.status||"unknown").toUpperCase();$("#mSum").textContent=n.summary||"";$("#mBody").innerHTML="";$("#mJson").style.display="";$("#mJson").textContent=JSON.stringify(n.signals||{},null,2);$("#modal").classList.add("open");}
 function showCryptolab(model){
   $("#mTitle").textContent="🧪 CryptoLab · open trades";
   $("#mJson").style.display="none";$("#mJson").textContent="";
@@ -620,7 +622,7 @@ $("#newsFeed").addEventListener("click",showNewsFeed);
 $("#newsFeed").classList.add("clickable");
 
 // TRA-89: build stamp + auto-refresh when a newer cockpit is deployed (defeats GitHub Pages HTML caching)
-var BUILD="2026-06-28T21:00Z-r4";
+var BUILD="2026-06-29T01:00Z-r5";
 $("#buildStamp").textContent="cockpit build "+BUILD;
 function checkVersion(){
   fetch("./index.html?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
