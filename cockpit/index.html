@@ -239,6 +239,7 @@
       <div class="panel col-4"><h3><span class="g"></span>Ingestion Latencies</h3><div id="latRows"></div></div>
       <div class="panel col-4 spark"><h3><span class="g"></span>Scanner Uptime <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· derived</span></h3><div class="sv mono" id="upVal">—</div><canvas id="upSpark" width="320" height="58"></canvas><div class="s mono" style="font-size:.58rem;color:var(--dim)" id="upSub"></div></div>
       <div class="panel col-12"><h3><span class="g"></span>Industry Verticals <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· TRA-136</span></h3><div id="vertScorecard" class="vsc"></div></div>
+      <div class="panel col-12"><h3><span class="g"></span>Confidence vs Success <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· TRA-94</span></h3><div id="confScorecard" class="csc"></div></div>
       <div class="panel col-12"><h3><span class="g"></span>Live Event Log</h3><div class="log" id="eventLog"></div></div>
     </div>
   </section>
@@ -591,6 +592,76 @@ function renderVerticals(rows){
   });
 }
 
+/* ---------- TRA-94: Confidence vs Success Scorecard ---------- */
+var CONF_URL="https://alxtkdebryheweqbqlts.supabase.co/rest/v1/v2_confidence_scorecard?select=*";
+var BAND_ORDER=["<0.6","0.6-0.7","0.7-0.8",">=0.8"];
+function loadConfidence(){
+  fetch(CONF_URL,{headers:{"apikey":CUR_KEY,"Authorization":"Bearer "+CUR_KEY}})
+  .then(function(r){return r.ok?r.json():[];})
+  .then(function(rows){renderConfidence(rows);})
+  .catch(function(){renderConfidence([]);});
+}
+function renderConfidence(rows){
+  var box=$("#confScorecard");if(!box)return;
+  if(!rows||!rows.length){box.innerHTML='<span style="color:var(--dim)">No confidence data yet</span>';return;}
+  var builds={};
+  rows.forEach(function(r){
+    var key=r.build+"|"+r.vertical;
+    if(!builds[key])builds[key]=[];
+    builds[key].push(r);
+  });
+  var html='<table style="width:100%;border-collapse:collapse;font-size:.72rem;line-height:1.5">';
+  html+='<thead><tr style="border-bottom:1px solid var(--border);color:var(--dim)">';
+  html+='<th style="text-align:left;padding:4px 8px">Build / Vertical</th>';
+  html+='<th style="text-align:left;padding:4px 6px">Band</th>';
+  html+='<th style="text-align:right;padding:4px 6px">Trades</th>';
+  html+='<th style="text-align:right;padding:4px 6px">W / L</th>';
+  html+='<th style="text-align:right;padding:4px 6px">Win%</th>';
+  html+='<th style="text-align:right;padding:4px 6px">Avg P&L</th>';
+  html+='<th style="text-align:right;padding:4px 6px">Total P&L</th>';
+  html+='<th style="padding:4px 6px;width:100px">Bar</th>';
+  html+='</tr></thead><tbody>';
+  var sortedKeys=Object.keys(builds).sort();
+  sortedKeys.forEach(function(key){
+    var parts=key.split("|");
+    var bld=parts[0],vert=parts[1];
+    var icon=bld==="cryptolab"?"🧪":"📊";
+    var bandMap={};
+    builds[key].forEach(function(r){bandMap[r.confidence_band]=r;});
+    var first=true;
+    BAND_ORDER.forEach(function(band){
+      var r=bandMap[band];
+      if(!r)return;
+      var pnl=parseFloat(r.total_pnl)||0;
+      var avg=parseFloat(r.avg_pnl)||0;
+      var wr=parseFloat(r.win_rate_pct)||0;
+      var pnlCls=pnl>=0?"color:var(--up)":"color:var(--down)";
+      var avgCls=avg>=0?"color:var(--up)":"color:var(--down)";
+      var maxBar=200;
+      var barW=Math.min(Math.abs(pnl)/5*1,100);
+      var barColor=pnl>=0?"var(--up)":"var(--down)";
+      html+='<tr style="border-bottom:1px solid var(--border)">';
+      if(first){
+        html+='<td style="padding:4px 8px;font-weight:600">'+icon+" "+bld+" · "+(VERT_ICONS[vert]||"")+" "+vert+'</td>';
+        first=false;
+      }else{
+        html+='<td style="padding:4px 8px"></td>';
+      }
+      html+='<td style="padding:4px 6px;font-family:\'Fira Code\',monospace;font-size:.68rem">'+band+'</td>';
+      html+='<td style="text-align:right;padding:4px 6px">'+r.trades+'</td>';
+      html+='<td style="text-align:right;padding:4px 6px">'+r.wins+'/'+r.losses+'</td>';
+      html+='<td style="text-align:right;padding:4px 6px;font-weight:600;'+(wr>=55?"color:var(--up)":wr<45?"color:var(--down)":"")+'">'+wr.toFixed(1)+'%</td>';
+      html+='<td style="text-align:right;padding:4px 6px;'+avgCls+'">'+money(avg)+'</td>';
+      html+='<td style="text-align:right;padding:4px 6px;font-weight:600;'+pnlCls+'">'+(pnl>=0?"+":"")+money(pnl)+'</td>';
+      html+='<td style="padding:4px 6px"><div style="height:10px;width:'+barW+'%;background:'+barColor+';border-radius:3px;min-width:2px"></div></td>';
+      html+='</tr>';
+    });
+  });
+  html+='</tbody></table>';
+  html+='<div style="margin-top:6px;font-size:.6rem;color:var(--dim)">Excludes test/cleanup trades (tra79_*, admin cleanups). CryptoLab confidence from raw_payload; matrix from v2_signals.</div>';
+  box.innerHTML=html;
+}
+
 /* ---------- modal ---------- */
 function openModal(n){if(!n)return;$("#mTitle").textContent=(n.ico?n.ico+" ":"")+(n.label||"")+" · "+(n.status||"unknown").toUpperCase();$("#mSum").textContent=n.summary||"";$("#mBody").innerHTML="";$("#mJson").style.display="";$("#mJson").textContent=JSON.stringify(n.signals||{},null,2);$("#modal").classList.add("open");}
 function showCryptolab(model){
@@ -656,7 +727,7 @@ $("#newsFeed").addEventListener("click",showNewsFeed);
 $("#newsFeed").classList.add("clickable");
 
 // TRA-89: build stamp + auto-refresh when a newer cockpit is deployed (defeats GitHub Pages HTML caching)
-var BUILD="2026-06-29T04:30Z-r8";
+var BUILD="2026-06-29T05:15Z-r9";
 $("#buildStamp").textContent="cockpit build "+BUILD;
 function checkVersion(){
   fetch("./index.html?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
@@ -667,7 +738,7 @@ function checkVersion(){
 setInterval(checkVersion,60000);
 
 $("#pollSec").textContent=Math.round(POLL_MS/1000);
-poll();setInterval(poll,POLL_MS);setInterval(setLive,1000);loadVerticals();setInterval(loadVerticals,30000);
+poll();setInterval(poll,POLL_MS);setInterval(setLive,1000);loadVerticals();setInterval(loadVerticals,30000);loadConfidence();setInterval(loadConfidence,30000);
 </script>
 </body>
 </html>
