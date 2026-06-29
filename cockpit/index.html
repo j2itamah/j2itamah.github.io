@@ -565,7 +565,7 @@ function drawSpark(cv,data,color){
 
 /* ---------- TRA-136: Industry Verticals Scorecard ---------- */
 var VERT_URL="https://alxtkdebryheweqbqlts.supabase.co/rest/v1/v2_vertical_scorecard?select=*";
-var VERT_ICONS={crypto:"🪙",equities:"📈",ai:"🤖",quantum:"⚛️",political:"🏛️"};
+var VERT_ICONS={crypto:"🪙",equities:"📈",ai:"🤖",quantum:"⚛️",political:"🏛️",tech:"💻"};
 function loadVerticals(){
   fetch(VERT_URL,{headers:{"apikey":CUR_KEY,"Authorization":"Bearer "+CUR_KEY}})
   .then(function(r){return r.ok?r.json():[];})
@@ -656,7 +656,7 @@ $("#newsFeed").addEventListener("click",showNewsFeed);
 $("#newsFeed").classList.add("clickable");
 
 // TRA-89: build stamp + auto-refresh when a newer cockpit is deployed (defeats GitHub Pages HTML caching)
-var BUILD="2026-06-29T02:45Z-r7";
+var BUILD="2026-06-29T04:30Z-r8";
 $("#buildStamp").textContent="cockpit build "+BUILD;
 function checkVersion(){
   fetch("./index.html?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
