@@ -300,14 +300,14 @@ function loadA(){
     if(!d)d={};
     var pipe={};(d.pipeline||[]).forEach(function(n){pipe[n.id]=n;});
     var nodes=DEEP_NODES.map(function(n){var p=pipe[n.id]||{};return {id:n.id,label:n.label,ico:n.ico,status:p.status||"amber",summary:p.summary||"",signals:p.signals||{}};});
-    var acc=d.accounting||{},lp=d.loop||{},sc=d.scanner||{},tg=d.telegram||{},lt=d.last_trade||{},mk=d.market||{};
-    if(!mk.in_us_cash_session||(num(lp.open_intents)===0&&num((acc.matrix_open_count||0))===0)){nodes.forEach(function(n){if((n.id==="execute"||n.id==="size")&&n.status==="red")n.status="amber";});}
+    var acc=d.accounting||{},lp=d.loop||{},sc=d.scanner||{},tg=d.telegram||{},lt=d.last_trade||{},mk=(d.market||{});
+    var mktClosed=!mk||!mk.in_us_cash_session;
+    var noOpens=num(lp.open_intents)===0&&num(acc.matrix_open_count||0)===0;
+    if(mktClosed||noOpens){nodes.forEach(function(n){if((n.id==="execute"||n.id==="size")&&n.status==="red")n.status="amber";});}
     var nf=(pipe.news_feed||{}).signals||{},dl=(pipe.dashboard||{}).signals||{};
     var st=function(id){return (pipe[id]||{}).status||"amber";};
     var newsFeed={status:st("news_feed"),stats:[["rss",ageStr(num(nf.rss_age_minutes))],["pending",fmt(nf.rss_pending)]]};
-    var mktOpen=!!mk.in_us_cash_session;
-    var noMatrixOpens=num(lp.open_intents)===0&&num((acc.matrix_open_count||0))===0;
-    var offCap=function(s){return ((!mktOpen||noMatrixOpens)&&s==="red")?"amber":s;};
+    var offCap=function(s){return ((mktClosed||noOpens)&&s==="red")?"amber":s;};
     var cols={
       scanner:{status:st("scanner"),stats:[["scan",ageStr(num(sc.scan_age_minutes))],["today",fmt(sc.headlines_today)]]},
       assess_gate:{status:st("assess_gate"),stats:[["signals",fmt(sc.signals_today)]]},
