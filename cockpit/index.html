@@ -651,7 +651,7 @@ function renderConfidence(rows){
       html+='<td style="text-align:right;padding:4px 6px">'+r.trades+'</td>';
       html+='<td style="text-align:right;padding:4px 6px">'+r.wins+'/'+r.losses+'</td>';
       html+='<td style="text-align:right;padding:4px 6px;font-weight:600;'+(wr>=55?"color:var(--up)":wr<45?"color:var(--down)":"")+'">'+wr.toFixed(1)+'%</td>';
-      html+='<td style="text-align:right;padding:4px 6px;'+avgCls+'">'+money(avg)+'</td>';
+      html+='<td style="text-align:right;padding:4px 6px;'+avgCls+'">'+(avg>=0?"+":"")+money(avg)+'</td>';
       html+='<td style="text-align:right;padding:4px 6px;font-weight:600;'+pnlCls+'">'+(pnl>=0?"+":"")+money(pnl)+'</td>';
       html+='<td style="padding:4px 6px"><div style="height:10px;width:'+barW+'%;background:'+barColor+';border-radius:3px;min-width:2px"></div></td>';
       html+='</tr>';
