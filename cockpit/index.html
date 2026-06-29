@@ -139,6 +139,11 @@
   .lat .f{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--teal),#22d3ee);transition:width .8s}
   .lat .f.a{background:linear-gradient(90deg,var(--amber),#fcd34d)}.lat .f.r{background:linear-gradient(90deg,#dc2626,var(--red))}
   .lat .v{width:54px;flex:none;text-align:right;color:var(--text)}
+  .vsc{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--fm);font-size:.68rem}
+  .vsc .vc{flex:1;min-width:140px;max-width:220px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px}
+  .vsc .vc h4{margin:0 0 6px;font-size:.72rem;letter-spacing:.03em;text-transform:uppercase;color:var(--teal)}
+  .vsc .vc .vr{display:flex;justify-content:space-between;padding:2px 0;color:var(--muted)}.vsc .vc .vr b{color:var(--text)}
+  .vsc .vc .vr.up b{color:var(--teal)}.vsc .vc .vr.down b{color:var(--red)}
   .log{height:230px;overflow-y:auto;font-family:var(--fm);font-size:.65rem;scrollbar-width:thin}
   .log::-webkit-scrollbar{width:5px}.log::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:9px}
   .ev{display:flex;gap:9px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.035);animation:fade .4s}
@@ -233,6 +238,7 @@
       <div class="panel col-4"><h3><span class="g"></span>Gate Decisions <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· derived</span></h3><div id="gateBars"></div></div>
       <div class="panel col-4"><h3><span class="g"></span>Ingestion Latencies</h3><div id="latRows"></div></div>
       <div class="panel col-4 spark"><h3><span class="g"></span>Scanner Uptime <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· derived</span></h3><div class="sv mono" id="upVal">—</div><canvas id="upSpark" width="320" height="58"></canvas><div class="s mono" style="font-size:.58rem;color:var(--dim)" id="upSub"></div></div>
+      <div class="panel col-12"><h3><span class="g"></span>Industry Verticals <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· TRA-136</span></h3><div id="vertScorecard" class="vsc"></div></div>
       <div class="panel col-12"><h3><span class="g"></span>Live Event Log</h3><div class="log" id="eventLog"></div></div>
     </div>
   </section>
@@ -557,6 +563,34 @@ function drawSpark(cv,data,color){
   ctx.beginPath();ctx.arc(X(data.length-1),Y(data[data.length-1]),2.4,0,7);ctx.fillStyle=color;ctx.fill();
 }
 
+/* ---------- TRA-136: Industry Verticals Scorecard ---------- */
+var VERT_URL="https://alxtkdebryheweqbqlts.supabase.co/rest/v1/v2_vertical_scorecard?select=*";
+var VERT_ICONS={crypto:"🪙",equities:"📈",ai:"🤖",quantum:"⚛️",political:"🏛️"};
+function loadVerticals(){
+  fetch(VERT_URL,{headers:{"apikey":CUR_KEY,"Authorization":"Bearer "+CUR_KEY}})
+  .then(function(r){return r.ok?r.json():[];})
+  .then(function(rows){renderVerticals(rows);})
+  .catch(function(){renderVerticals([]);});
+}
+function renderVerticals(rows){
+  var box=$("#vertScorecard");if(!box)return;
+  if(!rows||!rows.length){box.innerHTML='<span style="color:var(--dim)">No vertical data yet</span>';return;}
+  box.innerHTML="";
+  rows.forEach(function(r){
+    var v=r.industry_vertical||"unknown";
+    var pnl=parseFloat(r.realized_pnl)||0;var upnl=parseFloat(r.unrealized_pnl)||0;
+    var cls=pnl>=0?"up":"down";
+    var d=el("div","vc");
+    d.innerHTML='<h4>'+(VERT_ICONS[v]||"📊")+" "+v+'</h4>'+
+      '<div class="vr">Open<b>'+fmt(r.open_positions)+'</b></div>'+
+      '<div class="vr">Closed<b>'+fmt(r.closed_trades)+'</b></div>'+
+      '<div class="vr '+cls+'">Realized<b>'+(pnl>=0?"+":"")+money(pnl)+'</b></div>'+
+      '<div class="vr '+(upnl>=0?"up":"down")+'">Unrealized<b>'+(upnl>=0?"+":"")+money(upnl)+'</b></div>'+
+      '<div class="vr">Win Rate<b>'+fmt(r.win_rate_pct)+'%</b></div>';
+    box.appendChild(d);
+  });
+}
+
 /* ---------- modal ---------- */
 function openModal(n){if(!n)return;$("#mTitle").textContent=(n.ico?n.ico+" ":"")+(n.label||"")+" · "+(n.status||"unknown").toUpperCase();$("#mSum").textContent=n.summary||"";$("#mBody").innerHTML="";$("#mJson").style.display="";$("#mJson").textContent=JSON.stringify(n.signals||{},null,2);$("#modal").classList.add("open");}
 function showCryptolab(model){
@@ -622,7 +656,7 @@ $("#newsFeed").addEventListener("click",showNewsFeed);
 $("#newsFeed").classList.add("clickable");
 
 // TRA-89: build stamp + auto-refresh when a newer cockpit is deployed (defeats GitHub Pages HTML caching)
-var BUILD="2026-06-29T01:00Z-r5";
+var BUILD="2026-06-29T02:15Z-r6";
 $("#buildStamp").textContent="cockpit build "+BUILD;
 function checkVersion(){
   fetch("./index.html?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
@@ -633,7 +667,7 @@ function checkVersion(){
 setInterval(checkVersion,60000);
 
 $("#pollSec").textContent=Math.round(POLL_MS/1000);
-poll();setInterval(poll,POLL_MS);setInterval(setLive,1000);
+poll();setInterval(poll,POLL_MS);setInterval(setLive,1000);loadVerticals();setInterval(loadVerticals,30000);
 </script>
 </body>
 </html>
