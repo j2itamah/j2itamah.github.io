@@ -240,6 +240,7 @@
       <div class="panel col-4 spark"><h3><span class="g"></span>Scanner Uptime <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· derived</span></h3><div class="sv mono" id="upVal">—</div><canvas id="upSpark" width="320" height="58"></canvas><div class="s mono" style="font-size:.58rem;color:var(--dim)" id="upSub"></div></div>
       <div class="panel col-12"><h3><span class="g"></span>Industry Verticals <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· TRA-136</span></h3><div id="vertScorecard" class="vsc"></div></div>
       <div class="panel col-12"><h3><span class="g"></span>Confidence vs Success <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· TRA-94</span></h3><div id="confScorecard" class="csc"></div></div>
+      <div class="panel col-12"><h3><span class="g"></span>Edge-Proof &amp; Prop-Firm Readiness <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· TRA-138</span></h3><div id="edgeProofPanel" class="vsc"></div></div>
       <div class="panel col-12"><h3><span class="g"></span>Live Event Log</h3><div class="log" id="eventLog"></div></div>
     </div>
   </section>
@@ -722,6 +723,95 @@ function showNewsFeed(){
 $("#modalX").onclick=function(){$("#modal").classList.remove("open");};
 $("#modal").onclick=function(e){if(e.target===this)this.classList.remove("open");};
 
+/* ---------- TRA-138: Edge-Proof & Prop-Firm Readiness ---------- */
+var EDGE_URL="https://alxtkdebryheweqbqlts.supabase.co/rest/v1/v2_edge_proof_metrics?select=*&order=sample_size.desc";
+var EDGE_VERT_URL="https://alxtkdebryheweqbqlts.supabase.co/rest/v1/v2_edge_proof_by_vertical?select=*&order=sample_size.desc";
+function loadEdgeProof(){
+  Promise.all([
+    fetch(EDGE_URL,{headers:{"apikey":CUR_KEY,"Authorization":"Bearer "+CUR_KEY}}).then(function(r){return r.ok?r.json():[];}),
+    fetch(EDGE_VERT_URL,{headers:{"apikey":CUR_KEY,"Authorization":"Bearer "+CUR_KEY}}).then(function(r){return r.ok?r.json():[];})
+  ]).then(function(res){renderEdgeProof(res[0],res[1]);}).catch(function(){renderEdgeProof([],[]);});
+}
+function renderEdgeProof(books,verts){
+  var box=$("#edgeProofPanel");if(!box)return;
+  if((!books||!books.length)&&(!verts||!verts.length)){box.innerHTML='<span style="color:var(--dim)">No edge-proof data yet</span>';return;}
+  var html='';
+  // Vertical summary cards
+  if(verts&&verts.length){
+    html+='<div style="margin-bottom:16px"><div style="font-weight:700;font-size:.82rem;margin-bottom:8px">📊 Vertical Summary</div>';
+    html+='<div style="display:flex;gap:12px;flex-wrap:wrap">';
+    verts.forEach(function(v){
+      var ico=(VERT_ICONS[v.vertical]||"📊");
+      var pf=v.profit_factor!==null?parseFloat(v.profit_factor):null;
+      var wr=v.win_rate_pct!==null?parseFloat(v.win_rate_pct):0;
+      var ne=parseFloat(v.net_expectancy)||0;
+      var dd=parseFloat(v.max_drawdown)||0;
+      html+='<div style="flex:1;min-width:220px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px">';
+      html+='<div style="font-weight:700;font-size:.78rem;margin-bottom:6px">'+ico+' '+v.vertical.charAt(0).toUpperCase()+v.vertical.slice(1)+'</div>';
+      html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:.68rem">';
+      html+='<span style="color:var(--dim)">Trades</span><span style="text-align:right;font-weight:600">'+v.sample_size+'</span>';
+      html+='<span style="color:var(--dim)">Win Rate</span><span style="text-align:right;font-weight:600;'+(wr>=50?'color:var(--up)':'color:var(--down)')+'">'+wr.toFixed(1)+'%</span>';
+      html+='<span style="color:var(--dim)">Realized</span><span style="text-align:right;font-weight:600;'+(parseFloat(v.total_realized_pnl)>=0?'color:var(--up)':'color:var(--down)');
+      html+='">'+(parseFloat(v.total_realized_pnl)>=0?'+':'')+money(v.total_realized_pnl)+'</span>';
+      html+='<span style="color:var(--dim)">Profit Factor</span><span style="text-align:right;font-weight:600;'+(pf!==null&&pf>1?'color:var(--up)':pf!==null?'color:var(--down)':'')+'">'+((pf!==null)?pf.toFixed(2):'—')+'</span>';
+      html+='<span style="color:var(--dim)">Expectancy</span><span style="text-align:right;font-weight:600;'+(ne>=0?'color:var(--up)':'color:var(--down)')+'">'+money(ne)+'/trade</span>';
+      html+='<span style="color:var(--dim)">Net-of-Cost</span><span style="text-align:right;font-weight:600;'+(ne>=0?'color:var(--up)':'color:var(--down)')+'">'+money(ne)+'/trade</span>';
+      html+='<span style="color:var(--dim)">Max DD</span><span style="text-align:right;font-weight:600">'+money(dd)+'</span>';
+      html+='</div></div>';
+    });
+    html+='</div></div>';
+  }
+  // Book-level table
+  if(books&&books.length){
+    var edgeCount=books.filter(function(b){return b.edge_proven;}).length;
+    html+='<div style="font-weight:700;font-size:.82rem;margin-bottom:8px">📚 Per-Book Metrics <span style="font-weight:400;color:var(--dim);font-size:.7rem">('+books.length+' book×vertical combos, '+edgeCount+' edge-proven)</span></div>';
+    html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.68rem;line-height:1.4">';
+    html+='<thead><tr style="border-bottom:1px solid var(--border);color:var(--dim)">';
+    html+='<th style="text-align:left;padding:4px 6px">Book</th>';
+    html+='<th style="text-align:left;padding:4px 6px">Vert</th>';
+    html+='<th style="text-align:right;padding:4px 6px">N</th>';
+    html+='<th style="text-align:right;padding:4px 6px">Win%</th>';
+    html+='<th style="text-align:right;padding:4px 6px">P&L</th>';
+    html+='<th style="text-align:right;padding:4px 6px">PF</th>';
+    html+='<th style="text-align:right;padding:4px 6px">Expect</th>';
+    html+='<th style="text-align:right;padding:4px 6px">Net Exp</th>';
+    html+='<th style="text-align:right;padding:4px 6px">Max DD</th>';
+    html+='<th style="text-align:center;padding:4px 6px">Prop</th>';
+    html+='<th style="text-align:center;padding:4px 6px">Edge</th>';
+    html+='</tr></thead><tbody>';
+    books.forEach(function(b){
+      var pf=b.profit_factor!==null?parseFloat(b.profit_factor):null;
+      var wr=b.win_rate_pct!==null?parseFloat(b.win_rate_pct):null;
+      var ne=parseFloat(b.net_expectancy)||0;
+      var exp=parseFloat(b.expectancy)||0;
+      var dd=parseFloat(b.max_drawdown)||0;
+      var ddp=parseFloat(b.max_drawdown_pct)||0;
+      var pnl=parseFloat(b.total_realized_pnl)||0;
+      var pr=b.prop_readiness||'amber';
+      var prDot=pr==='green'?'🟢':pr==='amber'?'🟡':'🔴';
+      var edgeBadge=b.edge_proven?'<span style="background:#22c55e;color:#000;padding:1px 6px;border-radius:4px;font-weight:700;font-size:.6rem">EDGE</span>':'<span style="color:var(--dim);font-size:.6rem">—</span>';
+      var shortBook=b.book_key.replace(/^v2_/,'').replace(/_clean_\d+.*$/,'').replace(/_expansion_\d+.*$/,'').replace(/_matrix20.*$/,'');
+      if(shortBook.length>32) shortBook=shortBook.substring(0,30)+'…';
+      html+='<tr style="border-bottom:1px solid var(--border);'+(b.edge_proven?'background:rgba(34,197,94,.08)':'')+'">';
+      html+='<td style="padding:4px 6px;font-family:\'Fira Code\',monospace;font-size:.62rem" title="'+b.book_key+'">'+shortBook+'</td>';
+      html+='<td style="padding:4px 6px">'+(VERT_ICONS[b.vertical]||"")+" "+b.vertical+'</td>';
+      html+='<td style="text-align:right;padding:4px 6px;font-weight:600">'+b.sample_size+'</td>';
+      html+='<td style="text-align:right;padding:4px 6px;'+(wr!==null&&wr>=50?'color:var(--up)':wr!==null?'color:var(--down)':'')+'">'+(wr!==null?wr.toFixed(1)+'%':'—')+'</td>';
+      html+='<td style="text-align:right;padding:4px 6px;font-weight:600;'+(pnl>=0?'color:var(--up)':'color:var(--down)')+'">'+(pnl>=0?'+':'')+money(pnl)+'</td>';
+      html+='<td style="text-align:right;padding:4px 6px;'+(pf!==null&&pf>1?'color:var(--up)':pf!==null?'color:var(--down)':'')+'">'+(pf!==null?pf.toFixed(2):'—')+'</td>';
+      html+='<td style="text-align:right;padding:4px 6px;'+(exp>=0?'color:var(--up)':'color:var(--down)')+'">'+money(exp)+'</td>';
+      html+='<td style="text-align:right;padding:4px 6px;font-weight:600;'+(ne>=0?'color:var(--up)':'color:var(--down)')+'">'+money(ne)+'</td>';
+      html+='<td style="text-align:right;padding:4px 6px">'+money(dd)+' ('+ddp.toFixed(1)+'%)</td>';
+      html+='<td style="text-align:center;padding:4px 6px">'+prDot+'</td>';
+      html+='<td style="text-align:center;padding:4px 6px">'+edgeBadge+'</td>';
+      html+='</tr>';
+    });
+    html+='</tbody></table></div>';
+    html+='<div style="margin-top:8px;font-size:.6rem;color:var(--dim)">Edge = PF&gt;1.3 + positive net-of-cost expectancy + N≥30 + drawdown&lt;10%. Prop: daily loss&lt;5%, total DD&lt;10%, no single day&gt;40% of profit. Costs: 0.3% round-trip (0.1% fee + 0.05% slippage/side).</div>';
+  }
+  box.innerHTML=html;
+}
+
 /* ---------- live strip ---------- */
 function setLive(){
   var okA=S.lastOk.A,okB=S.lastOk.B,strip=$("#liveStrip"),txt=$("#liveText");
@@ -756,7 +846,7 @@ $("#newsFeed").addEventListener("click",showNewsFeed);
 $("#newsFeed").classList.add("clickable");
 
 // TRA-89: build stamp + auto-refresh when a newer cockpit is deployed (defeats GitHub Pages HTML caching)
-var BUILD="2026-06-29T05:15Z-r9";
+var BUILD="2026-06-29T06:00Z-r10";
 $("#buildStamp").textContent="cockpit build "+BUILD;
 function checkVersion(){
   fetch("./index.html?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
@@ -767,7 +857,7 @@ function checkVersion(){
 setInterval(checkVersion,60000);
 
 $("#pollSec").textContent=Math.round(POLL_MS/1000);
-poll();setInterval(poll,POLL_MS);setInterval(setLive,1000);loadVerticals();setInterval(loadVerticals,30000);loadConfidence();setInterval(loadConfidence,30000);
+poll();setInterval(poll,POLL_MS);setInterval(setLive,1000);loadVerticals();setInterval(loadVerticals,30000);loadConfidence();setInterval(loadConfidence,30000);loadEdgeProof();setInterval(loadEdgeProof,30000);
 </script>
 </body>
 </html>
