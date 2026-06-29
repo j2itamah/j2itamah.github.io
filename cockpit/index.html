@@ -326,7 +326,7 @@ function loadA(){
       {c:"US session",v:mk.in_us_cash_session?"OPEN":"closed",sev:mk.in_us_cash_session?"g":"a"}
     ];
     var lats=[{n:"RSS feed",m:num(nf.rss_age_minutes),a:10,r:30},{n:"Scanner",m:num(sc.scan_age_minutes),a:10,r:30},
-      {n:"Marks",m:num(lp.mark_age_minutes),a:mktOpen?2:480,r:mktOpen?5:1440},{n:"Intents",m:num(lp.intent_age_minutes),a:mktOpen?15:480,r:mktOpen?30:1440},{n:"Publisher",m:num(dl.publisher_age_minutes),a:25,r:60}];
+      {n:"Marks",m:num(lp.mark_age_minutes),a:mktOpen?7:480,r:mktOpen?12:1440},{n:"Intents",m:num(lp.intent_age_minutes),a:mktOpen?15:480,r:mktOpen?30:1440},{n:"Publisher",m:num(dl.publisher_age_minutes),a:25,r:60}];
     var gates=[{n:"freshness",v:score(st("news_feed"))},{n:"relevance",v:score(st("assess_gate"))},{n:"sentiment",v:score(st("execute"))},{n:"duplicate",v:score(st("scanner"))}];
     /* Wire data.v2.json: equity, CryptoLab, positions, leader */
     var eq=NaN,eqCurve=[],eqSub="Connecting…",clab=null,clpos=[],clAvail=false,leader=null,opens=NaN;
