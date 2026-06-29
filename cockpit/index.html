@@ -311,7 +311,7 @@ function loadA(){
       scanner:{status:st("scanner"),stats:[["scan",ageStr(num(sc.scan_age_minutes))],["today",fmt(sc.headlines_today)]]},
       assess_gate:{status:st("assess_gate"),stats:[["signals",fmt(sc.signals_today)]]},
       size:{status:offCap(st("size")),stats:[["intents",fmt(lp.open_intents)]]},
-      execute:{status:offCap(st("execute")),stats:[["open",fmt(lp.open_intents)],["mark",ageStr(num(lp.mark_age_minutes))]]},
+      execute:(function(){var es=offCap(st("execute"));var markMin=num(lp.mark_age_minutes);var hasOpens=num(lp.open_intents)>0||num(acc.matrix_open_count||0)>0;var markThresh=mktOpen?30:1440;if(hasOpens&&markMin>markThresh){es="red";}return {status:es,stats:[["open",fmt(lp.open_intents)],["mark",ageStr(markMin)]]};})(),
       ledger:{status:st("ledger"),stats:[["drift",fmt(acc.books_with_drift)],["viol",fmt(acc.invariant_violations_24h)]]},
       dashboard:(function(){var ds=st("dashboard");if(ds==="amber"&&dv)ds="green";if(ds==="amber"&&!dv)ds="red";var pubAge=num(dl.publisher_age_minutes);return {status:ds,stats:[["pub",ageStr(pubAge)],["feed",dv?"live":"down"]]};})()
     };
