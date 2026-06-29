@@ -301,18 +301,14 @@ function loadA(){
     var pipe={};(d.pipeline||[]).forEach(function(n){pipe[n.id]=n;});
     var nodes=DEEP_NODES.map(function(n){var p=pipe[n.id]||{};return {id:n.id,label:n.label,ico:n.ico,status:p.status||"amber",summary:p.summary||"",signals:p.signals||{}};});
     var acc=d.accounting||{},lp=d.loop||{},sc=d.scanner||{},tg=d.telegram||{},lt=d.last_trade||{},mk=(d.market||{});
-    var mktClosed=!mk||!mk.in_us_cash_session;
-    var noOpens=num(lp.open_intents)===0&&num(acc.matrix_open_count||0)===0;
-    if(mktClosed||noOpens){nodes.forEach(function(n){if((n.id==="execute"||n.id==="size")&&n.status==="red")n.status="amber";});}
     var nf=(pipe.news_feed||{}).signals||{},dl=(pipe.dashboard||{}).signals||{};
     var st=function(id){return (pipe[id]||{}).status||"amber";};
     var newsFeed={status:st("news_feed"),stats:[["rss",ageStr(num(nf.rss_age_minutes))],["pending",fmt(nf.rss_pending)]]};
-    var offCap=function(s){return ((mktClosed||noOpens)&&s==="red")?"amber":s;};
     var cols={
       scanner:{status:st("scanner"),stats:[["scan",ageStr(num(sc.scan_age_minutes))],["today",fmt(sc.headlines_today)]]},
       assess_gate:{status:st("assess_gate"),stats:[["signals",fmt(sc.signals_today)]]},
-      size:{status:offCap(st("size")),stats:[["intents",fmt(lp.open_intents)]]},
-      execute:{status:offCap(st("execute")),stats:[["open",fmt(lp.open_intents)],["mark",ageStr(num(lp.mark_age_minutes))]]},
+      size:{status:st("size"),stats:[["intents",fmt(lp.open_intents)]]},
+      execute:{status:st("execute"),stats:[["open",fmt(lp.open_intents)],["mark",ageStr(num(lp.mark_age_minutes))]]},
       ledger:{status:st("ledger"),stats:[["drift",fmt(acc.books_with_drift)],["viol",fmt(acc.invariant_violations_24h)]]},
       dashboard:(function(){var ds=st("dashboard");if(ds==="amber"&&dv)ds="green";if(ds==="amber"&&!dv)ds="red";var pubAge=num(dl.publisher_age_minutes);return {status:ds,stats:[["pub",ageStr(pubAge)],["feed",dv?"live":"down"]]};})()
     };
@@ -327,7 +323,7 @@ function loadA(){
       {c:"US session",v:mk.in_us_cash_session?"OPEN":"closed",sev:mk.in_us_cash_session?"g":"a"}
     ];
     var lats=[{n:"RSS feed",m:num(nf.rss_age_minutes),a:10,r:30},{n:"Scanner",m:num(sc.scan_age_minutes),a:10,r:30},
-      {n:"Marks",m:num(lp.mark_age_minutes),a:mktOpen?2:480,r:mktOpen?5:1440},{n:"Intents",m:num(lp.intent_age_minutes),a:mktOpen?15:480,r:mktOpen?30:1440},{n:"Publisher",m:num(dl.publisher_age_minutes),a:25,r:60}];
+      {n:"Marks",m:num(lp.mark_age_minutes),a:2,r:5},{n:"Intents",m:num(lp.intent_age_minutes),a:15,r:30},{n:"Publisher",m:num(dl.publisher_age_minutes),a:25,r:60}];
     var gates=[{n:"freshness",v:score(st("news_feed"))},{n:"relevance",v:score(st("assess_gate"))},{n:"sentiment",v:score(st("execute"))},{n:"duplicate",v:score(st("scanner"))}];
     /* Wire data.v2.json: equity, CryptoLab, positions, leader */
     var eq=NaN,eqCurve=[],eqSub="Connecting…",clab=null,clpos=[],clAvail=false,leader=null,opens=NaN;
@@ -369,7 +365,7 @@ function loadA(){
       }
       details.push({c:"Open positions",v:String(isNaN(opens)?0:opens),s:"across all books"});
     }
-    return {build:"A",overall:offCap(d.overall||"amber"),online:true,newsFeed:newsFeed,cols:cols,nodes:nodes,details:details,lats:lats,gates:gates,
+    return {build:"A",overall:d.overall||"amber",online:true,newsFeed:newsFeed,cols:cols,nodes:nodes,details:details,lats:lats,gates:gates,
       equity:eq,equityCurve:eqCurve,equitySub:eqSub,cryptolab:clab,cryptolabPositions:clpos,cryptolabAvail:clAvail,leader:leader,opens:opens,rejects:NaN};
   });
 }
