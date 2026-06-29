@@ -254,7 +254,7 @@ var AG="https://news-trading-system-production-b13f.up.railway.app";
 var CUR_RPC="https://alxtkdebryheweqbqlts.supabase.co/rest/v1/rpc/v2_system_health_feed";
 var CUR_KEY="sb_publishable_NHWa8EN8tJwhHvJnejvaZQ_PvbejkOL";
 var ORD={green:0,amber:1,red:2};
-var COLNODES=[{id:"scanner",label:"Scanner"},{id:"assess_gate",label:"Scores / Gates"},{id:"size",label:"Risk & Sizing"},{id:"execute",label:"Execute"},{id:"ledger",label:"Ledger"}];
+var COLNODES=[{id:"scanner",label:"Scanner"},{id:"assess_gate",label:"Scores / Gates"},{id:"size",label:"Risk & Sizing"},{id:"execute",label:"Execute"},{id:"ledger",label:"Ledger"},{id:"dashboard",label:"Dashboard"}];
 var DEEP_NODES=[{id:"news_feed",label:"News Feed",ico:"📰"},{id:"scanner",label:"Scanner",ico:"🛰️"},{id:"assess_gate",label:"Assess+Gate",ico:"⚖️"},{id:"size",label:"Size",ico:"📐"},{id:"execute",label:"Execute",ico:"⚡"},{id:"ledger",label:"Ledger",ico:"📒"},{id:"dashboard",label:"Dashboard",ico:"📊"}];
 
 var S={view:"glance",build:"A",model:{A:null,B:null},prev:{A:null,B:null},events:{A:[],B:[]},
@@ -301,7 +301,8 @@ function loadA(){
       assess_gate:{status:st("assess_gate"),stats:[["signals",fmt(sc.signals_today)]]},
       size:{status:st("size"),stats:[["intents",fmt(lp.open_intents)]]},
       execute:{status:st("execute"),stats:[["open",fmt(lp.open_intents)],["mark",ageStr(num(lp.mark_age_minutes))]]},
-      ledger:{status:st("ledger"),stats:[["drift",fmt(acc.books_with_drift)],["viol",fmt(acc.invariant_violations_24h)]]}
+      ledger:{status:st("ledger"),stats:[["drift",fmt(acc.books_with_drift)],["viol",fmt(acc.invariant_violations_24h)]]},
+      dashboard:(function(){var ds=st("dashboard");if(ds==="amber"&&dv)ds="green";if(ds==="amber"&&!dv)ds="red";var pubAge=num(dl.publisher_age_minutes);return {status:ds,stats:[["pub",ageStr(pubAge)],["feed",dv?"live":"down"]]};})()
     };
     var details=[
       {c:"Overall",v:(d.overall||"—").toUpperCase(),sev:sev(d.overall)},
@@ -396,7 +397,8 @@ function loadB(){
       assess_gate:{status:assessS,stats:[["open",fmt(xc.opened)],["rej",fmt(xc.rejected)]]},
       size:{status:sizeS,stats:[["books",havePf?String(nb):"—"]]},
       execute:{status:execS,stats:[["pos",havePf?String(openPos):"—"],["X",fmt(xc.opened)]]},
-      ledger:{status:ledgerS,stats:[["drift",havePf?String(driftBooks):"—"],["viol",havePf?String(viol):"—"]]}
+      ledger:{status:ledgerS,stats:[["drift",havePf?String(driftBooks):"—"],["viol",havePf?String(viol):"—"]]},
+      dashboard:{status:dashS,stats:[["status",hz.status||"—"],["up",ageStr(num(hz.uptime_sec)/60)]]}
     };
     var clab=null;
     if(cl&&cl.portfolio&&!isNaN(num(cl.portfolio.total_pnl))){var p=cl.portfolio;clab={pnl:num(p.total_pnl),pct:num(p.pnl_pct),equity:num(p.equity)};}
@@ -618,7 +620,7 @@ $("#newsFeed").addEventListener("click",showNewsFeed);
 $("#newsFeed").classList.add("clickable");
 
 // TRA-89: build stamp + auto-refresh when a newer cockpit is deployed (defeats GitHub Pages HTML caching)
-var BUILD="2026-06-28T08:00Z-r3";
+var BUILD="2026-06-28T21:00Z-r4";
 $("#buildStamp").textContent="cockpit build "+BUILD;
 function checkVersion(){
   fetch("./index.html?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
