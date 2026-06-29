@@ -258,7 +258,7 @@
 var POLL_MS=5000;
 var AG="https://news-trading-system-production-b13f.up.railway.app";
 var CUR_RPC="https://alxtkdebryheweqbqlts.supabase.co/rest/v1/rpc/v2_system_health_feed";
-var CUR_KEY="sb_publishable_NHWa8EN8tJwhHvJnejvaZQ_PvbejkOL";
+var CUR_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseHRrZGVicnloZXdlcWJxbHRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0OTI3NzEsImV4cCI6MjA5NjA2ODc3MX0.DG8-RAQnDTpqTKHR7rjL5FWOW9Z-FdVVbBJjRuL18GA";
 var ORD={green:0,amber:1,red:2};
 var COLNODES=[{id:"scanner",label:"Scanner"},{id:"assess_gate",label:"Scores / Gates"},{id:"size",label:"Risk & Sizing"},{id:"execute",label:"Execute"},{id:"ledger",label:"Ledger"},{id:"dashboard",label:"Dashboard"}];
 var DEEP_NODES=[{id:"news_feed",label:"News Feed",ico:"📰"},{id:"scanner",label:"Scanner",ico:"🛰️"},{id:"assess_gate",label:"Assess+Gate",ico:"⚖️"},{id:"size",label:"Size",ico:"📐"},{id:"execute",label:"Execute",ico:"⚡"},{id:"ledger",label:"Ledger",ico:"📒"},{id:"dashboard",label:"Dashboard",ico:"📊"}];
@@ -656,7 +656,7 @@ $("#newsFeed").addEventListener("click",showNewsFeed);
 $("#newsFeed").classList.add("clickable");
 
 // TRA-89: build stamp + auto-refresh when a newer cockpit is deployed (defeats GitHub Pages HTML caching)
-var BUILD="2026-06-29T02:15Z-r6";
+var BUILD="2026-06-29T02:45Z-r7";
 $("#buildStamp").textContent="cockpit build "+BUILD;
 function checkVersion(){
   fetch("./index.html?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
