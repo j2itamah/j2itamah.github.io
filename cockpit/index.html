@@ -306,7 +306,8 @@ function loadA(){
     var st=function(id){return (pipe[id]||{}).status||"amber";};
     var newsFeed={status:st("news_feed"),stats:[["rss",ageStr(num(nf.rss_age_minutes))],["pending",fmt(nf.rss_pending)]]};
     var mktOpen=!!mk.in_us_cash_session;
-    var offCap=function(s){return (!mktOpen&&s==="red")?"amber":s;};
+    var noMatrixOpens=num(lp.open_intents)===0&&num((acc.matrix_open_count||0))===0;
+    var offCap=function(s){return ((!mktOpen||noMatrixOpens)&&s==="red")?"amber":s;};
     var cols={
       scanner:{status:st("scanner"),stats:[["scan",ageStr(num(sc.scan_age_minutes))],["today",fmt(sc.headlines_today)]]},
       assess_gate:{status:st("assess_gate"),stats:[["signals",fmt(sc.signals_today)]]},
