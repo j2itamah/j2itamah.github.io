@@ -300,6 +300,7 @@ function loadA(){
     if(!d)d={};
     var pipe={};(d.pipeline||[]).forEach(function(n){pipe[n.id]=n;});
     var nodes=DEEP_NODES.map(function(n){var p=pipe[n.id]||{};return {id:n.id,label:n.label,ico:n.ico,status:p.status||"amber",summary:p.summary||"",signals:p.signals||{}};});
+    if(!mk.in_us_cash_session){nodes.forEach(function(n){if((n.id==="execute"||n.id==="size")&&n.status==="red")n.status="amber";});}
     var acc=d.accounting||{},lp=d.loop||{},sc=d.scanner||{},tg=d.telegram||{},lt=d.last_trade||{},mk=d.market||{};
     var nf=(pipe.news_feed||{}).signals||{},dl=(pipe.dashboard||{}).signals||{};
     var st=function(id){return (pipe[id]||{}).status||"amber";};
