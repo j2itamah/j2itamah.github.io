@@ -286,15 +286,22 @@ function fetchT(url,opts,ms){ms=ms||8000;var c=new AbortController();var to=setT
   var o=opts||{};o.signal=c.signal;o.cache="no-store";
   return fetch(url,o).then(function(r){clearTimeout(to);return r;},function(e){clearTimeout(to);throw e;});}
 
-/* ---------- Build A: Cursor RPC + data.v2.json for equity/CryptoLab ---------- */
-var CUR_DATA='https://j2itamah.github.io/trading-dashboard/data.v2.json';
+/* ---------- Build A: Cursor RPC + Supabase cache for equity/CryptoLab ---------- */
+var CUR_CACHE='https://alxtkdebryheweqbqlts.supabase.co/rest/v1/v2_dashboard_cache?id=eq.1&select=data,generated_at';
+var CUR_TRUTH='https://alxtkdebryheweqbqlts.supabase.co/rest/v1/v2_book_metrics?select=book_key,open_count,closed_count,marked_equity';
 function loadA(){
-  var healthP=fetchT(CUR_RPC,{method:"POST",headers:{"apikey":CUR_KEY,"Authorization":"Bearer "+CUR_KEY,"Content-Type":"application/json"},body:"{}"})
+  var hdr={"apikey":CUR_KEY,"Authorization":"Bearer "+CUR_KEY};
+  var healthP=fetchT(CUR_RPC,{method:"POST",headers:Object.assign({"Content-Type":"application/json"},hdr),body:"{}"})
     .then(function(r){if(!r.ok)throw new Error("rpc "+r.status);return r.json();})
     .catch(function(){return null;});
-  var dataP=fetchT(CUR_DATA+'?t='+Date.now()).then(function(r){if(!r.ok)throw new Error("data "+r.status);return r.json();}).catch(function(){return null;});
-  return Promise.all([healthP,dataP]).then(function(res){
-    var d=res[0],dv=res[1];
+  var dataP=fetchT(CUR_CACHE,{headers:hdr},15000)
+    .then(function(r){if(!r.ok)throw new Error("cache "+r.status);return r.json();})
+    .then(function(rows){if(!rows||!rows.length)return null;var o=rows[0].data||{};o._generated_at=rows[0].generated_at||'';return o;})
+    .catch(function(){return null;});
+  var truthP=fetchT(CUR_TRUTH,{headers:hdr})
+    .then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});
+  return Promise.all([healthP,dataP,truthP]).then(function(res){
+    var d=res[0],dv=res[1],truth=res[2];
     if(!d&&!dv)throw new Error("Build A unreachable");
     if(Array.isArray(d))d=d[0];
     if(!d)d={};
@@ -313,8 +320,26 @@ function loadA(){
       size:{status:offCap(st("size")),stats:[["intents",fmt(lp.open_intents)]]},
       execute:(function(){var es=offCap(st("execute"));var markMin=num(lp.mark_age_minutes);var hasOpens=num(lp.open_intents)>0||num(acc.matrix_open_count||0)>0;var markThresh=mktOpen?30:1440;if(hasOpens&&markMin>markThresh){es="red";}return {status:es,stats:[["open",fmt(lp.open_intents)],["mark",ageStr(markMin)]]};})(),
       ledger:(function(){var driftUsd=0;(acc.drift_books||[]).forEach(function(b){driftUsd+=Math.abs(num(b.recon_drift)||0);});return {status:st("ledger"),stats:[["drift","$"+Math.round(driftUsd).toLocaleString()],["viol",fmt(acc.invariant_violations_24h)]]};})(),
-      dashboard:(function(){var ds=st("dashboard");if(ds==="amber"&&dv)ds="green";if(ds==="amber"&&!dv)ds="red";var pubAge=num(dl.publisher_age_minutes);return {status:ds,stats:[["pub",ageStr(pubAge)],["feed",dv?"live":"down"]]};})()
+      dashboard:(function(){
+        var ds="red",issues=[],cacheAge=NaN;
+        if(dv&&dv._generated_at){cacheAge=(Date.now()-parseTs(dv._generated_at))/60000;if(cacheAge<0)cacheAge=0;}
+        if(!dv){ds="red";issues.push("cache unreachable");}
+        else if(cacheAge>30){ds="red";issues.push("stale >30m");}
+        else if(cacheAge>10){ds="amber";issues.push("stale >10m");}
+        else{ds="green";}
+        if(dv&&truth&&ds!=="red"){
+          var cacheBm=dv.book_metrics||[],tOpen=0,tClosed=0,tEq=0,cOpen=0,cClosed=0,cEq=0;
+          (truth||[]).forEach(function(t){tOpen+=num(t.open_count);tClosed+=num(t.closed_count);tEq+=num(t.marked_equity);});
+          cacheBm.forEach(function(b){cOpen+=num(b.open_count);cClosed+=num(b.closed_count);cEq+=num(b.marked_equity);});
+          if(Math.abs(tOpen-cOpen)>0){ds="red";issues.push("open mismatch: cache="+cOpen+" db="+tOpen);}
+          if(Math.abs(tClosed-cClosed)>2&&ds!=="red"){ds="amber";issues.push("closed drift");}
+          if(tEq>0&&Math.abs(tEq-cEq)/tEq>0.01&&ds!=="red"){ds="amber";issues.push("equity drift");}
+          if(cacheBm.length===0&&truth.length>0){ds="red";issues.push("cache empty, DB has "+truth.length+" books");}
+        }
+        return {status:ds,stats:[["age",ageStr(cacheAge)],["match",issues.length?issues.length+"✗":"✓"]],_issues:issues};
+      })()
     };
+    for(var ni=0;ni<nodes.length;ni++){if(nodes[ni].id==="dashboard"){nodes[ni].status=cols.dashboard.status;nodes[ni].summary=cols.dashboard._issues&&cols.dashboard._issues.length?cols.dashboard._issues[0]:"verified ✓";break;}}
     var details=[
       {c:"Overall",v:(d.overall||"—").toUpperCase(),sev:sev(d.overall)},
       {c:"Open intents",v:fmt(lp.open_intents)},{c:"Active books",v:fmt(acc.active_books)},
@@ -405,15 +430,31 @@ function loadB(){
     var sizeS=!havePf?"red":(isNaN(num(pf.total_equity))?"red":"green");
     var execS=!havePf?"red":"green";
     var ledgerS=!havePf?"red":(viol>0?"red":(driftBooks>0?"amber":"green"));
-    var dashS=hz.status==="ok"?"green":(hz.status?"amber":"red");
     var newsFeed={status:feedS,stats:[["scan",ageStr(scanMin)],["X poll",ageStr(xpollMin)]]};
+    var dashNode=(function(){
+      var ds="red",issues=[];
+      if(!haveHz){ds="red";issues.push("healthz down");}
+      else if(hz.status!=="ok"){ds="amber";issues.push("status="+hz.status);}
+      else{ds="green";}
+      if(havePf&&ds!=="red"){
+        var snapAge=num(hz.snapshot_age_sec||0)/60;
+        if(snapAge>30){ds="red";issues.push("snapshot >30m");}
+        else if(snapAge>10&&ds==="green"){ds="amber";issues.push("snapshot >10m");}
+        var apiOpen=openPos,apiBooks=nb,apiEq=num(pf.total_equity);
+        if(apiBooks>0&&apiEq===0){ds="red";issues.push("equity $0 with "+apiBooks+" books");}
+        for(var sk in strat){if(!strat.hasOwnProperty(sk))continue;var sv=strat[sk];
+          if(num(sv.total_value)===0&&(num(sv.open_positions_count)>0||num(sv.trade_count)>0)){
+            ds=ds==="green"?"amber":ds;issues.push(sk+" shows $0 with trades");break;}}
+      }
+      return {status:ds,stats:[["status",hz.status||"—"],["match",issues.length?issues.length+"✗":"✓"]]};
+    })();
     var cols={
       scanner:{status:scanS,stats:[["scan",ageStr(scanMin)],["X",ageStr(xpollMin)]]},
       assess_gate:{status:assessS,stats:[["open",fmt(xc.opened)],["rej",fmt(xc.rejected)]]},
       size:{status:sizeS,stats:[["books",havePf?String(nb):"—"]]},
       execute:{status:execS,stats:[["pos",havePf?String(openPos):"—"],["X",fmt(xc.opened)]]},
       ledger:{status:ledgerS,stats:[["drift",havePf?"$"+Math.round(totalDriftUsd).toLocaleString():"—"],["viol",havePf?String(viol):"—"]]},
-      dashboard:{status:dashS,stats:[["status",hz.status||"—"],["up",ageStr(num(hz.uptime_sec)/60)]]}
+      dashboard:dashNode
     };
     var clab=null;
     if(cl&&cl.portfolio&&!isNaN(num(cl.portfolio.total_pnl))){var p=cl.portfolio;clab={pnl:num(p.total_pnl),pct:num(p.pnl_pct),equity:num(p.equity)};}
@@ -425,7 +466,7 @@ function loadB(){
       {id:"size",label:"Size",ico:"📐",status:sizeS,summary:nb+" books · risk sizing",signals:{books:nb,total_cash:pf.total_cash}},
       {id:"execute",label:"Execute",ico:"⚡",status:execS,summary:"open pos="+openPos+" · X opened="+fmt(xc.opened),signals:{open_positions:openPos,x_opened:xc.opened,deployed:pf.total_deployed}},
       {id:"ledger",label:"Ledger",ico:"📒",status:ledgerS,summary:"drift_books="+driftBooks+" violations="+viol,signals:{drift_books:driftBooks,violations:viol,books:nb}},
-      {id:"dashboard",label:"Dashboard",ico:"📊",status:dashS,summary:"status="+(hz.status||"?")+" · up "+ageStr(num(hz.uptime_sec)/60),signals:hz}
+      {id:"dashboard",label:"Dashboard",ico:"📊",status:dashNode.status,summary:"status="+(hz.status||"?")+" · "+(dashNode.stats[1][1]==="✓"?"verified":"issues"),signals:hz}
     ];
     var details=[
       {c:"Total equity",v:money(pf.total_equity),s:havePf?"cash "+money(pf.total_cash):""},
