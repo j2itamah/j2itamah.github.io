@@ -215,11 +215,11 @@
     <span style="color:#2dd4bf">&rarr;</span>
   </a>
 
-  <footer>Paper trading only &middot; not financial advice &middot; BUILD 20260630-01 &middot; top performer updates live</footer>
+  <footer>Paper trading only &middot; not financial advice &middot; BUILD 20260630-02 &middot; top performer updates live</footer>
 
 <script>
-/* === BUILD 20260630-01 === unified feed (single source for both builds) */
-var BUILD='20260630-01';
+/* === BUILD 20260630-02 === unified feed (single source for both builds) */
+var BUILD='20260630-02';
 var UNIFIED_URL='https://news-trading-system-production-b13f.up.railway.app/api/unified/data';
 
 var NAMES={news_only:'News Only',news_plus_ta:'Trend Gate',trend_strict:'Strict Trend',
@@ -278,15 +278,6 @@ function loadUnified(){
       bookMap[tk].tradeCount++;
     }
 
-    /* Overlay free_cash from book_health where available */
-    var bh=d.book_health||[];
-    for(var h=0;h<bh.length;h++){
-      var hk=bh[h].engine+'|'+bh[h].book_key;
-      if(bookMap[hk]&&bh[h].free_cash!=null){
-        bookMap[hk].free_cash=num(bh[h].free_cash);
-      }
-    }
-
     /* Convert to leaderboard entries */
     var results=[],hasA=false,hasB=false;
     for(var k in bookMap){
@@ -298,7 +289,7 @@ function loadUnified(){
       if(eng==='B')hasB=true;
       var start=bk.starting_balance;
       var totalPnl=bk.realized+bk.unrealized;
-      var eq=(!isNaN(bk.free_cash))?bk.free_cash:(start+totalPnl);
+      var eq=start+totalPnl;
       var pctAll=start?totalPnl/start*100:0;
       var buildLabel=eng==='A'?'Build A':'Build B';
       var buildCls=eng==='A'?'a':'b';
