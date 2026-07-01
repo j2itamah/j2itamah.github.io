@@ -50,7 +50,7 @@
        animation:pulse 1.8s infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.4)}70%{box-shadow:0 0 0 9px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
 
-  /* Top Performer card — mobile-safe */
+  /* Top Performer card */
   .champ{width:100%;max-width:880px;margin-bottom:22px;background:#0b0f1a;color:#f8fafc;
     border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:24px 28px;
     box-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.4);position:relative;overflow:hidden;
@@ -154,16 +154,16 @@
 </style>
 </head>
 <body>
-  <div class="brand"><div class="mark"></div><h1>Quant<span>Pulse</span> · Trading Lab</h1></div>
+  <div class="brand"><div class="mark"></div><h1>Quant<span>Pulse</span> &middot; Trading Lab</h1></div>
   <div class="sub">Two parallel news-driven trading systems, running head to head.</div>
-  <div class="live"><span class="dot"></span> Both engines live · paper trading</div>
+  <div class="live"><span class="dot"></span> Both engines live &middot; paper trading</div>
 
   <div class="health" id="siteHealth" title="Reflects whether the live dashboard data is loading and accurate">
     <span class="health-dot" id="healthDot"></span><span id="healthText">Checking dashboard health&hellip;</span>
   </div>
 
   <div class="champ">
-    <div class="champ-label">&#127942; Top performer · live</div>
+    <div class="champ-label">&#127942; Top performer &middot; live</div>
     <div class="champ-name" id="champName">Loading live results&hellip;</div>
     <div class="champ-stats">
       <div><span class="champ-cap">Account value</span><span class="champ-val" id="champValue">&mdash;</span></div>
@@ -173,7 +173,7 @@
   </div>
 
   <div class="leaderboard">
-    <div class="lb-title">Cross-Build Leaderboard · ranked by % return
+    <div class="lb-title">Cross-Build Leaderboard &middot; ranked by % return
       <button class="lb-toggle" id="lbToggle" onclick="var w=document.getElementById('lbRowsWrap');var open=w.style.maxHeight!=='0px'&&w.style.maxHeight;w.style.maxHeight=open?'0px':'2000px';this.textContent=open?'Show standings':'Hide standings'">Show standings</button>
     </div>
     <div class="lb-rows-wrap" id="lbRowsWrap">
@@ -215,22 +215,21 @@
     <span style="color:#2dd4bf">&rarr;</span>
   </a>
 
-  <footer>Paper trading only &middot; not financial advice &middot; BUILD 20260628-03 &middot; top performer updates live</footer>
+  <footer>Paper trading only &middot; not financial advice &middot; BUILD 20260630-01 &middot; top performer updates live</footer>
 
 <script>
-/* === BUILD 20260628-02 === cache-bust */
-var BUILD='20260628-03';
-var AG_URL='https://news-trading-system-production-b13f.up.railway.app/api/portfolio';
-var CUR_URL='https://j2itamah.github.io/trading-dashboard/data.v2.json';
-var CUR_FALLBACK='https://j2itamah.github.io/trading-dashboard/v2-preview/data.v2.json';
+/* === BUILD 20260630-01 === unified feed (single source for both builds) */
+var BUILD='20260630-01';
+var UNIFIED_URL='https://news-trading-system-production-b13f.up.railway.app/api/unified/data';
 
 var NAMES={news_only:'News Only',news_plus_ta:'Trend Gate',trend_strict:'Strict Trend',
-  mean_reversion:'Mean Reversion',full_confluence:'Full Confluence'};
+  mean_reversion:'Mean Reversion',full_confluence:'Full Confluence',
+  strict_trend_gate:'Strict Trend',cryptolab:'CryptoLab'};
 
 function num(v){return(v==null||v==='')?NaN:+v;}
-function money(n){return isNaN(n)?'—':'$'+Number(n).toLocaleString(undefined,{maximumFractionDigits:2});}
-function pnlFmt(p,pct){if(isNaN(p))return'—';var s=p>=0?'+':'-';var pc=isNaN(pct)?'':' ('+(pct>=0?'+':'')+Number(pct).toFixed(2)+'%)';return s+'$'+Math.abs(p).toLocaleString(undefined,{maximumFractionDigits:2})+pc;}
-function setPnl(id,p,pct){var e=document.getElementById(id);if(!e)return;if(isNaN(p)){e.textContent='—';e.className='champ-val';return;}e.textContent=pnlFmt(p,pct);e.className='champ-val '+(p>=0?'up':'down');}
+function money(n){return isNaN(n)?'---':'$'+Number(n).toLocaleString(undefined,{maximumFractionDigits:2});}
+function pnlFmt(p,pct){if(isNaN(p))return'---';var s=p>=0?'+':'-';var pc=isNaN(pct)?'':' ('+(pct>=0?'+':'')+Number(pct).toFixed(2)+'%)';return s+'$'+Math.abs(p).toLocaleString(undefined,{maximumFractionDigits:2})+pc;}
+function setPnl(id,p,pct){var e=document.getElementById(id);if(!e)return;if(isNaN(p)){e.textContent='---';e.className='champ-val';return;}e.textContent=pnlFmt(p,pct);e.className='champ-val '+(p>=0?'up':'down');}
 function stratLabel(key){
   var parts=(key||'').replace(/^v2_/,'').split('_');
   var pf=parts[0]||'';
@@ -239,117 +238,136 @@ function stratLabel(key){
   else if(parts.length>=2&&parts[1]==='confluence')pf=parts[0]+'_'+parts[1];
   else if(parts.length>=2&&parts[1]==='strict')pf=parts[0]+'_'+parts[1];
   else if(parts.length>=3&&parts[1]==='plus')pf=parts[0]+'_'+parts[1]+'_'+parts[2];
+  else if(parts.length>=3&&parts[1]==='trend')pf=parts[0]+'_'+parts[1]+'_'+parts[2];
   return NAMES[pf]||pf.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
 }
 
-/* --- Load Build A (Cursor + Claude / data.v2.json) --- */
-function loadA(){
-  return fetch(CUR_URL+'?t='+Date.now()).then(function(r){
-    if(!r.ok)throw new Error('not ok');return r.json();
-  }).catch(function(){
-    return fetch(CUR_FALLBACK+'?t='+Date.now()).then(function(r){return r.json();});
+/* --- Load from unified Railway feed (both builds in one call) --- */
+function loadUnified(){
+  return fetch(UNIFIED_URL+'?t='+Date.now(),{cache:'no-store'}).then(function(r){
+    if(!r.ok)throw new Error('unified '+r.status);return r.json();
   }).then(function(d){
-    var results=[];
-    /* Parse book_metrics for prop books */
-    var bm=d.book_metrics||d.official_books||[];
-    for(var i=0;i<bm.length;i++){
-      var b=bm[i];
-      var eq=num(b.marked_equity);
-      var start=num(b.starting_balance||b.book_starting_balance||10000);
-      if(isNaN(eq)||eq===0)continue;
-      var pctAll=(eq-start)/start*100;
-      var todayPnl=num(b.today_marked_pnl_approx||b.today_realized_pnl||0);
-      var todayPct=start?todayPnl/start*100:0;
-      var portfolio=b.portfolio||'unknown';
-      var exitModel=b.target_model||'fixed';
-      var label=stratLabel(b.book_key||portfolio)+(exitModel==='volatility'?' ATR':' Fixed');
+    if(d.error)throw new Error(d.error);
+
+    /* Build a map of book_key -> {starting_balance, target_model, P&L accumulators} */
+    var bookMap={};
+    var books=d.books||[];
+    for(var i=0;i<books.length;i++){
+      var b=books[i];
+      var key=b.engine+'|'+b.book_key;
+      bookMap[key]={
+        engine:b.engine,
+        book_key:b.book_key,
+        starting_balance:num(b.starting_balance)||10000,
+        target_model:b.target_model||'fixed',
+        realized:0,unrealized:0,tradeCount:0
+      };
+    }
+
+    /* Accumulate per-book P&L from trades */
+    var trades=d.trades||[];
+    for(var j=0;j<trades.length;j++){
+      var t=trades[j];
+      var tk=t.engine+'|'+t.book_key;
+      if(!bookMap[tk]){
+        bookMap[tk]={engine:t.engine,book_key:t.book_key,starting_balance:10000,
+          target_model:'fixed',realized:0,unrealized:0,tradeCount:0};
+      }
+      bookMap[tk].realized+=num(t.realized_pnl)||0;
+      bookMap[tk].unrealized+=num(t.unrealized_pnl)||0;
+      bookMap[tk].tradeCount++;
+    }
+
+    /* Overlay free_cash from book_health where available */
+    var bh=d.book_health||[];
+    for(var h=0;h<bh.length;h++){
+      var hk=bh[h].engine+'|'+bh[h].book_key;
+      if(bookMap[hk]&&bh[h].free_cash!=null){
+        bookMap[hk].free_cash=num(bh[h].free_cash);
+      }
+    }
+
+    /* Convert to leaderboard entries */
+    var results=[],hasA=false,hasB=false;
+    for(var k in bookMap){
+      if(!bookMap.hasOwnProperty(k))continue;
+      var bk=bookMap[k];
+      if(bk.tradeCount===0)continue;
+      var eng=bk.engine;
+      if(eng==='A')hasA=true;
+      if(eng==='B')hasB=true;
+      var start=bk.starting_balance;
+      var totalPnl=bk.realized+bk.unrealized;
+      var eq=(!isNaN(bk.free_cash))?bk.free_cash:(start+totalPnl);
+      var pctAll=start?totalPnl/start*100:0;
+      var buildLabel=eng==='A'?'Build A':'Build B';
+      var buildCls=eng==='A'?'a':'b';
+      if((bk.book_key||'').toLowerCase()==='cryptolab'){buildLabel='CryptoLab';buildCls='crypto';}
+      var exitModel=bk.target_model||'fixed';
+      var label=stratLabel(bk.book_key);
+      if(exitModel==='volatility')label+=' ATR';
+      else if(exitModel==='fixed')label+=' Fixed';
       results.push({
-        build:'Build A',buildCls:'a',
+        build:buildLabel,buildCls:buildCls,
         name:label,
         value:eq,
-        pnlDay:todayPnl,pctDay:todayPct,
-        pnlAll:eq-start,pctAll:pctAll
+        pnlDay:0,pctDay:0,
+        pnlAll:totalPnl,pctAll:pctAll
       });
     }
-    /* Parse CryptoLab as first-class contender */
-    var cl=d.cryptolab||{};
-    var acct=cl.account||{};
-    var clEq=num(acct.marked_equity||acct.free_cash);
-    var clStart=num(acct.starting_balance||100000);
-    var clTrades=cl.trades||[];
-    if(!isNaN(clEq)&&clEq>0){
-      var clPnl=clEq-clStart;
-      var clPct=clStart?clPnl/clStart*100:0;
-      var clRealized=clTrades.filter(function(t){return t.status==='CLOSED';}).reduce(function(s,t){return s+num(t.realized_pnl||0);},0);
-      var clUnrealized=clTrades.filter(function(t){return t.status==='OPEN';}).reduce(function(s,t){return s+num(t.unrealized_pnl||0);},0);
+
+    /* Add CryptoLab accounts if not already covered by book trades */
+    var clAccts=d.crypto_lab_accounts||[];
+    for(var ci=0;ci<clAccts.length;ci++){
+      var ca=clAccts[ci];
+      var clStart=num(ca.initial_balance)||100000;
+      var clCurrent=num(ca.current_balance);
+      var clPnl=num(ca.total_pnl)||0;
+      if(isNaN(clCurrent)||clCurrent===0)continue;
+      var existing=false;
+      for(var ri=0;ri<results.length;ri++){
+        if(results[ri].buildCls==='crypto'){existing=true;break;}
+      }
+      if(existing)continue;
+      if(ca.engine==='A')hasA=true;
+      if(ca.engine==='B')hasB=true;
       results.push({
         build:'CryptoLab',buildCls:'crypto',
-        name:'CryptoLab ('+clTrades.length+' trades)',
-        value:clEq,
-        pnlDay:num(clRealized+clUnrealized)||0,pctDay:clStart?(clRealized+clUnrealized)/clStart*100:0,
-        pnlAll:clPnl,pctAll:clPct
+        name:'CryptoLab',
+        value:clCurrent,
+        pnlDay:0,pctDay:0,
+        pnlAll:clPnl,pctAll:clStart?clPnl/clStart*100:0
       });
     }
-    return results;
-  }).catch(function(e){console.warn('loadA failed:',e);return[];});
+    return {results:results,hasA:hasA,hasB:hasB};
+  });
 }
 
-/* --- Load Build B (OpenAI + Antigravity) --- */
-function loadB(){
-  return fetch(AG_URL+'?t='+Date.now()).then(function(r){
-    if(!r.ok)throw new Error('AG '+r.status);return r.json();
-  }).then(function(d){
-    var results=[];
-    var strats=d.strategies||{};
-    for(var id in strats){
-      if(!strats.hasOwnProperty(id))continue;
-      var x=strats[id];
-      var pctAll=num(x.pnl_percentage);
-      if(isNaN(pctAll))continue;
-      results.push({
-        build:'Build B',buildCls:'b',
-        name:(NAMES[id]||id.replace(/_/g,' '))+(x.target_model?' '+x.target_model:''),
-        value:num(x.total_value),
-        pnlDay:num(x.daily_pnl),pctDay:num(x.daily_pnl_pct),
-        pnlAll:num(x.total_pnl),pctAll:pctAll
-      });
-    }
-    return results;
-  }).catch(function(e){console.warn('loadB failed:',e);return[];});
-}
+var LB_CAP=10;
 
-var LB_CAP=10; /* show only the top 10 \u2014 never the full ~42-book wall */
-
-/* --- Render leaderboard + top performer. Returns a summary used for the health badge. --- */
+/* --- Render leaderboard + top performer --- */
 function renderBoard(all){
-  /* Rank only entries that have a valid numeric return */
   var ranked=all.filter(function(r){return !isNaN(r.pctAll);});
-  /* Sort by % return desc; tie-break by account value desc, then name, so a tie of flat
-     0.00% books resolves deterministically instead of picking an arbitrary winner. */
   ranked.sort(function(a,b){
     var d=(b.pctAll||0)-(a.pctAll||0); if(Math.abs(d)>1e-9)return d;
     var dv=(num(b.value)||0)-(num(a.value)||0); if(Math.abs(dv)>1e-9)return dv;
     return String(a.name||'').localeCompare(String(b.name||''));
   });
-  /* Top performer = best ranked book that has a usable account value */
   var best=null;
   for(var k=0;k<ranked.length;k++){ if(!isNaN(num(ranked[k].value))){ best=ranked[k]; break; } }
   if(!best)best=ranked[0]||null;
 
   var nm=document.getElementById('champName');
   if(!best){
-    nm.textContent='Waiting for live data\u2026';
-    document.getElementById('champValue').textContent='\u2014';
+    nm.textContent='Waiting for live data…';
+    document.getElementById('champValue').textContent='—';
     setPnl('champDay',NaN,NaN);
-    document.getElementById('champAll').textContent='\u2014';
+    document.getElementById('champAll').textContent='—';
     var le=document.getElementById('lbRows'); if(le)le.innerHTML='<div class="lb-empty">No live data available</div>';
     return {count:0,allFlat:true,best:null,bestValid:false};
   }
   nm.innerHTML=best.name+' <span class="champ-build">'+best.build+'</span>';
-  /* Bulletproof the three card values so they can NEVER render blank when a leader exists:
-     derive Account Value from initial+lifetime P&L if the raw value is missing, and treat a
-     missing daily/return figure as 0 rather than an em-dash. */
-  var initGuess=10000; // matrix/whitehouse books start at 10k; CryptoLab carries its own value
+  var initGuess=10000;
   var bVal=!isNaN(num(best.value))?num(best.value):(initGuess+(num(best.pnlAll)||0));
   var bDay=isNaN(num(best.pnlDay))?0:num(best.pnlDay);
   var bDayPct=isNaN(num(best.pctDay))?0:num(best.pctDay);
@@ -362,7 +380,6 @@ function renderBoard(all){
     allEl.textContent=(bAll>=0?'+':'')+Number(bAll).toFixed(2)+'%'+' ('+pnlFmt(bAllUsd,NaN)+')';
     allEl.className='champ-val '+(bAll>=0?'up':'down');
   }
-  /* Leaderboard rows \u2014 capped to the top 10 */
   var el=document.getElementById('lbRows');
   if(el){
     if(!ranked.length){el.innerHTML='<div class="lb-empty">No live data available</div>';}
@@ -379,7 +396,7 @@ function renderBoard(all){
         html+='</div>';
       }
       if(ranked.length>shown){
-        html+='<div class="lb-empty">+'+(ranked.length-shown)+' more books \u00b7 showing top '+LB_CAP+'</div>';
+        html+='<div class="lb-empty">+'+(ranked.length-shown)+' more books · showing top '+LB_CAP+'</div>';
       }
       el.innerHTML=html;
     }
@@ -388,7 +405,6 @@ function renderBoard(all){
   return {count:ranked.length,allFlat:allFlat,best:best,bestValid:!isNaN(num(best.value))};
 }
 
-/* --- Dashboard-accuracy health badge: green only when data is loaded AND sane --- */
 function setHealth(state,msg){
   var el=document.getElementById('siteHealth'),tx=document.getElementById('healthText');
   if(!el||!tx)return;
@@ -397,27 +413,21 @@ function setHealth(state,msg){
 }
 
 function refresh(){
-  Promise.all([loadA(),loadB()]).then(function(res){
-    var aBooks=res[0]||[],bBooks=res[1]||[];
-    var all=aBooks.concat(bBooks);
+  loadUnified().then(function(res){
+    var all=res.results;
     var summary=renderBoard(all);
-    /* Health reflects whether the dashboard data is loaded and accurate:
-       - bad  : no data at all, or the top performer has no usable account value
-       - warn : a build failed to load, or every book is flat (no activity yet)
-       - ok   : both builds loaded, ranking populated, top performer valid */
-    var aOk=aBooks.length>0, bOk=bBooks.length>0;
     if(!summary.count || !summary.bestValid){
-      setHealth('bad','Dashboard data unavailable — check Build A / Build B feeds');
-    }else if(!aOk||!bOk){
-      setHealth('warn','Partial data — '+(aOk?'Build B':'Build A')+' feed not responding');
+      setHealth('bad','Dashboard data unavailable — unified feed returned no books');
+    }else if(!res.hasA||!res.hasB){
+      setHealth('warn','Partial data — '+(res.hasA?'Build B':'Build A')+' has no trades yet');
     }else if(summary.allFlat){
       setHealth('warn','Live · both builds loaded · all flat (no P&L moves yet)');
     }else{
-      setHealth('ok','Live · both builds active · top performer '+(summary.best.pctAll>=0?'+':'')+Number(summary.best.pctAll).toFixed(2)+'%');
+      setHealth('ok','Live · unified feed · top performer '+(summary.best.pctAll>=0?'+':'')+Number(summary.best.pctAll).toFixed(2)+'%');
     }
   }).catch(function(e){
     console.warn('refresh failed:',e);
-    setHealth('bad','Dashboard failed to load live data');
+    setHealth('bad','Dashboard failed to load unified feed');
   });
 }
 refresh();setInterval(refresh,60000);
