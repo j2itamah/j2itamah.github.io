@@ -235,12 +235,13 @@
     <div class="grid">
       <div class="panel col-8"><h3><span class="g"></span>Detail Cards</h3><div class="metrics" id="detailCards"></div></div>
       <div class="panel col-4 spark"><h3><span class="g"></span>Equity Curve</h3><div class="sv mono" id="eqVal">—</div><canvas id="eqSpark" width="320" height="58"></canvas><div class="s mono" style="font-size:.58rem;color:var(--dim)" id="eqSub"></div></div>
-      <div class="panel col-4"><h3><span class="g"></span>Gate Decisions <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· derived</span></h3><div id="gateBars"></div></div>
+      <div class="panel col-4"><h3><span class="g"></span>Pipeline Metrics <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· live</span></h3><div id="gateBars"></div></div>
       <div class="panel col-4"><h3><span class="g"></span>Ingestion Latencies</h3><div id="latRows"></div></div>
       <div class="panel col-4 spark"><h3><span class="g"></span>Scanner Uptime <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· derived</span></h3><div class="sv mono" id="upVal">—</div><canvas id="upSpark" width="320" height="58"></canvas><div class="s mono" style="font-size:.58rem;color:var(--dim)" id="upSub"></div></div>
       <div class="panel col-12"><h3><span class="g"></span>Industry Verticals <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· TRA-136</span></h3><div id="vertScorecard" class="vsc"></div></div>
       <div class="panel col-12"><h3><span class="g"></span>Confidence vs Success <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· TRA-94</span></h3><div id="confScorecard" class="csc"></div></div>
       <div class="panel col-12"><h3><span class="g"></span>Edge-Proof &amp; Prop-Firm Readiness <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· TRA-138</span></h3><div id="edgeProofPanel" class="vsc"></div></div>
+      <div class="panel col-12"><h3><span class="g"></span>Correctness Guards <span style="color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none">· TRA-131</span></h3><div id="guardsPanel" style="font-size:.7rem"></div></div>
       <div class="panel col-12"><h3><span class="g"></span>Live Event Log</h3><div class="log" id="eventLog"></div></div>
     </div>
   </section>
@@ -309,16 +310,14 @@ function loadA(){
     var nodes=DEEP_NODES.map(function(n){var p=pipe[n.id]||{};return {id:n.id,label:n.label,ico:n.ico,status:p.status||"amber",summary:p.summary||"",signals:p.signals||{}};});
     var acc=d.accounting||{},lp=d.loop||{},sc=d.scanner||{},tg=d.telegram||{},lt=d.last_trade||{},mk=(d.market||{});
     var mktOpen=!!mk.in_us_cash_session;
-    var noOpens=num(lp.open_intents)===0&&num(acc.matrix_open_count||0)===0;
-    var offCap=function(s){return (!mktOpen||noOpens)&&s==="red"?"amber":s;};
     var nf=(pipe.news_feed||{}).signals||{},dl=(pipe.dashboard||{}).signals||{};
     var st=function(id){return (pipe[id]||{}).status||"amber";};
     var newsFeed=(function(){var ns=st("news_feed");var pend=num(nf.rss_pending);if(pend>5000)ns="red";else if(pend>2000&&ns!=="red")ns="amber";return {status:ns,stats:[["rss",ageStr(num(nf.rss_age_minutes))],["pending",fmt(pend)]]};})();;
     var cols={
       scanner:{status:st("scanner"),stats:[["scan",ageStr(num(sc.scan_age_minutes))],["today",fmt(sc.headlines_today)]]},
       assess_gate:{status:st("assess_gate"),stats:[["signals",fmt(sc.signals_today)]]},
-      size:{status:offCap(st("size")),stats:[["intents",fmt(lp.open_intents)]]},
-      execute:(function(){var es=offCap(st("execute"));var markMin=num(lp.mark_age_minutes);var hasOpens=num(lp.open_intents)>0||num(acc.matrix_open_count||0)>0;var markThresh=mktOpen?30:1440;if(hasOpens&&markMin>markThresh){es="red";}return {status:es,stats:[["open",fmt(lp.open_intents)],["mark",ageStr(markMin)]]};})(),
+      size:{status:st("size"),stats:[["intents",fmt(lp.open_intents)],["mkt",mktOpen?"open":"closed"]]},
+      execute:(function(){var es=st("execute");var markMin=num(lp.mark_age_minutes);var hasOpens=num(lp.open_intents)>0||num(acc.matrix_open_count||0)>0;var markThresh=mktOpen?30:1440;if(hasOpens&&markMin>markThresh){es="red";}return {status:es,stats:[["open",fmt(lp.open_intents)],["mark",ageStr(markMin)]]};})(),
       ledger:(function(){var driftUsd=0;(acc.drift_books||[]).forEach(function(b){driftUsd+=Math.abs(num(b.recon_drift)||0);});return {status:st("ledger"),stats:[["drift","$"+Math.round(driftUsd).toLocaleString()],["viol",fmt(acc.invariant_violations_24h)]]};})(),
       dashboard:(function(){
         var ds="red",issues=[],cacheAge=NaN;
@@ -352,7 +351,10 @@ function loadA(){
     ];
     var lats=[{n:"RSS feed",m:num(nf.rss_age_minutes),a:10,r:30},{n:"Scanner",m:num(sc.scan_age_minutes),a:10,r:30},
       {n:"Marks",m:num(lp.mark_age_minutes),a:mktOpen?7:480,r:mktOpen?12:1440},{n:"Intents",m:num(lp.intent_age_minutes),a:mktOpen?15:480,r:mktOpen?30:1440},{n:"Publisher",m:num(dl.publisher_age_minutes),a:25,r:60}];
-    var gates=[{n:"freshness",v:score(st("news_feed"))},{n:"relevance",v:score(st("assess_gate"))},{n:"sentiment",v:score(st("execute"))},{n:"duplicate",v:score(st("scanner"))}];
+    var rssAge=num(nf.rss_age_minutes);var aFreshPct=isNaN(rssAge)?0:clamp(Math.round(100-rssAge*2),0,100);
+    var aHdlToday=num(sc.headlines_today);var aThrPct=aHdlToday>0?clamp(Math.round(Math.min(aHdlToday,200)/2),0,100):0;
+    var aSigToday=num(sc.signals_today);var aGatePct=aSigToday>0&&aHdlToday>0?clamp(Math.round(aSigToday/aHdlToday*100),0,100):0;
+    var gates=[{n:"feed freshness",v:aFreshPct},{n:"throughput today",v:aThrPct},{n:"signal rate",v:aGatePct},{n:"scanner",v:score(st("scanner"))}];
     /* Wire data.v2.json: equity, CryptoLab, positions, leader */
     var eq=NaN,eqCurve=[],eqSub="Connecting…",clab=null,clpos=[],clAvail=false,leader=null,opens=NaN;
     if(dv){
@@ -397,7 +399,7 @@ function loadA(){
       }
       details.push({c:"Open positions",v:String(isNaN(opens)?0:opens),s:"across all books"});
     }
-    return {build:"A",overall:offCap(d.overall||"amber"),online:true,newsFeed:newsFeed,cols:cols,nodes:nodes,details:details,lats:lats,gates:gates,
+    return {build:"A",overall:d.overall||"amber",online:true,newsFeed:newsFeed,cols:cols,nodes:nodes,details:details,lats:lats,gates:gates,
       equity:eq,equityCurve:eqCurve,equitySub:eqSub,cryptolab:clab,cryptolabPositions:clpos,cryptolabAvail:clAvail,leader:leader,opens:opens,rejects:NaN};
   });
 }
@@ -409,11 +411,12 @@ function loadB(){
     fetchT(AG+"/healthz"+t).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}),
     fetchT(AG+"/api/portfolio"+t).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}),
     fetchT(AG+"/api/x_connector/status"+t).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}),
-    fetchT(AG+"/api/crypto-lab"+t).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;})
+    fetchT(AG+"/api/crypto-lab"+t).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}),
+    fetchT(AG+"/api/health"+t).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;})
   ]).then(function(a){
-    var hz=a[0],pf=a[1],xc=a[2],cl=a[3];
+    var hz=a[0],pf=a[1],xc=a[2],cl=a[3],hlth=a[4];
     if(!hz&&!pf&&!xc)throw new Error("AG unreachable");
-    hz=hz||{};pf=pf||{};xc=xc||{};
+    hz=hz||{};pf=pf||{};xc=xc||{};hlth=hlth||{};
     var inSess=!!hz.in_session, scanMin=num(hz.scanner_age_sec)/60;
     var xpollMin=xc.last_poll?(Date.now()-parseTs(xc.last_poll))/60000:NaN;
     if(xpollMin<0)xpollMin=0;
@@ -428,7 +431,8 @@ function loadB(){
     var scanS=!haveHz?"red":(inSess?stMin(scanMin,10,30):(isNaN(scanMin)?"red":(scanMin>240?"amber":"green")));
     var assessS=!haveXc?"amber":(xc.enabled?"green":"amber");
     var sizeS=!havePf?"red":(isNaN(num(pf.total_equity))?"red":"green");
-    var execS=!havePf?"red":"green";
+    var lastCycleMin=hlth.last_cycle_at?(Date.now()-parseTs(hlth.last_cycle_at))/60000:NaN;
+    var execS=!havePf?"red":(inSess&&(isNaN(lastCycleMin)||lastCycleMin>30)?"amber":"green");
     var ledgerS=!havePf?"red":(viol>0?"red":(driftBooks>0?"amber":"green"));
     var newsFeed={status:feedS,stats:[["scan",ageStr(scanMin)],["X poll",ageStr(xpollMin)]]};
     var dashNode=(function(){
@@ -481,10 +485,17 @@ function loadB(){
       {c:"Uptime",v:ageStr(num(hz.uptime_sec)/60),sev:hz.status==="ok"?"g":"a"}
     ];
     var lats=[{n:"Scanner",m:scanMin,a:10,r:30},{n:"X poll",m:xpollMin,a:20,r:45},{n:"Last X signal",m:xpollMin,a:30,r:90}];
-    var gates=[{n:"freshness",v:score(feedS)},{n:"relevance",v:score(assessS)},{n:"sentiment",v:score(execS)},{n:"duplicate",v:score(scanS)}];
+    var ff=hlth.feed_freshness||{};
+    var sigAge=num(ff.signal_age_sec);var freshPct=isNaN(sigAge)?0:clamp(Math.round(100-sigAge/36),0,100);
+    var thrPct=num(ff.trades_24h)>0?clamp(Math.round(Math.min(num(ff.trades_24h),200)/2),0,100):0;
+    var gatePct=num(xc.rejected)+num(xc.opened)>0?Math.round(num(xc.opened)/(num(xc.opened)+num(xc.rejected))*100):0;
+    var zpSusp=hlth.zero_pnl_close_suspects||{};var zpCount=Object.keys(zpSusp).length;
+    var qualPct=zpCount===0?100:clamp(100-zpCount*20,0,100);
+    var gates=[{n:"feed freshness",v:freshPct},{n:"throughput 24h",v:thrPct},{n:"gate pass rate",v:gatePct},{n:"data quality",v:qualPct}];
     var curve=(pf.historical_daily_equities||[]).map(function(p){return num(p.equity);}).filter(function(x){return !isNaN(x);});
+    var correctness={max_drift:hlth.max_drift||0,negative_cash:hlth.negative_cash_books||[],stale_strategies:hlth.stale_strategies||[],zero_pnl:zpSusp,feeds_403:hlth.feeds_403||[]};
     return {build:"B",overall:nodes.reduce(function(o,n){return ORD[n.status]>ORD[o]?n.status:o;},"green"),online:true,
-      newsFeed:newsFeed,cols:cols,nodes:nodes,details:details,lats:lats,gates:gates,
+      newsFeed:newsFeed,cols:cols,nodes:nodes,details:details,lats:lats,gates:gates,correctness:correctness,
       equity:num(pf.total_equity),equityCurve:curve,equitySub:havePf?((pf.historical_daily_equities||[]).length+" day curve · live"):"—",
       cryptolab:clab,cryptolabPositions:clpos,cryptolabAvail:!!cl,leader:leader,opens:num(xc.opened),rejects:num(xc.rejected)};
   });
@@ -599,6 +610,7 @@ function renderDeep(){
   drawSpark($("#eqSpark"),m.equityCurve&&m.equityCurve.length?m.equityCurve:[],m.overall==="red"?"#f87171":"#2dd4bf");
   var uh=S.upHist[m.build];$("#upVal").textContent=healthPct(m.nodes)+"%";$("#upSub").textContent=uh.length+" samples · 5s";
   drawSpark($("#upSpark"),uh,"#22d3ee");
+  renderGuards();
   var log=$("#eventLog");log.innerHTML="";
   S.events[m.build].forEach(function(e){var r=el("div","ev "+e.cls);r.innerHTML='<span class="t">'+e.t+'</span><span class="m">'+e.msg+'</span>';log.appendChild(r);});
 }
@@ -611,6 +623,30 @@ function drawSpark(cv,data,color){
   ctx.beginPath();ctx.moveTo(X(0),Y(data[0]));for(var i=1;i<data.length;i++)ctx.lineTo(X(i),Y(data[i]));ctx.lineTo(X(data.length-1),H-pad);ctx.lineTo(X(0),H-pad);ctx.closePath();ctx.fillStyle=gr;ctx.fill();
   ctx.beginPath();ctx.moveTo(X(0),Y(data[0]));for(var j=1;j<data.length;j++)ctx.lineTo(X(j),Y(data[j]));ctx.strokeStyle=color;ctx.lineWidth=1.6;ctx.stroke();
   ctx.beginPath();ctx.arc(X(data.length-1),Y(data[data.length-1]),2.4,0,7);ctx.fillStyle=color;ctx.fill();
+}
+
+/* ---------- TRA-131: Correctness Guards ---------- */
+function renderGuards(){
+  var m=S.model[S.build];var box=$("#guardsPanel");if(!box)return;
+  if(!m||!m.correctness){box.innerHTML='<span style="color:var(--dim)">No correctness data (Build A does not expose guards yet)</span>';return;}
+  var c=m.correctness;var rows=[];
+  var driftS=c.max_drift<0.01?"green":c.max_drift<1?"amber":"red";
+  rows.push({guard:"Max cash drift",value:"$"+c.max_drift.toFixed(2),status:driftS,detail:driftS==="green"?"no drift":"drift detected across books"});
+  var ncS=c.negative_cash.length===0?"green":"red";
+  rows.push({guard:"Negative cash books",value:String(c.negative_cash.length),status:ncS,detail:ncS==="green"?"all books positive":c.negative_cash.map(function(b){return b.book+" ($"+b.cash+")";}).join(", ")});
+  var staleS=c.stale_strategies.length===0?"green":"amber";
+  rows.push({guard:"Stale strategies",value:String(c.stale_strategies.length),status:staleS,detail:staleS==="green"?"all active":c.stale_strategies.map(function(s){return s.book+" ("+s.last_trade_days_ago+"d, "+s.open_positions+" open)";}).join(", ")});
+  var zpKeys=Object.keys(c.zero_pnl);var zpS=zpKeys.length===0?"green":"amber";
+  rows.push({guard:"Zero-P&L close suspects",value:String(zpKeys.length),status:zpS,detail:zpS==="green"?"none":zpKeys.map(function(k){return k+" ("+c.zero_pnl[k].pct+"%)";}).join(", ")});
+  var f4S=c.feeds_403.length===0?"green":"red";
+  rows.push({guard:"Feed 403 errors",value:String(c.feeds_403.length),status:f4S,detail:f4S==="green"?"all feeds OK":c.feeds_403.join(", ")});
+  var html='<table style="width:100%;border-collapse:collapse;font-size:.7rem"><thead><tr style="border-bottom:1px solid var(--border);color:var(--dim)"><th style="text-align:left;padding:4px 8px">Guard</th><th style="text-align:center;padding:4px 8px">Status</th><th style="text-align:right;padding:4px 8px">Value</th><th style="text-align:left;padding:4px 8px">Detail</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    var dot=r.status==="green"?"🟢":r.status==="amber"?"🟡":"🔴";
+    html+='<tr style="border-bottom:1px solid rgba(255,255,255,.04)"><td style="padding:4px 8px">'+r.guard+'</td><td style="text-align:center;padding:4px 8px">'+dot+'</td><td style="text-align:right;padding:4px 8px;font-family:var(--fm)">'+r.value+'</td><td style="padding:4px 8px;color:var(--muted)">'+r.detail+'</td></tr>';
+  });
+  html+='</tbody></table>';
+  box.innerHTML=html;
 }
 
 /* ---------- TRA-136: Industry Verticals Scorecard ---------- */
@@ -894,7 +930,7 @@ $("#newsFeed").addEventListener("click",showNewsFeed);
 $("#newsFeed").classList.add("clickable");
 
 // TRA-89: build stamp + auto-refresh when a newer cockpit is deployed (defeats GitHub Pages HTML caching)
-var BUILD="2026-06-29T06:00Z-r10";
+var BUILD="2026-07-01T02:00Z-r11";
 $("#buildStamp").textContent="cockpit build "+BUILD;
 function checkVersion(){
   fetch("./index.html?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
