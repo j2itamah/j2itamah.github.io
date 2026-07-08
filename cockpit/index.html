@@ -292,7 +292,7 @@ var CUR_CACHE='https://alxtkdebryheweqbqlts.supabase.co/rest/v1/v2_dashboard_cac
 var CUR_TRUTH='https://alxtkdebryheweqbqlts.supabase.co/rest/v1/v2_book_metrics?select=book_key,open_count,closed_count,marked_equity';
 function loadA(){
   var hdr={"apikey":CUR_KEY,"Authorization":"Bearer "+CUR_KEY};
-  var healthP=fetchT(CUR_RPC,{method:"POST",headers:Object.assign({"Content-Type":"application/json"},hdr),body:"{}"})
+  var healthP=fetchT(CUR_RPC,{method:"POST",headers:Object.assign({"Content-Type":"application/json"},hdr),body:"{}"},15000)
     .then(function(r){if(!r.ok)throw new Error("rpc "+r.status);return r.json();})
     .catch(function(){return null;});
   var dataP=fetchT(CUR_CACHE,{headers:hdr},15000)
@@ -306,6 +306,8 @@ function loadA(){
     if(!d&&!dv)throw new Error("Build A unreachable");
     if(Array.isArray(d))d=d[0];
     if(!d)d={};
+    // When RPC times out but cache is fresh, derive overall from cache health
+    if(!d.overall&&dv&&dv._generated_at){var cAge=(Date.now()-parseTs(dv._generated_at))/60000;if(cAge<10)d.overall="green";else if(cAge<30)d.overall="amber";else d.overall="red";}
     var pipe={};(d.pipeline||[]).forEach(function(n){pipe[n.id]=n;});
     var nodes=DEEP_NODES.map(function(n){var p=pipe[n.id]||{};return {id:n.id,label:n.label,ico:n.ico,status:p.status||"amber",summary:p.summary||"",signals:p.signals||{}};});
     var acc=d.accounting||{},lp=d.loop||{},sc=d.scanner||{},tg=d.telegram||{},lt=d.last_trade||{},mk=(d.market||{});
@@ -651,7 +653,7 @@ function renderGuards(){
 
 /* ---------- TRA-136: Industry Verticals Scorecard ---------- */
 var VERT_URL="https://alxtkdebryheweqbqlts.supabase.co/rest/v1/v2_vertical_scorecard?select=*";
-var VERT_ICONS={crypto:"🪙",equities:"📈",ai:"🤖",quantum:"⚛️",political:"🏛️",tech:"💻"};
+var VERT_ICONS={crypto:"🪙",equities:"📈",ai:"🤖",quantum:"⚛️",political:"🏛️",tech:"💻",general:"📰"};
 function loadVerticals(){
   fetch(VERT_URL,{headers:{"apikey":CUR_KEY,"Authorization":"Bearer "+CUR_KEY}})
   .then(function(r){return r.ok?r.json():[];})
@@ -930,7 +932,7 @@ $("#newsFeed").addEventListener("click",showNewsFeed);
 $("#newsFeed").classList.add("clickable");
 
 // TRA-89: build stamp + auto-refresh when a newer cockpit is deployed (defeats GitHub Pages HTML caching)
-var BUILD="2026-07-01T02:00Z-r11";
+var BUILD="2026-07-08T05:20Z-r12";
 $("#buildStamp").textContent="cockpit build "+BUILD;
 function checkVersion(){
   fetch("./index.html?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
