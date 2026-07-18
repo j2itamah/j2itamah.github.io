@@ -46,6 +46,9 @@
   .health.warn .health-dot{background:#d97706}
   .health.bad{border-color:rgba(220,38,38,.30);color:#b91c1c;background:rgba(220,38,38,.06)}
   .health.bad .health-dot{background:var(--down)}
+  .trust-note{width:100%;max-width:880px;margin:-8px 0 22px;padding:12px 16px;border-radius:14px;
+    border:1px solid rgba(217,119,6,.28);background:rgba(217,119,6,.07);color:#92400e;
+    font-size:.84rem;line-height:1.45;text-align:center}
   .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(22,163,74,.5);
        animation:pulse 1.8s infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.4)}70%{box-shadow:0 0 0 9px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
@@ -156,24 +159,29 @@
 <body>
   <div class="brand"><div class="mark"></div><h1>Quant<span>Pulse</span> &middot; Trading Lab</h1></div>
   <div class="sub">Two parallel news-driven trading systems, running head to head.</div>
-  <div class="live"><span class="dot"></span> Both engines live &middot; paper trading</div>
+  <div class="live"><span class="dot"></span> Engines monitored live &middot; paper trading diagnostics</div>
 
-  <div class="health" id="siteHealth" title="Reflects whether the live dashboard data is loading and accurate">
+  <div class="health" id="siteHealth" title="Reflects whether the diagnostic dashboard data is loading and internally consistent">
     <span class="health-dot" id="healthDot"></span><span id="healthText">Checking dashboard health&hellip;</span>
   </div>
 
+  <div class="trust-note">
+    Rule 21 trust status: Build A / legacy metrics shown here are diagnostic and unverified unless a row is explicitly marked VALIDATED.
+    Do not treat leaderboard, P&amp;L, or edge labels as trusted trade results.
+  </div>
+
   <div class="champ">
-    <div class="champ-label">&#127942; Top performer &middot; live</div>
-    <div class="champ-name" id="champName">Loading live results&hellip;</div>
+    <div class="champ-label">&#127942; Diagnostic leader &middot; legacy/unverified</div>
+    <div class="champ-name" id="champName">Loading diagnostic results&hellip;</div>
     <div class="champ-stats">
-      <div><span class="champ-cap">Account value</span><span class="champ-val" id="champValue">&mdash;</span></div>
-      <div><span class="champ-cap">P/L today</span><span class="champ-val" id="champDay">&mdash;</span></div>
-      <div><span class="champ-cap">% return since baseline</span><span class="champ-val" id="champAll">&mdash;</span></div>
+      <div><span class="champ-cap">Diagnostic value</span><span class="champ-val" id="champValue">&mdash;</span></div>
+      <div><span class="champ-cap">Diagnostic P/L today</span><span class="champ-val" id="champDay">&mdash;</span></div>
+      <div><span class="champ-cap">Diagnostic return since baseline</span><span class="champ-val" id="champAll">&mdash;</span></div>
     </div>
   </div>
 
   <div class="leaderboard">
-    <div class="lb-title">Cross-Build Leaderboard &middot; ranked by % return
+    <div class="lb-title">Diagnostic Leaderboard &middot; legacy/unverified return
       <button class="lb-toggle" id="lbToggle" onclick="var w=document.getElementById('lbRowsWrap');var open=w.style.maxHeight!=='0px'&&w.style.maxHeight;w.style.maxHeight=open?'0px':'2000px';this.textContent=open?'Show standings':'Hide standings'">Show standings</button>
     </div>
     <div class="lb-rows-wrap" id="lbRowsWrap">
@@ -185,7 +193,7 @@
     <a class="card coral" href="https://j2itamah.github.io/trading-dashboard/" target="_blank" rel="noopener">
       <span class="pill">Build A</span>
       <h2>Cursor&nbsp;+&nbsp;Claude</h2>
-      <p>Supabase-backed V2 pipeline. Claude scores the news; 20 books trade in parallel with auto-closing TP/SL exits + CryptoLab.</p>
+      <p>Supabase-backed V2 pipeline. Legacy paper-trading metrics are shown as diagnostics until VALIDATED-only reporting is available.</p>
       <div class="stack">
         <span class="tag">Cursor</span><span class="tag">Claude</span>
         <span class="tag">Supabase</span><span class="tag">n8n</span>
@@ -197,7 +205,7 @@
     <a class="card dark" href="https://news-trading-system-production-b13f.up.railway.app/" target="_blank" rel="noopener">
       <span class="pill">Build B</span>
       <h2>OpenAI&nbsp;+&nbsp;Antigravity</h2>
-      <p>FastAPI engine on Railway. OpenAI GPT scores sentiment; freshness &amp; move gates filter late entries before each trade.</p>
+      <p>FastAPI engine on Railway. Trusted trade drawers now require VALIDATED rows; legacy portfolio views remain diagnostic unless labeled.</p>
       <div class="stack">
         <span class="tag">Antigravity</span><span class="tag">OpenAI GPT</span>
         <span class="tag">FastAPI</span><span class="tag">Railway</span>
@@ -211,11 +219,11 @@
      box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 22px rgba(45,212,191,.10);font-weight:600;font-size:.95rem;transition:transform .18s,border-color .18s">
     <span style="color:#2dd4bf;text-shadow:0 0 12px rgba(45,212,191,.5)">&#x2B21;</span>
     Master System Health Cockpit
-    <span style="color:#94a3b8;font-weight:500;font-size:.84rem">&mdash; live pipeline map &middot; both builds</span>
+    <span style="color:#94a3b8;font-weight:500;font-size:.84rem">&mdash; diagnostic pipeline map &middot; both builds</span>
     <span style="color:#2dd4bf">&rarr;</span>
   </a>
 
-  <footer>Paper trading only &middot; not financial advice &middot; BUILD 20260630-02 &middot; top performer updates live</footer>
+  <footer>Paper trading only &middot; not financial advice &middot; BUILD 20260630-02 &middot; legacy/unverified diagnostics unless explicitly VALIDATED</footer>
 
 <script>
 /* === BUILD 20260630-02 === unified feed (single source for both builds) */
@@ -350,11 +358,11 @@ function renderBoard(all){
 
   var nm=document.getElementById('champName');
   if(!best){
-    nm.textContent='Waiting for live data…';
+    nm.textContent='Waiting for diagnostic data…';
     document.getElementById('champValue').textContent='—';
     setPnl('champDay',NaN,NaN);
     document.getElementById('champAll').textContent='—';
-    var le=document.getElementById('lbRows'); if(le)le.innerHTML='<div class="lb-empty">No live data available</div>';
+    var le=document.getElementById('lbRows'); if(le)le.innerHTML='<div class="lb-empty">No diagnostic data available</div>';
     return {count:0,allFlat:true,best:null,bestValid:false};
   }
   nm.innerHTML=best.name+' <span class="champ-build">'+best.build+'</span>';
@@ -373,7 +381,7 @@ function renderBoard(all){
   }
   var el=document.getElementById('lbRows');
   if(el){
-    if(!ranked.length){el.innerHTML='<div class="lb-empty">No live data available</div>';}
+    if(!ranked.length){el.innerHTML='<div class="lb-empty">No diagnostic data available</div>';}
     else{
       var shown=Math.min(ranked.length,LB_CAP),html='';
       for(var i=0;i<shown;i++){
@@ -412,9 +420,9 @@ function refresh(){
     }else if(!res.hasA||!res.hasB){
       setHealth('warn','Partial data — '+(res.hasA?'Build B':'Build A')+' has no trades yet');
     }else if(summary.allFlat){
-      setHealth('warn','Live · both builds loaded · all flat (no P&L moves yet)');
+      setHealth('warn','Diagnostic feed loaded · both builds flat (no diagnostic P&L moves yet)');
     }else{
-      setHealth('ok','Live · unified feed · top performer '+(summary.best.pctAll>=0?'+':'')+Number(summary.best.pctAll).toFixed(2)+'%');
+      setHealth('warn','Diagnostic feed loaded · legacy/unverified leader '+(summary.best.pctAll>=0?'+':'')+Number(summary.best.pctAll).toFixed(2)+'%');
     }
   }).catch(function(e){
     console.warn('refresh failed:',e);
