@@ -116,6 +116,8 @@
   .refresh-btn{border:1px solid var(--line);background:var(--panel);color:var(--ink-soft);border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer;margin-top:6px}
   .refresh-btn:hover{border-color:var(--accent);color:var(--accent)}
   .snapshot-warning{display:none;margin:0 0 18px;padding:11px 14px;border:1px solid #e7c46a;border-radius:10px;background:#fff8e5;color:#7a5610;font:600 12px/1.45 'Spline Sans Mono',monospace}
+  .rule21-trust-banner{margin:0 0 18px;padding:13px 15px;border:1px solid #d97706;border-radius:14px;background:#fffbeb;color:#92400e;font:700 12px/1.55 'Spline Sans Mono',monospace;box-shadow:var(--shadow)}
+  .rule21-trust-banner strong{color:#7c2d12}
   .lab-warning,.vol-warning{margin:0 0 18px;padding:12px 14px;border-radius:12px;font:600 12px/1.45 'Spline Sans Mono',monospace}
   .lab-warning{border:1px solid #d97706;background:#fffbeb;color:#92400e}
   .vol-warning{border:1px solid #ddd6fe;background:var(--purple-bg);color:var(--purple)}
@@ -499,6 +501,11 @@
   </header>
 
   <div class="snapshot-warning" id="snapshot-warning"></div>
+  <div class="rule21-trust-banner" id="rule21-trust-banner">
+    <strong>Rule 21 trust status:</strong> Build A V2 preview is legacy/diagnostic. P/L, equity, leaderboards,
+    trade cards, and historical confidence panels are UNVERIFIED unless a row is explicitly marked VALIDATED.
+    Do not treat these numbers as trusted trading results.
+  </div>
 
   <section id="view-overview" class="view"></section>
   <section id="view-research" class="view"></section>
@@ -910,7 +917,7 @@ function operationsGlance(open, closed, book){
   const invPct=Math.max(0,100-cashPct);
   const todayPct=equity?((todayPnl/equity)*100):0;
   return `<div class="eq-card equity-hero">
-    <div class="eq-label">Official Marked Equity · ${esc(LIFE_LABELS[book?.lifecycle]||book?.lifecycle||'selected')}</div>
+    <div class="eq-label">Diagnostic Marked Equity · unverified · ${esc(LIFE_LABELS[book?.lifecycle]||book?.lifecycle||'selected')}</div>
     <div class="eq-equity">${fmtMoney(equity)}</div>
     <div class="eq-growth ${signCls(todayPnl)}">${todayPnl>=0?'+':''}${fmtMoney(todayPnl)} (${fmtPct(todayPct)}) today</div>
     <div class="split-bar"><span class="cash" style="width:${cashPct}%"></span><span class="inv" style="width:${invPct}%"></span></div>
@@ -997,7 +1004,7 @@ function modelPerformancePanel(){
     <div class="guardrail-caption"><span>${fmtInt(r.tp)} TP</span><span>${fmtInt(r.sl)} SL</span><span>${fmtInt(r.timed)} time</span></div>
     ${sampleBar}${atrRow}
   </div>`}).join('');
-  return `<div class="panel"><h2>Fixed vs Volatility</h2><div class="section-note">Current official books only (${esc(baselineKey)}). Archived pre-reset books are excluded. Volatility uses ATR-based stops/targets — open mark P/L can look worse than fixed on the same day before any closes.</div>${cards}</div>`;
+  return `<div class="panel"><h2>Fixed vs Volatility · diagnostic/unverified</h2><div class="section-note">Diagnostic legacy view only (${esc(baselineKey)}). Archived pre-reset books are excluded. Volatility uses ATR-based stops/targets — open mark P/L can look worse than fixed on the same day before any closes. Not a trusted result unless explicitly VALIDATED.</div>${cards}</div>`;
 }
 function confidencePerformancePanel(){
   const CONF_DATA=[
@@ -1030,12 +1037,12 @@ function confidencePerformancePanel(){
     </div>`;
   }).join('');
   const keyFinding=`<div style="margin:14px 0 0;padding:12px 14px;border-radius:10px;border:1px solid #e7c46a;background:#fff8e5;color:#7a5610;font:600 12px/1.5 'Spline Sans Mono',monospace">
-    Key finding: Higher confidence does NOT improve performance. 0.65 BUY has the best absolute P/L (+$1,007) while 0.70+ BUY loses money (-$89). SELL outperforms BUY at every bucket. Recommend: do not raise the minimum confidence threshold — the 0.65 band is where most value is generated.
+    Diagnostic observation only: historical legacy rows suggest higher confidence did not improve performance in this snapshot. Treat as unverified research context, not a trusted rule or strategy recommendation.
   </div>`;
   const tooltip=`<div style="margin:14px 0 0;padding:10px 14px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--muted);font:11px/1.5 'Spline Sans Mono',monospace">
     Confidence is only one factor. Direction, model, news type, and timing matter too.
   </div>`;
-  return `<div class="panel"><h2>Historical Confidence Performance</h2><div class="section-note">Based on historical V1 closed trades, not only current V2 ledger sample. research_valid = true only. Data snapshot from 2026-06-18.</div>${rows}${keyFinding}${tooltip}</div>`;
+  return `<div class="panel"><h2>Historical Confidence Performance · legacy/unverified</h2><div class="section-note">Legacy diagnostic context from historical V1 closed trades, not the current validated contract. Data snapshot from 2026-06-18. Do not use as trusted P/L or edge evidence.</div>${rows}${keyFinding}${tooltip}</div>`;
 }
 function rulebookStatusPanel(){
   const health=DATA?.health||{};
@@ -1242,7 +1249,7 @@ function equityBlock(summary){
   const cashPct=Math.max(0,Math.min(100,(cash/(cash+deployed||1))*100));
   const invPct=Math.max(0,Math.min(100,100-cashPct));
   return `<div class="eq-card equity-hero">
-    <div class="eq-label">Official Marked Equity</div>
+    <div class="eq-label">Diagnostic Marked Equity · unverified</div>
     <div class="eq-equity">${fmtMoney(equity)}</div>
     <div class="eq-growth ${signCls(pnl)}">${pnl>=0?'+':''}${fmtMoney(pnl)} total · ${fmtPct((pnl/(start||1))*100)}</div>
     <div class="split-bar"><span class="cash" style="width:${cashPct}%"></span><span class="inv" style="width:${invPct}%"></span></div>
@@ -1264,9 +1271,9 @@ function renderOverview(){
   const dailyLossRemaining=Math.max(0,dailyLossLimit-dailyLossUsed);
   let html=equityBlock(s);
   html+=`<div class="kpis">
-    ${kpi('Today P/L', `${today>=0?'+':''}${fmtMoney(today)}`, signCls(today), 'Marked approximation')}
-    ${kpi('Total P/L', `${total>=0?'+':''}${fmtMoney(total)}`, signCls(total), 'Since start/baseline')}
-    ${kpi('Open Trades', fmtInt(reset.open), '', `${fmtInt(reset.closed)} closed since reset`)}
+    ${kpi('Diagnostic Today P/L', `${today>=0?'+':''}${fmtMoney(today)}`, signCls(today), 'Unverified mark approximation')}
+    ${kpi('Diagnostic Total P/L', `${total>=0?'+':''}${fmtMoney(total)}`, signCls(total), 'Unverified since start/baseline')}
+    ${kpi('Diagnostic Open Trades', fmtInt(reset.open), '', `${fmtInt(reset.closed)} unverified closed since reset`)}
     ${kpi('V2 Health', health.accounting_ok?'OK':'Check', health.accounting_ok?'pos-text':'neg-text', `${health.books_with_drift||0} drift books`)}
   </div>`;
   html+=cockpitGuideStrip();
@@ -2295,7 +2302,7 @@ function renderCryptoLab(){
   const status=labStatusValue();
   const pill=(label,value,cls='')=>`<span class="rule-chip ${cls}">${esc(label)}: ${esc(value)}</span>`;
   const panel=(title,note,body,style='')=>`<div class="panel" style="margin-bottom:18px;${style}"><h2 style="margin-bottom:4px">${title}</h2>${note?`<div class="section-note">${note}</div>`:''}${body}</div>`;
-  let html=`<div class="lab-warning">Crypto Lab is a separate proving lane for after-hours monitoring. No broker orders and no official prop totals unless explicitly promoted.</div>`;
+  let html=`<div class="lab-warning">Crypto Lab is a separate proving lane for after-hours monitoring. Legacy Build A rows are UNVERIFIED unless explicitly marked VALIDATED. No broker orders and no official prop totals unless explicitly promoted.</div>`;
   const focusLabels={all:'All',accounts:'Accounts',trades:'Trades',evidence:'Evidence'};
   html+=`<div class="lab-focus-controls" aria-label="CryptoLab focus">${Object.entries(focusLabels).map(([key,label])=>`<button class="lab-focus-btn ${LAB_FOCUS===key?'on':''}" data-lab-focus="${key}" type="button">${label}</button>`).join('')}</div>`;
   html+=`<div class="lab-section lab-section-accounts">`;
@@ -2305,7 +2312,7 @@ function renderCryptoLab(){
     const acct=newsOnlyAccount;
     const markedEquity=Number(acct.free_cash||0)+Number(acct.deployed_cost||0)+Number(acct.unrealized_pnl||0);
     const totalRealizedPnl=Number(acct.realized_pnl||0);
-    html+=`<div class="panel" style="margin-bottom:18px;border-color:var(--purple);background:linear-gradient(180deg,#fff,#faf8ff)"><h2 style="margin-bottom:4px">CryptoLab Sim Account</h2><div class="section-note">Research-only simulated lane · ${esc(newsOnlyAccount.account_key)} · No broker orders.</div><div class="kpis" style="margin-bottom:12px">${kpi('Free Cash',fmtMoney(acct.free_cash),'','of '+fmtMoney(acct.starting_balance))}${kpi('Deployed',fmtMoney(acct.deployed_cost),'',fmtInt(labOpen.length)+' open')}${kpi('Realized P/L',(totalRealizedPnl>=0?'+':'')+fmtMoney(totalRealizedPnl),signCls(totalRealizedPnl),fmtInt(labClosed.length)+' closed')}${kpi('Equity',fmtMoney(markedEquity),signCls(markedEquity-Number(acct.starting_balance||10000)),(Number(acct.unrealized_pnl||0)!==0?'unrealized '+(Number(acct.unrealized_pnl)>=0?'+':'')+fmtMoney(acct.unrealized_pnl):'no open exposure'))}${kpi('Open Trades',fmtInt(labOpen.length),'',fmtInt(labClosed.length)+' closed')}${kpi('System Status',status.label,status.cls,status.sub)}</div><div class="compact-meta">${pill('CP14',mon.status||'unknown',mon.status==='PASS'?'':'warn')}${pill('Health',hlth.status||'unknown',hlth.status==='PASS'?'':'warn')}${pill('Readiness',rdns.status||'UNKNOWN',rdns.status==='READY_FOR_REVIEW'?'':'warn')}${pill('Publisher',pubLatest?.status||'none',pubLatest?.status==='success'?'':'warn')}</div></div>`;
+    html+=`<div class="panel" style="margin-bottom:18px;border-color:var(--purple);background:linear-gradient(180deg,#fff,#faf8ff)"><h2 style="margin-bottom:4px">CryptoLab Sim Account · unverified</h2><div class="section-note">Research-only simulated lane · ${esc(newsOnlyAccount.account_key)} · No broker orders · not trusted unless explicitly VALIDATED.</div><div class="kpis" style="margin-bottom:12px">${kpi('Free Cash',fmtMoney(acct.free_cash),'','of '+fmtMoney(acct.starting_balance))}${kpi('Deployed',fmtMoney(acct.deployed_cost),'',fmtInt(labOpen.length)+' open')}${kpi('Diagnostic Realized P/L',(totalRealizedPnl>=0?'+':'')+fmtMoney(totalRealizedPnl),signCls(totalRealizedPnl),fmtInt(labClosed.length)+' unverified closed')}${kpi('Diagnostic Equity',fmtMoney(markedEquity),signCls(markedEquity-Number(acct.starting_balance||10000)),(Number(acct.unrealized_pnl||0)!==0?'unverified unrealized '+(Number(acct.unrealized_pnl)>=0?'+':'')+fmtMoney(acct.unrealized_pnl):'no open exposure'))}${kpi('Open Trades',fmtInt(labOpen.length),'',fmtInt(labClosed.length)+' unverified closed')}${kpi('System Status',status.label,status.cls,status.sub)}</div><div class="compact-meta">${pill('Rule 21','UNVERIFIED','warn')}${pill('CP14',mon.status||'unknown',mon.status==='PASS'?'':'warn')}${pill('Health',hlth.status||'unknown',hlth.status==='PASS'?'':'warn')}${pill('Readiness',rdns.status||'UNKNOWN',rdns.status==='READY_FOR_REVIEW'?'':'warn')}${pill('Publisher',pubLatest?.status||'none',pubLatest?.status==='success'?'':'warn')}</div></div>`;
   }
   if(labAccounts.length){
     const order=['crypto_news_only','crypto_trend_gate','crypto_trend_strict','crypto_mean_revert','crypto_full_confluence'];
@@ -2470,12 +2477,12 @@ function renderCryptoLab(){
     html+=`<div class="panel" style="margin-bottom:18px"><h2 style="margin-bottom:4px">Lifecycle Evidence</h2><div class="empty" style="margin:0">No completed lifecycle evidence yet.</div></div>`;
   }
   if(labOpen.length>0){
-    html+=`<div class="panel open-panel" style="margin-bottom:18px"><h2>Open Simulated Trades (${fmtInt(labOpen.length)})</h2><div class="section-note">Tap a card for timing, source, sizing, and risk detail.</div>${labOpen.map(labTradeRow).join('')}</div>`;
+	  html+=`<div class="panel open-panel" style="margin-bottom:18px"><h2>Open Simulated Trades · unverified (${fmtInt(labOpen.length)})</h2><div class="section-note">Tap a card for timing, source, sizing, and risk detail. Diagnostic only unless explicitly VALIDATED.</div>${labOpen.map(labTradeRow).join('')}</div>`;
   } else {
     html+=`<div class="panel" style="margin-bottom:18px;text-align:center;padding:28px"><div class="empty" style="margin:0">No open simulated trades. All positions closed.</div></div>`;
   }
   if(labClosed.length>0){
-    html+=`<div class="panel closed-panel" style="margin-bottom:18px"><h2>Closed Simulated Trades (${fmtInt(labClosed.length)})</h2><div class="section-note">Tap a card for entry/close prices, realized P/L, and source.</div>${labClosed.slice(0,10).map(labTradeRow).join('')}</div>`;
+    html+=`<div class="panel closed-panel" style="margin-bottom:18px"><h2>Closed Simulated Trades · unverified (${fmtInt(labClosed.length)})</h2><div class="section-note">Tap a card for entry/close prices, realized P/L, and source. Diagnostic only unless explicitly VALIDATED.</div>${labClosed.slice(0,10).map(labTradeRow).join('')}</div>`;
   }
   html+=`</div><div class="lab-section lab-section-evidence">`;
   const candidateCards=cands.map(c=>{
