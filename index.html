@@ -229,6 +229,7 @@
 /* === BUILD 20260630-02 === unified feed (single source for both builds) */
 var BUILD='20260630-02';
 var UNIFIED_URL='https://news-trading-system-production-b13f.up.railway.app/api/unified/data';
+var LOCAL_V2_URL='data.v2.json';
 
 var NAMES={news_only:'News Only',news_plus_ta:'Trend Gate',trend_strict:'Strict Trend',
   mean_reversion:'Mean Reversion',full_confluence:'Full Confluence',
@@ -250,39 +251,41 @@ function stratLabel(key){
   return NAMES[pf]||pf.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
 }
 
-/* --- Load from unified Railway feed (both builds in one call) --- */
-function loadUnified(){
-  return fetch(UNIFIED_URL+'?t='+Date.now(),{cache:'no-store'}).then(function(r){
-    if(!r.ok)throw new Error('unified '+r.status);return r.json();
-  }).then(function(d){
+function normalizeUnified(d){
     if(d.error)throw new Error(d.error);
 
     /* Build a map of book_key -> {starting_balance, target_model, P&L accumulators} */
     var bookMap={};
-    var books=d.books||[];
+    var books=d.books||d.book_metrics||[];
     for(var i=0;i<books.length;i++){
       var b=books[i];
-      var key=b.engine+'|'+b.book_key;
+      var inferredEngine=b.engine||(b.history_preserved_backend_key?'A':'A');
+      var key=inferredEngine+'|'+b.book_key;
       bookMap[key]={
-        engine:b.engine,
+        engine:inferredEngine,
         book_key:b.book_key,
         starting_balance:num(b.starting_balance)||10000,
         target_model:b.target_model||'fixed',
-        realized:0,unrealized:0,tradeCount:0
+        realized:num(b.realized_pnl)||0,
+        unrealized:num(b.unrealized_pnl)||0,
+        tradeCount:num(b.open_count)||num(b.closed_count)||0
       };
     }
 
     /* Accumulate per-book P&L from trades */
-    var trades=d.trades||[];
+    var trades=d.trades||d.closed_trades||[];
     for(var j=0;j<trades.length;j++){
       var t=trades[j];
-      var tk=t.engine+'|'+t.book_key;
+      var tEngine=t.engine||(t.book_key?'A':'A');
+      var tk=tEngine+'|'+t.book_key;
       if(!bookMap[tk]){
-        bookMap[tk]={engine:t.engine,book_key:t.book_key,starting_balance:10000,
+        bookMap[tk]={engine:tEngine,book_key:t.book_key,starting_balance:num(t.book_starting_balance)||10000,
           target_model:'fixed',realized:0,unrealized:0,tradeCount:0};
       }
-      bookMap[tk].realized+=num(t.realized_pnl)||0;
-      bookMap[tk].unrealized+=num(t.unrealized_pnl)||0;
+      if(!(d.book_metrics||[]).length){
+        bookMap[tk].realized+=num(t.realized_pnl)||0;
+        bookMap[tk].unrealized+=num(t.unrealized_pnl)||0;
+      }
       bookMap[tk].tradeCount++;
     }
 
@@ -339,6 +342,22 @@ function loadUnified(){
       });
     }
     return {results:results,hasA:hasA,hasB:hasB};
+}
+
+/* --- Load from same-origin static Build A diagnostic data first; fall back to
+   the unified Railway feed only if local data is unavailable. This avoids CORS
+   noise on GitHub Pages while preserving Rule 21: all rendered results remain
+   legacy/unverified diagnostics unless a row is explicitly marked VALIDATED. --- */
+function loadUnified(){
+  return fetch(LOCAL_V2_URL+'?t='+Date.now(),{cache:'no-store'}).then(function(r){
+    if(!r.ok)throw new Error('local '+r.status);return r.json();
+  }).catch(function(localErr){
+    console.warn('local diagnostic feed failed; falling back to unified feed:',localErr);
+    return fetch(UNIFIED_URL+'?t='+Date.now(),{cache:'no-store'}).then(function(r){
+      if(!r.ok)throw new Error('unified '+r.status);return r.json();
+    });
+  }).then(function(d){
+    return normalizeUnified(d);
   });
 }
 
