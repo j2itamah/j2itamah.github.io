@@ -1397,11 +1397,11 @@ function tradeRow(t){
     : `<div class="spend-line"><div><div class="spend-label">Spent</div><div class="spend-value">${fmtMoney(spend.spent)}</div></div><span class="rule-chip ${sizingOk?'':'warn'}">${esc(sizingLabel)}</span></div><div class="compact-meta">${sizingExplain}${timingChip}${brokerChip}${url?`<a class="article-chip" href="${esc(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Read article</a>`:''}</div>`;
   return `<div class="pos-row ${closed?'closed '+reasonClass:'open'}" data-trade-id="${t.id}" role="button" tabindex="0" aria-label="Open ${esc(t.asset)} ${esc(dir)} trade details" onclick="openTradeModal('${esc(t.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTradeModal('${esc(t.id)}')}">
     <div>
-      <div class="asset-line"><span>${esc(t.asset)}</span><span class="badge ${dir==='BUY'?'long':'short'}">${esc(dir)}</span>${modelBadge}${closed?`<span class="badge">${esc(t.lifecycle||'')}</span>`:''}</div>
+      <div class="asset-line"><span>${esc(t.asset)}</span><span class="badge ${dir==='BUY'?'long':'short'}">${esc(dir)}</span>${modelBadge}<span class="badge">UNVERIFIED</span>${closed?`<span class="badge">${esc(t.lifecycle||'')}</span>`:''}</div>
       ${meta}
       ${pricePathBar(t,true)}
     </div>
-    <div class="pos-pnl ${signCls(pnl)}">${pnl>=0?'+':''}${fmtMoney(pnl)}<div class="small">${fmtPct(pct)}</div></div>
+    <div class="pos-pnl ${signCls(pnl)}">${pnl>=0?'+':''}${fmtMoney(pnl)}<div class="small">${fmtPct(pct)} · diagnostic</div></div>
   </div>`;
 }
 function labTradeRow(t){
@@ -1422,11 +1422,11 @@ function labTradeRow(t){
   }
   return `<div class="pos-row ${closed?'closed':'open'}" data-lab-trade-id="${t.id}" role="button" tabindex="0" aria-label="Open ${esc(t.asset)} ${esc(dir)} CryptoLab trade details" onclick="openLabTradeModal('${esc(t.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLabTradeModal('${esc(t.id)}')}">
     <div>
-      <div class="asset-line"><span>${esc(t.asset)}</span><span class="badge ${dir==='BUY'?'long':'short'}">${esc(dir)}</span><span class="badge">SIM</span></div>
+      <div class="asset-line"><span>${esc(t.asset)}</span><span class="badge ${dir==='BUY'?'long':'short'}">${esc(dir)}</span><span class="badge">SIM</span><span class="badge">UNVERIFIED</span></div>
       ${meta}
       ${pricePathBar(t,true)}
     </div>
-    <div class="pos-pnl ${signCls(pnl)}">${pnl>=0?'+':''}${fmtMoney(pnl)}<div class="small">${fmtPct(pct)}</div></div>
+    <div class="pos-pnl ${signCls(pnl)}">${pnl>=0?'+':''}${fmtMoney(pnl)}<div class="small">${fmtPct(pct)} · diagnostic</div></div>
   </div>`;
 }
 function approvalBoundaryStrip(){
@@ -1813,7 +1813,7 @@ function renderOperations(){
 	    const visibleRows=expanded?filtered:listRows.slice(0,8);
 	    html+=`<div class="panel ${isClosed?'closed-panel':'open-panel'} trade-list-panel">
 	      <h2>${isClosed?'Closed Trades':'Open Positions'}</h2>
-	      <div class="section-note">${isClosed?(bookClosed.length?'Resolved trades: close reason, amount spent, article link, and exit against risk target.':`No closes on ${esc(baselineCp())} yet — this book reset ${DATA?.official_baseline?.captured_at?shortTime(DATA.official_baseline.captured_at):'after baseline'} and only counts trades on the current clean book key.${breached.length?` ${fmtInt(breached.length)} open still past TP/SL.`:' '}`):'Live trades: amount spent, sizing status, article link, latency chip, and distance to SL/TP.'}</div>
+	      <div class="section-note">${isClosed?(bookClosed.length?'Resolved diagnostic trades: close reason, amount spent, article link, and exit against risk target. Legacy/unverified unless explicitly VALIDATED.':`No closes on ${esc(baselineCp())} yet — this book reset ${DATA?.official_baseline?.captured_at?shortTime(DATA.official_baseline.captured_at):'after baseline'} and only counts trades on the current clean book key.${breached.length?` ${fmtInt(breached.length)} open still past TP/SL.`:' '}`):'Live diagnostic trades: amount spent, sizing status, article link, latency chip, and distance to SL/TP. Legacy/unverified unless explicitly VALIDATED.'}</div>
 	      <div class="ops-trade-tabs">
 	        <button class="ops-trade-tab ${activeList==='open'?'on':''}" data-ops-list="open">Open <strong>${fmtInt(bookOpen.length)}</strong></button>
 	        <button class="ops-trade-tab ${activeList==='closed'?'on':''}" data-ops-list="closed">Closed <strong>${fmtInt(bookClosed.length)}</strong></button>
@@ -2646,9 +2646,9 @@ function openTradeModal(id){
   const dirAdjNow=rawNowMove==null?null:(dir==='SELL'?-rawNowMove:rawNowMove);
   const refSourceLabel=latencyHasDisplayFallback(lat)?'Yahoo diagnostic':latencySourceText(lat);
   const refEntry=refEntryDisplay(lat, tradePx);
-  const html=`<div class="tm-head"><div><h3>${esc(t.asset)} <span class="badge ${dir==='BUY'?'long':'short'}">${esc(dir)}</span> <span class="badge ${modelOf(t)==='volatility'?'vol':''}">${esc(modelOf(t))}</span></h3><div class="tm-sub">${esc(t.portfolio||'')} · ${esc(t.lifecycle||'')} · ${esc(t.status||'')}</div></div><div class="tm-nav"><button class="tm-btn" onclick="openTradeModal('${esc(prevId)}')">← Prev</button><span class="tm-index">${tradeIdx+1}/${tradeCount}</span><button class="tm-btn" onclick="openTradeModal('${esc(nextId)}')">Next →</button><button class="tm-close" onclick="closeTradeModal()">×</button></div></div>
+  const html=`<div class="tm-head"><div><h3>${esc(t.asset)} <span class="badge ${dir==='BUY'?'long':'short'}">${esc(dir)}</span> <span class="badge ${modelOf(t)==='volatility'?'vol':''}">${esc(modelOf(t))}</span> <span class="badge">UNVERIFIED</span></h3><div class="tm-sub">${esc(t.portfolio||'')} · ${esc(t.lifecycle||'')} · ${esc(t.status||'')} · diagnostic legacy row</div></div><div class="tm-nav"><button class="tm-btn" onclick="openTradeModal('${esc(prevId)}')">← Prev</button><span class="tm-index">${tradeIdx+1}/${tradeCount}</span><button class="tm-btn" onclick="openTradeModal('${esc(nextId)}')">Next →</button><button class="tm-close" onclick="closeTradeModal()">×</button></div></div>
   <div class="tm-body">
-    <div class="tm-pnl-banner ${signCls(pnl)}">${pnl>=0?'+':''}${fmtMoney(pnl)}<div class="small">${fmtPct(pct)}</div></div>
+    <div class="tm-pnl-banner ${signCls(pnl)}">${pnl>=0?'+':''}${fmtMoney(pnl)}<div class="small">${fmtPct(pct)} · UNVERIFIED diagnostic P/L</div></div>
     <div class="news-impact">
       <div class="news-impact-head"><div><div class="news-impact-title">News impact</div><div class="small">${esc(headline)}</div></div><span class="impact-pill ${impact.cls}">${esc(impact.label)}</span></div>
       <div class="impact-grid">
@@ -2700,9 +2700,9 @@ function openLabTradeModal(id){
   const prevId=tradeCount?labTrades[(tradeIdx-1+tradeCount)%tradeCount]?.id:null;
   const nextId=tradeCount?labTrades[(tradeIdx+1)%tradeCount]?.id:null;
   const closedBanner=closed?`<div class="reason-line" style="margin:8px 0 4px;text-align:center"><span class="reason-pill">${esc(t.close_reason||'closed')}</span><span class="small" style="margin-left:8px">${shortTime(t.closed_at)}</span></div>`:'';
-  const html=`<div class="tm-head"><div><h3>${esc(t.asset)} <span class="badge ${dir==='BUY'?'long':'short'}">${esc(dir)}</span> <span class="badge">SIM</span></h3><div class="tm-sub">${esc(t.account_key||'')} · ${esc(t.target_model||'fixed')} · ${esc(t.status||'')}</div></div><div class="tm-nav"><button class="tm-btn" onclick="openLabTradeModal('${esc(prevId)}')">← Prev</button><span class="tm-index">${tradeIdx+1}/${tradeCount}</span><button class="tm-btn" onclick="openLabTradeModal('${esc(nextId)}')">Next →</button><button class="tm-close" onclick="closeTradeModal()">×</button></div></div>
+  const html=`<div class="tm-head"><div><h3>${esc(t.asset)} <span class="badge ${dir==='BUY'?'long':'short'}">${esc(dir)}</span> <span class="badge">SIM</span> <span class="badge">UNVERIFIED</span></h3><div class="tm-sub">${esc(t.account_key||'')} · ${esc(t.target_model||'fixed')} · ${esc(t.status||'')} · diagnostic simulated row</div></div><div class="tm-nav"><button class="tm-btn" onclick="openLabTradeModal('${esc(prevId)}')">← Prev</button><span class="tm-index">${tradeIdx+1}/${tradeCount}</span><button class="tm-btn" onclick="openLabTradeModal('${esc(nextId)}')">Next →</button><button class="tm-close" onclick="closeTradeModal()">×</button></div></div>
   <div class="tm-body">
-    <div class="tm-pnl-banner ${signCls(pnl)}">${closed?'Realized ':''}${pnl>=0?'+':''}${fmtMoney(pnl)}<div class="small">${fmtPct(pct)}</div></div>
+    <div class="tm-pnl-banner ${signCls(pnl)}">${closed?'Realized ':''}${pnl>=0?'+':''}${fmtMoney(pnl)}<div class="small">${fmtPct(pct)} · UNVERIFIED diagnostic P/L</div></div>
     ${closedBanner}
     ${pricePathBar(t,false)}
     ${url?`<div style="text-align:center;margin:8px 0"><a class="article-chip" href="${esc(url)}" target="_blank" rel="noopener" style="font-size:13px">View X source post →</a></div>`:''}
