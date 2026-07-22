@@ -1,6 +1,107 @@
 /* IBKR / REAL cockpit — reads ONLY data.real (public.agent_trades).
  * Rule 21: every figure shown here is a verified, costed, broker-backed result. */
-const state = { lastLoadedAt: null };
+const state = { lastLoadedAt: null, filter: "ALL", raw: null };
+
+function netValue(row) {
+  return Number(row?._net_pnl ?? row?.net_pnl_after_commissions_cad ?? row?.net_pnl_after_commissions ?? row?.net_pnl ?? 0);
+}
+function grossValue(row) {
+  return Number(row?._gross_pnl ?? row?.gross_pnl_cad ?? row?.gross_pnl ?? 0);
+}
+function commissionValue(row) {
+  const value = row?._commissions ?? row?.commissions_cad ?? row?.commissions;
+  return typeof value === "number" ? Number(value) : Number(value?.total ?? value?.cad ?? 0);
+}
+function rowMatchesFilter(row) {
+  return state.filter === "ALL" || catalystKey(row) === state.filter;
+}
+function groupReal(rows, field) {
+  const groups = {};
+  for (const row of rows || []) {
+    const key = String(row?.[field] || "UNKNOWN");
+    if (!groups[key]) groups[key] = { value: key, n: 0, wins: 0, gross_pnl: 0, commissions: 0, net_pnl: 0 };
+    const group = groups[key];
+    const net = netValue(row);
+    group.n += 1;
+    group.wins += net > 0 ? 1 : 0;
+    group.gross_pnl += grossValue(row);
+    group.commissions += commissionValue(row);
+    group.net_pnl += net;
+  }
+  return Object.values(groups).map((g) => ({
+    ...g,
+    gross_pnl: Number(g.gross_pnl.toFixed(2)),
+    commissions: Number(g.commissions.toFixed(2)),
+    net_pnl: Number(g.net_pnl.toFixed(2)),
+    win_rate: Number((g.wins / Math.max(g.n, 1) * 100).toFixed(1)),
+  })).sort((a, b) => Math.abs(b.net_pnl) - Math.abs(a.net_pnl));
+}
+function filteredEquityCurve(rows) {
+  let total = 0;
+  return (rows || []).slice().sort((a, b) => new Date(a.exit_ts || 0) - new Date(b.exit_ts || 0)).map((row, index) => {
+    const net = netValue(row);
+    total += net;
+    return { n: index + 1, ts: row.exit_ts, symbol: row.symbol, net_pnl: Number(net.toFixed(2)), cumulative_net_pnl: Number(total.toFixed(2)) };
+  });
+}
+function realForFilter(real) {
+  if (state.filter === "ALL") return real;
+  const detail = real.by_catalyst_detail?.[state.filter];
+  if (detail) return { ...real, ...detail, stale_open_n: 0, uncosted_closed_n: 0 };
+  const closedAll = (real.recent_closed || []).filter(rowMatchesFilter);
+  const costed = closedAll.filter((row) => row.exit_ts && row.exit_price != null && (row.net_pnl != null || row.net_pnl_after_commissions != null || row.net_pnl_after_commissions_cad != null || row._net_pnl != null));
+  const open = (real.open_positions || []).filter(rowMatchesFilter);
+  const wins = costed.filter((row) => netValue(row) > 0);
+  const gross = costed.reduce((sum, row) => sum + grossValue(row), 0);
+  const commissions = costed.reduce((sum, row) => sum + commissionValue(row), 0);
+  const net = costed.reduce((sum, row) => sum + netValue(row), 0);
+  return {
+    ...real,
+    n: costed.length,
+    closed_n: closedAll.length,
+    uncosted_closed_n: Math.max(0, closedAll.length - costed.length),
+    open_n: open.length,
+    stale_open_n: 0,
+    wins: wins.length,
+    losses: costed.length - wins.length,
+    win_rate: Number((wins.length / Math.max(costed.length, 1) * 100).toFixed(1)),
+    gross_pnl: Number(gross.toFixed(2)),
+    commissions: Number(commissions.toFixed(2)),
+    net_pnl: Number(net.toFixed(2)),
+    by_rule: groupReal(costed, "rule_id"),
+    by_catalyst: groupReal(costed, "catalyst_type"),
+    by_direction: groupReal(costed, "direction"),
+    equity_curve: filteredEquityCurve(costed),
+    recent_closed: closedAll.slice(0, 100),
+    recent_costed_closed: costed.slice(0, 100),
+    open_positions: open.slice(0, 100),
+    decision_feed: (real.decision_feed || []).filter(rowMatchesFilter),
+  };
+}
+function setupFilter(real) {
+  const types = catalystTypesFrom(real.by_catalyst, real.decision_feed, real.recent_closed, real.open_positions);
+  const counts = Object.fromEntries((real.by_catalyst || []).map((r) => [String(r.value || "UNKNOWN"), Number(r.n || 0)]));
+  renderCatalystFilter("catalyst-filter", state.filter, types, counts, "real");
+  $("filter-copy").textContent = state.filter === "ALL"
+    ? "Showing all verified REAL trades."
+    : `Showing REAL trades for ${catalystDisplay(state.filter)} only.`;
+  $("catalyst-filter")?.querySelectorAll("[data-catalyst-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.filter = button.getAttribute("data-catalyst-filter") || "ALL";
+      renderAll();
+    });
+  });
+}
+function renderAll() {
+  const real = realForFilter(state.raw || {});
+  setupFilter(state.raw || {});
+  renderHero(real); renderMetrics(real); renderPnlBars(real); renderGauges(real);
+  renderEquity(real); renderGroups(real); renderOpenPositions(real);
+  renderCryptoStatus(real); renderDecisionFeed(real);
+  $("refresh-status").className = "status-pill ok";
+  const filterText = state.filter === "ALL" ? "" : ` · ${catalystDisplay(state.filter)}`;
+  $("refresh-status").innerHTML = `<strong>Live${filterText}</strong> · REAL n=${num(real.n)} · updated ${state.lastLoadedAt?.toLocaleTimeString?.() || "now"}`;
+}
 
 function renderHero(real) {
   $("hero-net").innerHTML = `<span class="${cls(real.net_pnl)}">${money(real.net_pnl)}</span>`;
@@ -186,13 +287,10 @@ async function load() {
   try {
     const security = await fetchSecurity();
     const data = await fetchDashboard();
-    const real = data.real || {};
-    renderHero(real); renderMetrics(real); renderPnlBars(real); renderGauges(real);
-    renderEquity(real); renderGroups(real); renderOpenPositions(real);
-    renderCryptoStatus(real); renderDecisionFeed(real); renderSecurity(data, security);
+    state.raw = data.real || {};
     state.lastLoadedAt = new Date();
-    $("refresh-status").className = "status-pill ok";
-    $("refresh-status").innerHTML = `<strong>Live</strong> · REAL n=${num(real.n)} · updated ${state.lastLoadedAt.toLocaleTimeString()}`;
+    renderAll();
+    renderSecurity(data, security);
   } catch (error) { showError(error); }
 }
 

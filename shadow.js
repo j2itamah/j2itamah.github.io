@@ -1,7 +1,7 @@
 /* SHADOW / RESEARCH cockpit — same shape as IBKR / REAL, but research-only.
  * Reads ONLY data.shadow (public.agent_shadow_trades). Dollar values are fixed
  * $10K hypothetical translations from observed forward returns, not real fills. */
-const state = { lastLoadedAt: null };
+const state = { lastLoadedAt: null, filter: "ALL", raw: null };
 const RESEARCH_NOTIONAL = 10000;
 
 function hasValue(v) { return v !== null && v !== undefined && v !== ""; }
@@ -18,6 +18,65 @@ function hypotheticalPnl(returnPct, notional = RESEARCH_NOTIONAL) { return Numbe
 function completeRows(shadow) { return (shadow.recent_priced || []).filter(isCompleteObservation); }
 function pendingRows(shadow) { return (shadow.recent_priced || []).filter((r) => !isCompleteObservation(r)); }
 function horizonByName(shadow, name) { return (shadow.horizon_ladder || []).find((r) => String(r.horizon || "").toLowerCase() === name); }
+function rowMatchesFilter(row) { return state.filter === "ALL" || catalystKey(row) === state.filter; }
+function pricedCounts(rows, field) {
+  const counts = {};
+  for (const row of rows || []) {
+    const key = String(row?.[field] || "UNKNOWN");
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  return Object.entries(counts).map(([value, priced_n]) => ({ value, priced_n })).sort((a, b) => b.priced_n - a.priced_n);
+}
+function filteredLadder(rows) {
+  return ["5m", "15m", "1h", "eod"].map((h) => {
+    const values = (rows || []).map((row) => returnValue(row, h)).filter(hasValue).map(Number);
+    const wins = values.filter((v) => v > 0).length;
+    return {
+      horizon: h === "eod" ? "EOD" : h,
+      priced_n: values.length,
+      avg_direction_adjusted_return_pct: values.length ? Number((values.reduce((a, b) => a + b, 0) / values.length).toFixed(3)) : 0,
+      hit_rate: values.length ? Number((wins / values.length * 100).toFixed(1)) : 0,
+    };
+  });
+}
+function shadowForFilter(shadow) {
+  if (state.filter === "ALL") return shadow;
+  const detail = shadow.by_catalyst_detail?.[state.filter];
+  if (detail) return { ...shadow, ...detail };
+  const allRows = shadow.recent_priced || [];
+  const rows = allRows.filter(rowMatchesFilter);
+  const priced = rows.filter(_isPricedLocal);
+  const pending = rows.filter((row) => !_isPricedLocal(row));
+  return {
+    ...shadow,
+    priced_n: priced.length,
+    pending_or_unpriced_n: pending.length,
+    total_rows_diagnostic: rows.length,
+    horizon_ladder: filteredLadder(priced),
+    net_by_catalyst: [],
+    by_rule: pricedCounts(priced, "rule_id"),
+    by_catalyst: pricedCounts(priced, "catalyst_type"),
+    by_direction: pricedCounts(priced, "direction"),
+    recent_priced: rows,
+  };
+}
+function _isPricedLocal(row) {
+  return hasValue(row?.entry_reference_price) && ["5m", "15m", "1h", "eod"].some((h) => hasValue(row?.[`price_${h}`]));
+}
+function setupFilter(shadow) {
+  const types = catalystTypesFrom(shadow.by_catalyst, shadow.recent_priced);
+  const counts = Object.fromEntries((shadow.by_catalyst || []).map((r) => [String(r.value || "UNKNOWN"), Number(r.priced_n || 0)]));
+  renderCatalystFilter("catalyst-filter", state.filter, types, counts, "shadow");
+  $("filter-copy").textContent = state.filter === "ALL"
+    ? "Showing all SHADOW research observations."
+    : `Showing SHADOW research for ${catalystDisplay(state.filter)} only.`;
+  $("catalyst-filter")?.querySelectorAll("[data-catalyst-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.filter = button.getAttribute("data-catalyst-filter") || "ALL";
+      renderAll();
+    });
+  });
+}
 function eodStats(shadow) {
   const eod = horizonByName(shadow, "eod") || bestHorizon(shadow.horizon_ladder);
   if (!eod) return null;
@@ -89,6 +148,19 @@ function renderEquity(shadow) {
   const rows = completeRows(shadow);
   $("equity-curve").innerHTML = lineChart(researchCurve(rows), "cumulative_net_pnl", "Shadow hypothetical research P/L curve");
 }
+function renderLadder(shadow) {
+  const ladder = shadow.horizon_ladder || [];
+  if (ladder.length === 0) { $("shadow-horizon-ladder").innerHTML = `<div class="empty">No priced SHADOW horizons for this catalyst yet.</div>`; return; }
+  $("shadow-horizon-ladder").innerHTML = `<div class="ladder">${ladder.map((r) => {
+    const avg = Number(r.avg_direction_adjusted_return_pct || 0);
+    const hit = Number(r.hit_rate || 0);
+    return `<div class="ladder-card">
+      <div class="ladder-top"><strong>${safe(r.horizon)}</strong><span class="mono ${cls(avg)}">${pct3(avg)}</span></div>
+      <div class="bar-track"><div class="bar-fill shadow" style="width:${Math.max(3, Math.min(100, Math.abs(avg) * 20 || hit))}%"></div></div>
+      <div class="small">priced n=${num(r.priced_n)} · hit rate ${pct(hit)}</div>
+    </div>`;
+  }).join("")}</div>`;
+}
 function ruleCards(rows, emptyText) {
   if (!rows || rows.length === 0) return `<div class="empty">${esc(emptyText)}</div>`;
   return `<div class="rule-cards">${rows.slice(0, 12).map((r) => `
@@ -98,6 +170,21 @@ function ruleCards(rows, emptyText) {
     </div>`).join("")}</div>`;
 }
 function catalystLeaderboard(shadow) {
+  const detail = state.raw?.by_catalyst_detail;
+  if (state.filter === "ALL" && detail && Object.keys(detail).length) {
+    return Object.entries(detail).map(([key, summary]) => {
+      const eod = horizonByName(summary, "eod") || bestHorizon(summary.horizon_ladder);
+      const net = (summary.net_by_catalyst || [])[0];
+      return `<div class="rule-card">
+        <div class="rc-top"><div class="rc-name">${safe(catalystDisplay(key))}</div><div class="rc-net muted">priced n=${num(summary.priced_n)}</div></div>
+        <div class="rc-meta">
+          <span>${safe(eod?.horizon || "horizon")} ${eod ? pct3(eod.avg_direction_adjusted_return_pct) : "—"}</span>
+          <span>hit ${eod ? pct(eod.hit_rate) : "—"}</span>
+          <span>${net ? `${money(net.net_pnl)} modeled` : "net pending capture"}</span>
+        </div>
+      </div>`;
+    }).join("");
+  }
   const rows = shadow.by_catalyst || [];
   if (!rows.length) return `<div class="empty">No priced SHADOW rows by catalyst yet.</div>`;
   const max = Math.max(...rows.map((r) => Number(r.priced_n || 0)), 1);
@@ -154,6 +241,16 @@ function renderShadowStatus(shadow) {
     <div class="metric" style="margin-bottom:12px"><div class="metric-label">Research contract</div><div class="metric-value muted">SHADOW</div><div class="metric-sub">not executable · no real cash/equity · no broker fills</div></div>
     ${table(["Bucket", "Rows"], [["complete in feed", complete], ["pending in feed", pending], ["priced total", shadow.priced_n || 0], ["diagnostic total", shadow.total_rows_diagnostic || 0]], ([k, v]) => `<tr><td>${esc(k)}</td><td class="mono">${num(v)}</td></tr>`, "No shadow status.")}`;
 }
+function renderAll() {
+  const shadow = shadowForFilter(state.raw || {});
+  setupFilter(state.raw || {});
+  renderHero(shadow); renderMetrics(shadow); renderPnlBars(shadow); renderGauges(shadow);
+  renderEquity(shadow); renderLadder(shadow); renderGroups(shadow); renderPending(shadow); renderShadowStatus(shadow);
+  renderDecisionFeed(shadow);
+  $("refresh-status").className = "status-pill ok";
+  const filterText = state.filter === "ALL" ? "" : ` · ${catalystDisplay(state.filter)}`;
+  $("refresh-status").innerHTML = `<strong>Live · research only${filterText}</strong> · priced n=${num(shadow.priced_n)} · updated ${state.lastLoadedAt?.toLocaleTimeString?.() || "now"}`;
+}
 function renderSecurity(data, security) {
   const apiSec = data.security || {};
   $("security-state").innerHTML = `
@@ -166,19 +263,16 @@ function showError(error) {
   const msg = `SHADOW cockpit is fail-closed: ${error.message}`;
   $("refresh-status").className = "status-pill bad";
   $("refresh-status").innerHTML = `<strong>Blocked</strong> · ${new Date().toLocaleTimeString()}`;
-  ["real-metrics", "pnl-bars", "win-gauges", "equity-curve", "shadow-by-rule", "shadow-by-catalyst", "shadow-by-direction", "pending-marks", "decision-feed", "shadow-status"].forEach((id) => { if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`; });
+  ["real-metrics", "pnl-bars", "win-gauges", "equity-curve", "shadow-horizon-ladder", "shadow-by-rule", "shadow-by-catalyst", "shadow-by-direction", "pending-marks", "decision-feed", "shadow-status"].forEach((id) => { if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`; });
 }
 async function load() {
   try {
     const security = await fetchSecurity();
     const data = await fetchDashboard();
-    const shadow = data.shadow || {};
-    renderHero(shadow); renderMetrics(shadow); renderPnlBars(shadow); renderGauges(shadow);
-    renderEquity(shadow); renderGroups(shadow); renderPending(shadow); renderShadowStatus(shadow);
-    renderDecisionFeed(shadow); renderSecurity(data, security);
+    state.raw = data.shadow || {};
     state.lastLoadedAt = new Date();
-    $("refresh-status").className = "status-pill ok";
-    $("refresh-status").innerHTML = `<strong>Live · research only</strong> · priced n=${num(shadow.priced_n)} · updated ${state.lastLoadedAt.toLocaleTimeString()}`;
+    renderAll();
+    renderSecurity(data, security);
   } catch (error) { showError(error); }
 }
 document.addEventListener("DOMContentLoaded", () => { load(); setInterval(load, 30000); });

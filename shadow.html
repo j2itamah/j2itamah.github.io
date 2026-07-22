@@ -23,6 +23,17 @@
       <div class="status-pill" id="refresh-status">Loading…</div>
     </section>
 
+    <section class="panel filter-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Catalyst filter</h2>
+          <div class="filter-copy" id="filter-copy">Showing all SHADOW research observations.</div>
+        </div>
+        <span class="badge shadow">whole cockpit</span>
+      </div>
+      <div class="filter-pills" id="catalyst-filter"></div>
+    </section>
+
     <section class="hero-strip">
       <div class="hero-card primary">
         <div class="metric-label">Research P/L @ $10K each</div>
@@ -57,19 +68,19 @@
         <div class="chart-wrap" id="equity-curve"></div>
       </div>
       <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">Research P/L composition</h2><span class="badge shadow">$10K hypothetical</span></div>
-        <div id="pnl-bars"></div>
+        <div class="panel-header"><h2 class="panel-title">Horizon ladder</h2><span class="badge shadow">filtered priced n</span></div>
+        <div id="shadow-horizon-ladder"></div>
       </div>
     </section>
 
     <section class="grid two section-gap">
       <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">Hit gauges</h2><span class="badge shadow">n shown</span></div>
-        <div class="gauges" id="win-gauges"></div>
+        <div class="panel-header"><h2 class="panel-title">Research P/L composition</h2><span class="badge shadow">$10K hypothetical</span></div>
+        <div id="pnl-bars"></div>
       </div>
       <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">Shadow status</h2><span class="badge warn">research only</span></div>
-        <div id="shadow-status"><div class="loading">Loading shadow status…</div></div>
+        <div class="panel-header"><h2 class="panel-title">Hit gauges</h2><span class="badge shadow">n shown</span></div>
+        <div class="gauges" id="win-gauges"></div>
       </div>
     </section>
 
@@ -93,6 +104,11 @@
         <div class="panel-header"><h2 class="panel-title">Pending marks</h2><span class="badge warn">waiting for later horizons</span></div>
         <div id="pending-marks" class="loading">Loading pending marks…</div>
       </div>
+    </section>
+
+    <section class="panel section-gap">
+      <div class="panel-header"><h2 class="panel-title">Shadow status</h2><span class="badge warn">research only</span></div>
+      <div id="shadow-status"><div class="loading">Loading shadow status…</div></div>
     </section>
 
     <section class="panel section-gap">

@@ -24,6 +24,45 @@ function safe(v, fallback = "—") {
 function when(v) { if (!v) return "—"; try { return new Date(v).toLocaleString(); } catch { return esc(v); } }
 function shortTime(v) { if (!v) return "—"; try { return new Date(v).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); } catch { return esc(v); } }
 function shortSource(v) { if (!v) return "no source"; const r = String(v); return r.includes(":") ? r.split(":").slice(0, 2).join(":") : r; }
+function catalystKey(row) { return String(row?.catalyst_type || row?.value || "UNKNOWN"); }
+function catalystDisplay(value) {
+  const raw = String(value || "UNKNOWN");
+  const labels = {
+    ALL: "All",
+    filing: "Filing",
+    crypto_news: "Crypto news",
+    trading_halt: "Trading halt",
+    news: "News",
+    macro: "Macro",
+    UNKNOWN: "Unknown",
+  };
+  return labels[raw] || raw.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+function catalystTypesFrom(...lists) {
+  const preferred = ["filing", "crypto_news", "trading_halt", "news", "macro"];
+  const found = new Set();
+  for (const list of lists) {
+    for (const row of list || []) {
+      const key = catalystKey(row);
+      if (key && key !== "ALL") found.add(key);
+    }
+  }
+  return preferred.filter((key) => found.has(key)).concat(
+    [...found].filter((key) => !preferred.includes(key)).sort()
+  );
+}
+function renderCatalystFilter(id, selected, types, counts = {}, variant = "real") {
+  const el = $(id);
+  if (!el) return;
+  const chips = ["ALL", ...types];
+  el.innerHTML = chips.map((key) => {
+    const count = key === "ALL"
+      ? Object.values(counts).reduce((acc, value) => acc + Number(value || 0), 0)
+      : Number(counts[key] || 0);
+    const active = key === selected ? " active" : "";
+    return `<button class="filter-pill ${variant}${active}" type="button" data-catalyst-filter="${esc(key)}">${esc(catalystDisplay(key))}<span class="pill-count">${num(count)}</span></button>`;
+  }).join("");
+}
 
 async function fetchDashboard() {
   const res = await fetch(API_BASE + "/api/live-agent/dashboard", { cache: "no-store" });
