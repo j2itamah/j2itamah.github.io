@@ -112,7 +112,7 @@
     </section>
 
     <section class="cards">
-      <a class="card" id="realCard" href="#ibkr" aria-controls="detail" aria-current="true" data-pane="real" data-target-hash="#ibkr" onclick="return navPane('real', true)">
+      <a class="card" id="realCard" href="#ibkr" aria-controls="detail" aria-current="true" data-pane="real" data-target-hash="#ibkr" title="Open IBKR / REAL trades">
         <span class="pill">IBKR / REAL</span>
         <h2>Executable trades</h2>
         <p>Broker-backed fills from <code>agent_trades</code>. This is the trusted side for actual P&L.</p>
@@ -122,7 +122,7 @@
         <span class="go">View IBKR trades <span>→</span></span>
       </a>
 
-      <a class="card dark" id="shadowCard" href="#shadow" aria-controls="detail" aria-current="false" data-pane="shadow" data-target-hash="#shadow" onclick="return navPane('shadow', true)">
+      <a class="card dark" id="shadowCard" href="#shadow" aria-controls="detail" aria-current="false" data-pane="shadow" data-target-hash="#shadow" title="Open SHADOW research observations">
         <span class="pill">SHADOW / RESEARCH</span>
         <h2>Research observations</h2>
         <p>Priced forward marks from <code>agent_shadow_trades</code>. Useful for edge research, not executable P&L.</p>
@@ -263,10 +263,6 @@ function showPane(which, shouldScroll=false){
   const targetHash = which === "real" ? "#ibkr" : "#shadow";
   if(location.hash !== targetHash) history.replaceState(null, "", targetHash);
   if(shouldScroll) $("detail").scrollIntoView({behavior:"smooth", block:"start"});
-}
-function navPane(which, shouldScroll=false){
-  showPane(which, shouldScroll);
-  return false;
 }
 function setStatus(kind, text){
   $("siteStatus").className = "status " + kind;
