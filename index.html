@@ -115,7 +115,7 @@
     </section>
 
     <section class="cards">
-      <a class="card" id="realCard" href="#ibkr" tabindex="0" aria-controls="detail" aria-current="true" data-pane="real" data-target-hash="#ibkr" aria-label="Open IBKR real executable trades" title="Open IBKR / REAL trades">
+      <a class="card" id="realCard" href="#ibkr" role="button" tabindex="0" aria-controls="detail" aria-current="true" data-pane="real" data-target-hash="#ibkr" aria-label="Open IBKR real executable trades" title="Open IBKR / REAL trades">
         <span class="pill">IBKR / REAL</span>
         <h2>Executable trades</h2>
         <p>Broker-backed fills from <code>agent_trades</code>. This is the trusted side for actual P&L.</p>
@@ -125,7 +125,7 @@
         <span class="go">View IBKR trades <span>→</span></span>
       </a>
 
-      <a class="card dark" id="shadowCard" href="#shadow" tabindex="0" aria-controls="detail" aria-current="false" data-pane="shadow" data-target-hash="#shadow" aria-label="Open SHADOW research observations" title="Open SHADOW research observations">
+      <a class="card dark" id="shadowCard" href="#shadow" role="button" tabindex="0" aria-controls="detail" aria-current="false" data-pane="shadow" data-target-hash="#shadow" aria-label="Open SHADOW research observations" title="Open SHADOW research observations">
         <span class="pill">SHADOW / RESEARCH</span>
         <h2>Research observations</h2>
         <p>Priced forward marks from <code>agent_shadow_trades</code>. Useful for edge research, not executable P&L.</p>
@@ -312,18 +312,14 @@ function activateCard(cardOrPane, event){
   showPane(pane, true, true);
   return false;
 }
-document.addEventListener("click", (event) => {
-  const card = cardFromEvent(event);
-  if(!card || !document.querySelector(".cards")?.contains(card)) return;
-  if(event.defaultPrevented) return;
-  activateCard(card, event);
-});
 ["realCard","shadowCard"].forEach((id) => {
   const card = $(id);
-  card.addEventListener("click", (event) => activateCard(cardFromEvent(event), event));
+  card.addEventListener("click", (event) => {
+    activateCard(card, event);
+  });
   card.addEventListener("keydown", (event) => {
     if(event.key !== "Enter" && event.key !== " ") return;
-    activateCard(cardFromEvent(event), event);
+    activateCard(card, event);
   });
 });
 load();
