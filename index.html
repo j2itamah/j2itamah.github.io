@@ -114,7 +114,7 @@
     </section>
 
     <section class="cards">
-      <a class="card" id="realCard" href="#ibkr" role="button" aria-controls="detail" aria-current="true" data-pane="real" data-target-hash="#ibkr" title="Open IBKR / REAL trades">
+      <a class="card" id="realCard" href="#ibkr" role="button" tabindex="0" aria-controls="detail" aria-current="true" data-pane="real" data-target-hash="#ibkr" title="Open IBKR / REAL trades" onclick="return openPaneFromCard(this, event)">
         <span class="pill">IBKR / REAL</span>
         <h2>Executable trades</h2>
         <p>Broker-backed fills from <code>agent_trades</code>. This is the trusted side for actual P&L.</p>
@@ -124,7 +124,7 @@
         <span class="go">View IBKR trades <span>→</span></span>
       </a>
 
-      <a class="card dark" id="shadowCard" href="#shadow" role="button" aria-controls="detail" aria-current="false" data-pane="shadow" data-target-hash="#shadow" title="Open SHADOW research observations">
+      <a class="card dark" id="shadowCard" href="#shadow" role="button" tabindex="0" aria-controls="detail" aria-current="false" data-pane="shadow" data-target-hash="#shadow" title="Open SHADOW research observations" onclick="return openPaneFromCard(this, event)">
         <span class="pill">SHADOW / RESEARCH</span>
         <h2>Research observations</h2>
         <p>Priced forward marks from <code>agent_shadow_trades</code>. Useful for edge research, not executable P&L.</p>
@@ -294,6 +294,10 @@ function activateCard(card, event){
   if(event) event.preventDefault();
   if(!card || !card.dataset.pane) return;
   showPane(card.dataset.pane, true, true);
+  return false;
+}
+function openPaneFromCard(card, event){
+  return activateCard(card, event);
 }
 ["realCard","shadowCard"].forEach((id) => {
   const card = $(id);
