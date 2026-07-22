@@ -3,12 +3,13 @@
  * $10K hypothetical translations from observed forward returns, not real fills. */
 const state = { lastLoadedAt: null, filter: "ALL", raw: null };
 const RESEARCH_NOTIONAL = 10000;
+const FORWARD_HORIZONS = ["5m", "15m", "30m", "1h", "eod"];
 
 function hasValue(v) { return v !== null && v !== undefined && v !== ""; }
 function returnValue(r, horizon) { return r[`direction_adjusted_return_${horizon}_pct`] ?? r[`return_${horizon}_pct`]; }
 function isCompleteObservation(r) { return String(r.status || "").toUpperCase() === "COMPLETE" || hasValue(r.price_eod) || hasValue(returnValue(r, "eod")); }
 function latestReturn(r) {
-  for (const key of ["eod", "1h", "15m", "5m"]) {
+  for (const key of ["eod", "1h", "30m", "15m", "5m"]) {
     const value = returnValue(r, key);
     if (hasValue(value)) return { horizon: key.toUpperCase(), value: Number(value) };
   }
@@ -28,7 +29,7 @@ function pricedCounts(rows, field) {
   return Object.entries(counts).map(([value, priced_n]) => ({ value, priced_n })).sort((a, b) => b.priced_n - a.priced_n);
 }
 function filteredLadder(rows) {
-  return ["5m", "15m", "1h", "eod"].map((h) => {
+  return FORWARD_HORIZONS.map((h) => {
     const values = (rows || []).map((row) => returnValue(row, h)).filter(hasValue).map(Number);
     const wins = values.filter((v) => v > 0).length;
     return {
@@ -61,7 +62,7 @@ function shadowForFilter(shadow) {
   };
 }
 function _isPricedLocal(row) {
-  return hasValue(row?.entry_reference_price) && ["5m", "15m", "1h", "eod"].some((h) => hasValue(row?.[`price_${h}`]));
+  return hasValue(row?.entry_reference_price) && FORWARD_HORIZONS.some((h) => hasValue(row?.[`price_${h}`]));
 }
 function setupFilter(shadow) {
   const types = catalystTypesFrom(shadow.by_catalyst, shadow.recent_priced);
@@ -161,6 +162,66 @@ function renderLadder(shadow) {
     </div>`;
   }).join("")}</div>`;
 }
+function horizonLabel(horizon) { return horizon === "eod" ? "EOD" : horizon.toUpperCase(); }
+function horizonCaptureStatus(rows, horizon) {
+  return (rows || []).some((row) => Object.prototype.hasOwnProperty.call(row, `direction_adjusted_return_${horizon}_pct`) || Object.prototype.hasOwnProperty.call(row, `return_${horizon}_pct`) || Object.prototype.hasOwnProperty.call(row, `price_${horizon}`));
+}
+function forwardRows(shadow) {
+  const rows = (shadow.recent_priced || []).filter((row) => {
+    if (state.filter === "ALL") return catalystKey(row) === "filing";
+    return rowMatchesFilter(row);
+  });
+  return rows
+    .filter((row) => hasValue(row.entry_reference_price) || FORWARD_HORIZONS.some((h) => hasValue(returnValue(row, h))))
+    .sort((a, b) => {
+      const completeDelta = Number(isCompleteObservation(b)) - Number(isCompleteObservation(a));
+      if (completeDelta) return completeDelta;
+      return new Date(b.decision_ts || 0) - new Date(a.decision_ts || 0);
+    });
+}
+function horizonSummary(rows) {
+  return FORWARD_HORIZONS.map((horizon) => {
+    const captured = horizonCaptureStatus(rows, horizon);
+    const values = rows.map((row) => returnValue(row, horizon)).filter(hasValue).map(Number);
+    const wins = values.filter((value) => value > 0).length;
+    const avg = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+    return { horizon, captured, n: values.length, wins, hitRate: values.length ? wins / values.length * 100 : null, avg };
+  });
+}
+function renderForwardReturns(shadow) {
+  const rows = forwardRows(shadow);
+  const filteredName = state.filter === "ALL" ? "Filing" : catalystDisplay(state.filter);
+  $("forward-title").textContent = `${filteredName} forward returns`;
+  $("forward-note").textContent = state.filter === "ALL"
+    ? "Defaulting this section to filing observations so the SEC filing move data is not buried by newer mixed catalysts. Use the chips above to switch the whole cockpit to crypto news or trading halts."
+    : `${filteredName} observations only. Returns are direction-adjusted percentage moves from the entry reference; pending horizons stay blank instead of being guessed.`;
+
+  const summary = horizonSummary(rows);
+  $("forward-summary").innerHTML = summary.map((s) => {
+    const value = s.captured ? (s.n ? `<span class="${cls(s.avg)}">${pct3(s.avg)}</span>` : "—") : `<span class="pending-capture">not captured</span>`;
+    const sub = s.captured ? `priced n=${num(s.n)} · hit ${s.hitRate === null ? "—" : pct(s.hitRate)}` : "backend/API has no 30m field yet";
+    return metric(`${horizonLabel(s.horizon)} avg move`, value, s.n, sub);
+  }).join("");
+
+  $("forward-table").innerHTML = table(
+    ["Time", "Symbol", "Catalyst", "Dir", "Entry", "5m", "15m", "30m", "1h", "EOD", "Status"],
+    rows.slice(0, 24),
+    (r) => `<tr>
+      <td>${shortTime(r.decision_ts)}</td>
+      <td><strong>${safe(r.symbol)}</strong><div class="small">${safe(r.headline)}</div></td>
+      <td>${catalystLabel(r)}</td>
+      <td>${safe(r.direction)}</td>
+      <td class="mono">${safe(r.entry_reference_price)}</td>
+      ${FORWARD_HORIZONS.map((horizon) => {
+        const v = returnValue(r, horizon);
+        const captured = horizonCaptureStatus(rows, horizon);
+        return `<td class="mono ${hasValue(v) ? cls(v) : "muted"}">${hasValue(v) ? pct3(v) : (captured ? "pending" : "not captured")}</td>`;
+      }).join("")}
+      <td>${safe(r.status)}</td>
+    </tr>`,
+    `No ${filteredName.toLowerCase()} forward-return observations in the current live slice.`
+  );
+}
 function ruleCards(rows, emptyText) {
   if (!rows || rows.length === 0) return `<div class="empty">${esc(emptyText)}</div>`;
   return `<div class="rule-cards">${rows.slice(0, 12).map((r) => `
@@ -207,14 +268,14 @@ function renderPending(shadow) {
   const rows = pendingRows(shadow).slice().sort((a, b) => new Date(b.decision_ts || 0) - new Date(a.decision_ts || 0));
   $("pending-marks").innerHTML = table(["Symbol", "Dir", "Latest mark", "Waiting on"], rows.slice(0, 10), (r) => {
     const latest = latestReturn(r);
-    const missing = ["5m", "15m", "1h", "eod"].filter((h) => !hasValue(returnValue(r, h))).map((h) => h.toUpperCase()).join(", ") || "later multi-day";
+    const missing = FORWARD_HORIZONS.filter((h) => horizonCaptureStatus(rows, h) && !hasValue(returnValue(r, h))).map(horizonLabel).join(", ") || "later multi-day";
     return `<tr><td><strong>${safe(r.symbol)}</strong></td><td>${safe(r.direction)}</td><td class="mono ${latest ? cls(latest.value) : "muted"}">${latest ? `${safe(latest.horizon)} ${pct3(latest.value)}` : "—"}</td><td>${safe(missing)}</td></tr>`;
   }, "No pending SHADOW marks in current feed.");
 }
 function returnGrid(r) {
-  return ["5m", "15m", "1h", "eod"].map((h) => {
+  return FORWARD_HORIZONS.map((h) => {
     const v = returnValue(r, h);
-    return `<span class="chip ${hasValue(v) ? cls(v) : "muted"}">${h.toUpperCase()} ${hasValue(v) ? pct3(v) : "—"}</span>`;
+    return `<span class="chip ${hasValue(v) ? cls(v) : "muted"}">${horizonLabel(h)} ${hasValue(v) ? pct3(v) : (h === "30m" ? "not captured" : "—")}</span>`;
   }).join("");
 }
 function renderDecisionFeed(shadow) {
@@ -245,7 +306,7 @@ function renderAll() {
   const shadow = shadowForFilter(state.raw || {});
   setupFilter(state.raw || {});
   renderHero(shadow); renderMetrics(shadow); renderPnlBars(shadow); renderGauges(shadow);
-  renderEquity(shadow); renderLadder(shadow); renderGroups(shadow); renderPending(shadow); renderShadowStatus(shadow);
+  renderForwardReturns(shadow); renderEquity(shadow); renderLadder(shadow); renderGroups(shadow); renderPending(shadow); renderShadowStatus(shadow);
   renderDecisionFeed(shadow);
   $("refresh-status").className = "status-pill ok";
   const filterText = state.filter === "ALL" ? "" : ` · ${catalystDisplay(state.filter)}`;
@@ -263,7 +324,7 @@ function showError(error) {
   const msg = `SHADOW cockpit is fail-closed: ${error.message}`;
   $("refresh-status").className = "status-pill bad";
   $("refresh-status").innerHTML = `<strong>Blocked</strong> · ${new Date().toLocaleTimeString()}`;
-  ["real-metrics", "pnl-bars", "win-gauges", "equity-curve", "shadow-horizon-ladder", "shadow-by-rule", "shadow-by-catalyst", "shadow-by-direction", "pending-marks", "decision-feed", "shadow-status"].forEach((id) => { if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`; });
+  ["real-metrics", "forward-summary", "forward-table", "pnl-bars", "win-gauges", "equity-curve", "shadow-horizon-ladder", "shadow-by-rule", "shadow-by-catalyst", "shadow-by-direction", "pending-marks", "decision-feed", "shadow-status"].forEach((id) => { if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`; });
 }
 async function load() {
   try {
