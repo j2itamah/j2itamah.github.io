@@ -112,25 +112,25 @@
     </section>
 
     <section class="cards">
-      <article class="card" id="realCard" role="button" tabindex="0" aria-controls="detail" aria-pressed="true" onclick="showPane('real', true)" onkeydown="cardKey(event, 'real')">
+      <a class="card" id="realCard" href="#ibkr" aria-controls="detail" aria-current="true" data-pane="real">
         <span class="pill">IBKR / REAL</span>
         <h2>Executable trades</h2>
         <p>Broker-backed fills from <code>agent_trades</code>. This is the trusted side for actual P&L.</p>
         <div class="metric-line"><span>Verified closed</span><strong id="realN">—</strong></div>
         <div class="metric-line"><span>Open positions</span><strong id="realOpen">—</strong></div>
         <div class="metric-line"><span>Net P&L</span><strong id="realNet">—</strong></div>
-        <button class="go" type="button" onclick="event.stopPropagation(); showPane('real', true)">View IBKR trades <span>→</span></button>
-      </article>
+        <span class="go">View IBKR trades <span>→</span></span>
+      </a>
 
-      <article class="card dark" id="shadowCard" role="button" tabindex="0" aria-controls="detail" aria-pressed="false" onclick="showPane('shadow', true)" onkeydown="cardKey(event, 'shadow')">
+      <a class="card dark" id="shadowCard" href="#shadow" aria-controls="detail" aria-current="false" data-pane="shadow">
         <span class="pill">SHADOW / RESEARCH</span>
         <h2>Research observations</h2>
         <p>Priced forward marks from <code>agent_shadow_trades</code>. Useful for edge research, not executable P&L.</p>
         <div class="metric-line"><span>Priced n</span><strong id="shadowN">—</strong></div>
         <div class="metric-line"><span>Best horizon</span><strong id="shadowHorizon">—</strong></div>
         <div class="metric-line"><span>Best avg return</span><strong id="shadowReturn">—</strong></div>
-        <button class="go" type="button" onclick="event.stopPropagation(); showPane('shadow', true)">View SHADOW research <span>→</span></button>
-      </article>
+        <span class="go">View SHADOW research <span>→</span></span>
+      </a>
     </section>
 
     <section class="detail" id="detail">
@@ -243,29 +243,22 @@ function shadowTable(rows){
       <td class="mono">5m ${esc(r.price_5m)} · 15m ${esc(r.price_15m)} · 1h ${esc(r.price_1h)} · EOD ${esc(r.price_eod)}</td>
     </tr>`).join("")}</tbody></table>`;
 }
-function cardKey(event, which){
-  if(event.key === "Enter" || event.key === " "){
-    event.preventDefault();
-    showPane(which, true);
-  }
-}
 function showPane(which, shouldScroll=false){
   ACTIVE = which;
   $("realCard").classList.toggle("active", which === "real");
   $("shadowCard").classList.toggle("active", which === "shadow");
-  $("realCard").setAttribute("aria-pressed", which === "real" ? "true" : "false");
-  $("shadowCard").setAttribute("aria-pressed", which === "shadow" ? "true" : "false");
-  if(!DATA) return;
+  $("realCard").setAttribute("aria-current", which === "real" ? "true" : "false");
+  $("shadowCard").setAttribute("aria-current", which === "shadow" ? "true" : "false");
   if(which === "real"){
     $("detailTitle").textContent = "IBKR / REAL trades";
     $("detailSub").textContent = "Executable broker-backed rows from agent_trades. Verified closed rows are trusted; open rows are still live.";
     $("detailBadge").textContent = "REAL";
-    $("detailBody").innerHTML = tradeTable(DATA.real?.recent_closed || []);
+    $("detailBody").innerHTML = DATA ? tradeTable(DATA.real?.recent_closed || []) : `<div class="empty">Loading IBKR trades…</div>`;
   } else {
     $("detailTitle").textContent = "SHADOW / RESEARCH observations";
     $("detailSub").textContent = "Priced forward marks from agent_shadow_trades. Research only — not executable P&L.";
     $("detailBadge").textContent = "SHADOW";
-    $("detailBody").innerHTML = shadowTable(DATA.shadow?.recent_priced || []);
+    $("detailBody").innerHTML = DATA ? shadowTable(DATA.shadow?.recent_priced || []) : `<div class="empty">Loading SHADOW research…</div>`;
   }
   const targetHash = which === "real" ? "#ibkr" : "#shadow";
   if(location.hash !== targetHash) history.replaceState(null, "", targetHash);
@@ -292,6 +285,12 @@ async function load(){
   }
 }
 window.addEventListener("hashchange", () => showPane(location.hash === "#shadow" ? "shadow" : "real"));
+document.querySelectorAll("[data-pane]").forEach((card) => {
+  card.addEventListener("click", (event) => {
+    event.preventDefault();
+    showPane(card.dataset.pane, true);
+  });
+});
 load();
 setInterval(load, 30000);
 </script>
