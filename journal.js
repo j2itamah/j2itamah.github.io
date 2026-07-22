@@ -1,6 +1,7 @@
 /* Daily Trading Journal — measurement view across REAL and SHADOW.
  * REAL remains broker-backed/costed. SHADOW remains research-only. */
-const state = { raw: null, filter: "ALL", lastLoadedAt: null };
+const state = { raw: null, filter: "ALL", day: "ALL", lastLoadedAt: null };
+const SHADOW_TEST_SIZE = 10000;
 
 function dayKey(v) {
   if (!v) return "unknown";
@@ -18,6 +19,12 @@ function realGross(row) {
 function realCommission(row) {
   const value = row?._commissions ?? row?.commissions_cad ?? row?.commissions;
   return typeof value === "number" ? value : Number(value?.total ?? value?.cad ?? 0);
+}
+function realQty(row) { return Number(row?.quantity ?? row?.qty ?? 0); }
+function realCapitalUsed(row) {
+  const qty = Math.abs(realQty(row));
+  const entry = Number(row?.entry_price ?? 0);
+  return qty && entry ? qty * entry : 0;
 }
 function hasValue(v) { return v !== null && v !== undefined && v !== ""; }
 function shadowReturn(row, horizon) {
@@ -70,13 +77,17 @@ function buildDays(data) {
   }
   return Object.values(days).sort((a, b) => b.day.localeCompare(a.day));
 }
+function visibleDays(days) {
+  return state.day === "ALL" ? days : days.filter((day) => day.day === state.day);
+}
 function summarizeReal(rows) {
   const n = rows.length;
   const net = rows.reduce((sum, row) => sum + realNet(row), 0);
   const gross = rows.reduce((sum, row) => sum + realGross(row), 0);
   const commissions = rows.reduce((sum, row) => sum + realCommission(row), 0);
   const wins = rows.filter((row) => realNet(row) > 0).length;
-  return { n, net, gross, commissions, wins, losses: n - wins, winRate: n ? wins / n * 100 : 0 };
+  const capital = rows.reduce((sum, row) => sum + realCapitalUsed(row), 0);
+  return { n, net, gross, commissions, capital, wins, losses: n - wins, winRate: n ? wins / n * 100 : 0 };
 }
 function catalystRows(rows) {
   const counts = {};
@@ -101,6 +112,33 @@ function renderFilter(data) {
     });
   });
 }
+function setDay(day) {
+  state.day = day || "ALL";
+  const hash = state.day === "ALL" ? "#all" : `#day=${encodeURIComponent(state.day)}`;
+  if (window.location.hash !== hash) window.history.replaceState(null, "", hash);
+  renderAll();
+}
+function syncDayFromHash() {
+  const hash = String(window.location.hash || "");
+  const match = hash.match(/^#day=(\\d{4}-\\d{2}-\\d{2})$/);
+  state.day = match ? match[1] : "ALL";
+}
+function renderDateNav(days) {
+  const counts = Object.fromEntries(days.map((day) => [day.day, day.realClosed.length + day.shadowPriced.length]));
+  const chips = ["ALL", ...days.map((day) => day.day)];
+  $("date-filter").innerHTML = chips.map((key) => {
+    const active = key === state.day ? " active" : "";
+    const label = key === "ALL" ? "All days" : key;
+    const count = key === "ALL" ? days.reduce((sum, day) => sum + day.realClosed.length + day.shadowPriced.length, 0) : counts[key] || 0;
+    return `<button class="filter-pill real${active}" type="button" data-day-filter="${esc(key)}">${esc(label)}<span class="pill-count">${num(count)}</span></button>`;
+  }).join("");
+  $("date-copy").textContent = state.day === "ALL"
+    ? "Showing all days. Click a date to inspect that day by itself."
+    : `Showing ${state.day}. Click All days to go back to the full journal.`;
+  $("date-filter")?.querySelectorAll("[data-day-filter]").forEach((button) => {
+    button.addEventListener("click", () => setDay(button.getAttribute("data-day-filter") || "ALL"));
+  });
+}
 function renderHero(days) {
   const realRows = days.flatMap((d) => d.realClosed);
   const shadowRows = days.flatMap((d) => d.shadowPriced);
@@ -113,6 +151,30 @@ function renderHero(days) {
   $("hero-shadow-n").textContent = num(shadowRows.length);
   $("hero-shadow-best").textContent = best ? `${best.horizon} ${pct3(best.avg)}` : "—";
   $("hero-shadow-sub").textContent = best ? `priced n=${num(best.n)} · hit ${pct(best.hit)}` : "no priced shadow marks";
+}
+function renderDayDetail(allDays, days) {
+  if (state.day === "ALL") {
+    const best = allDays.slice().sort((a, b) => summarizeReal(b.realClosed).net - summarizeReal(a.realClosed).net)[0];
+    $("day-detail-title").textContent = "Day detail";
+    $("day-detail").innerHTML = [
+      metric("Selected day", "All days", allDays.length, "click a date above to isolate one day"),
+      metric("Best REAL day", best ? safe(best.day) : "—", best ? best.realClosed.length : 0, best ? `${money(summarizeReal(best.realClosed).net)} net` : "waiting for closed trades"),
+      metric("Why this matters", "compare changes", allDays.length, "daily view shows whether new changes improve results"),
+    ].join("");
+    return;
+  }
+  const selectedIndex = allDays.findIndex((day) => day.day === state.day);
+  const selected = allDays[selectedIndex];
+  const previous = allDays[selectedIndex + 1];
+  const currentReal = summarizeReal(selected?.realClosed || []);
+  const previousReal = summarizeReal(previous?.realClosed || []);
+  const delta = previous ? currentReal.net - previousReal.net : null;
+  $("day-detail-title").textContent = `${state.day} detail`;
+  $("day-detail").innerHTML = [
+    metric("REAL net that day", `<span class="${cls(currentReal.net)}">${money(currentReal.net)}</span>`, currentReal.n, `${money(currentReal.capital)} capital used · ${pct(currentReal.winRate)} win`),
+    metric("Vs prior day", delta == null ? "—" : `<span class="${cls(delta)}">${money(delta)}</span>`, previousReal.n, previous ? `${previous.day}: ${money(previousReal.net)} net` : "no prior day in current window"),
+    metric("SHADOW evidence", num((selected?.shadowPriced || []).length), (selected?.shadowPriced || []).length, `${num((selected?.shadowPending || []).length)} pending/unpriced in current slice`),
+  ].join("");
 }
 function renderCurve(days) {
   let total = 0;
@@ -136,17 +198,20 @@ function tradeList(rows, mode) {
   return rows.slice(0, 8).map((row) => {
     if (mode === "REAL") {
       const net = realNet(row);
+      const capital = realCapitalUsed(row);
+      const roc = capital ? net / capital * 100 : null;
       return `<div class="journal-row">
         <strong>${safe(row.symbol)} · ${safe(row.direction)} · ${safe(catalystDisplay(row.catalyst_type))}</strong>
         <span class="mono ${cls(net)}">${money(net)}</span>
-        <div class="small">${safe(row.exit_reason || "closed")} · ${safe(row.rule_id)} · ${safe(row.headline)}</div>
+        <div class="small">qty ${num(realQty(row))} · capital ${capital ? money(capital) : "—"} · return ${roc == null ? "—" : pct3(roc)} · ${safe(row.exit_reason || "closed")} · ${safe(row.rule_id)} · ${safe(row.headline)}</div>
       </div>`;
     }
     const mark = latestShadowReturn(row);
+    const pnl = mark ? mark.value * SHADOW_TEST_SIZE / 100 : null;
     return `<div class="journal-row">
       <strong>${safe(row.symbol)} · ${safe(row.direction)} · ${safe(catalystDisplay(row.catalyst_type))}</strong>
-      <span class="mono ${mark ? cls(mark.value) : "muted"}">${mark ? pct3(mark.value) : "pending"}</span>
-      <div class="small">${safe(mark?.horizon || "mark")} · ${safe(row.rule_id)} · ${safe(row.headline)}</div>
+      <span class="mono ${pnl == null ? "muted" : cls(pnl)}">${pnl == null ? "pending" : money(pnl)}</span>
+      <div class="small">$10K test size · ${safe(mark?.horizon || "mark")} ${mark ? pct3(mark.value) : "pending"} · ${safe(row.rule_id)} · ${safe(row.headline)}</div>
     </div>`;
   }).join("");
 }
@@ -185,10 +250,13 @@ function renderEntries(days) {
 }
 function renderAll() {
   const data = state.raw || {};
-  const days = buildDays(data);
+  const allDays = buildDays(data);
+  const days = visibleDays(allDays);
   renderFilter(data);
+  renderDateNav(allDays);
   renderHero(days);
-  renderCurve(days);
+  renderDayDetail(allDays, days);
+  renderCurve(allDays);
   renderMix(days);
   renderEntries(days);
   $("refresh-status").className = "status-pill ok";
@@ -204,9 +272,14 @@ async function load() {
   try {
     state.raw = await fetchDashboard();
     state.lastLoadedAt = new Date();
+    syncDayFromHash();
     renderAll();
   } catch (error) {
     showError(error);
   }
 }
-document.addEventListener("DOMContentLoaded", () => { load(); setInterval(load, 30000); });
+document.addEventListener("DOMContentLoaded", () => {
+  load();
+  setInterval(load, 30000);
+  window.addEventListener("hashchange", () => { syncDayFromHash(); renderAll(); });
+});

@@ -35,6 +35,17 @@
       <div class="filter-pills" id="catalyst-filter"></div>
     </section>
 
+    <section class="panel filter-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Date navigator</h2>
+          <div class="filter-copy" id="date-copy">Click a day to see only that day’s REAL and SHADOW evidence.</div>
+        </div>
+        <span class="badge real">clickable dates</span>
+      </div>
+      <div class="filter-pills" id="date-filter"></div>
+    </section>
+
     <section class="hero-strip">
       <div class="hero-card primary">
         <div class="metric-label">REAL net P&L</div>
@@ -56,6 +67,11 @@
         <div class="metric-value" id="hero-shadow-best">—</div>
         <div class="metric-sub" id="hero-shadow-sub">filtered horizon</div>
       </div>
+    </section>
+
+    <section class="panel section-gap">
+      <div class="panel-header"><h2 class="panel-title" id="day-detail-title">Day detail</h2><span class="badge real">vs prior day</span></div>
+      <div class="grid three" id="day-detail"><div class="loading">Loading day detail…</div></div>
     </section>
 
     <section class="grid two section-gap">
