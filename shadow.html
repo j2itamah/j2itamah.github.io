@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SHADOW / RESEARCH · Cockpit</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./cockpit.css" />
+</head>
+<body class="shadow-theme">
+  <main class="shell">
+    <a class="backlink" href="./index.html">← Launcher · IBKR vs SHADOW</a>
+    <section class="topbar">
+      <div>
+        <div class="eyebrow">SHADOW / RESEARCH · agent_shadow_trades</div>
+        <h1>Shadow Research Cockpit</h1>
+        <p class="subtitle">
+          Forward-observed research marks from <code>agent_shadow_trades</code>. Reference only for finding edge.
+        </p>
+      </div>
+      <div class="status-pill" id="refresh-status">Loading…</div>
+    </section>
+
+    <div class="research-banner">
+      <span class="badge shadow">RESEARCH — NOT EXECUTABLE</span>
+      <span>Shadow is research/ideas only — never a go/no-go for real capital. Only <strong>priced</strong> observations count as evidence; total rows are diagnostic.</span>
+    </div>
+
+    <section class="hero-strip">
+      <div class="hero-card primary">
+        <div class="metric-label">Priced observations (evidence)</div>
+        <div class="metric-value" id="hero-priced">—</div>
+        <div class="metric-sub">entry reference + forward mark</div>
+      </div>
+      <div class="hero-card">
+        <div class="metric-label">Modeled P&L rows</div>
+        <div class="metric-value" id="hero-modeled">—</div>
+        <div class="metric-sub">qty + modeled comm + net</div>
+      </div>
+      <div class="hero-card">
+        <div class="metric-label">Multi-day captured</div>
+        <div class="metric-value" id="hero-multi">—</div>
+        <div class="metric-sub" id="hero-multi-sub">—</div>
+      </div>
+      <div class="hero-card">
+        <div class="metric-label">Diagnostic rows</div>
+        <div class="metric-value muted" id="hero-diag">—</div>
+        <div class="metric-sub">not used as evidence</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header"><h2 class="panel-title">SHADOW · priced metrics</h2><span class="badge shadow">priced n only</span></div>
+      <div class="grid three" id="shadow-metrics"><div class="loading">Loading priced metrics…</div></div>
+    </section>
+
+    <section class="grid two section-gap">
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">Horizon ladder</h2><span class="badge shadow">5m→+5d · priced n</span></div>
+        <div id="shadow-horizon-ladder"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">Net metrics by catalyst</h2><span class="badge shadow">direction-adjusted</span></div>
+        <div id="shadow-net-catalyst"></div>
+      </div>
+    </section>
+
+    <section class="grid three section-gap">
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">By rule</h2><span class="badge shadow">priced n</span></div>
+        <div id="shadow-by-rule"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">By catalyst</h2><span class="badge shadow">priced n</span></div>
+        <div id="shadow-by-catalyst"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">By direction</h2><span class="badge shadow">priced n</span></div>
+        <div id="shadow-by-direction"></div>
+      </div>
+    </section>
+
+    <section class="panel section-gap">
+      <div class="panel-header">
+        <h2 class="panel-title">Recent priced observations</h2>
+        <span class="badge shadow">RESEARCH — NOT EXECUTABLE</span>
+      </div>
+      <div id="recent-shadow"></div>
+    </section>
+
+    <div class="footer">
+      SHADOW cockpit reads only <code>public.agent_shadow_trades</code> via the verified backend API (no credentials in this
+      static page). These figures are research reference and must never justify risking real money.
+    </div>
+  </main>
+  <script>window.API_BASE = "https://news-trading-system-production-b13f.up.railway.app";</script>
+  <script src="./cockpit-common.js"></script>
+  <script src="./shadow.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IBKR / REAL · Verified Cockpit</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./cockpit.css" />
+</head>
+<body class="real-theme">
+  <main class="shell">
+    <a class="backlink" href="./index.html">← Launcher · IBKR vs SHADOW</a>
+    <section class="topbar">
+      <div>
+        <div class="eyebrow">IBKR / REAL · agent_trades</div>
+        <h1>Verified Live-Agent Cockpit</h1>
+        <p class="subtitle">
+          Executable, broker-backed fills only — public <code>agent_trades</code>. <strong>Rule 21:</strong>
+          every figure here is verified, costed net-of-commission, and shows its sample <code>n</code>.
+          Unverified / uncosted rows are excluded fail-closed.
+        </p>
+      </div>
+      <div class="status-pill" id="refresh-status">Loading…</div>
+    </section>
+
+    <section class="hero-strip">
+      <div class="hero-card primary">
+        <div class="metric-label">Verified net (gross − commissions)</div>
+        <div class="metric-value" id="hero-net">—</div>
+        <div class="metric-sub" id="hero-net-sub">—</div>
+      </div>
+      <div class="hero-card">
+        <div class="metric-label">Verified closed</div>
+        <div class="metric-value" id="hero-real-n">—</div>
+        <div class="metric-sub">REAL costed n</div>
+      </div>
+      <div class="hero-card">
+        <div class="metric-label">Open positions</div>
+        <div class="metric-value" id="hero-open-n">—</div>
+        <div class="metric-sub">exit_ts is null</div>
+      </div>
+      <div class="hero-card">
+        <div class="metric-label">Win rate</div>
+        <div class="metric-value" id="hero-win">—</div>
+        <div class="metric-sub" id="hero-win-sub">—</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header"><h2 class="panel-title">REAL · verified metrics</h2><span class="badge real">Rule 21 · n shown</span></div>
+      <div class="grid three" id="real-metrics"><div class="loading">Loading verified metrics…</div></div>
+    </section>
+
+    <section class="grid two section-gap">
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">Verified net P&L curve</h2><span class="badge real">closed n</span></div>
+        <div class="chart-wrap" id="equity-curve"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">P&L composition</h2><span class="badge real">gross / comm / net</span></div>
+        <div id="pnl-bars"></div>
+      </div>
+    </section>
+
+    <section class="grid two section-gap">
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">Win gauges</h2><span class="badge real">n shown</span></div>
+        <div class="gauges" id="win-gauges"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">Crypto status</h2><span class="badge warn">gated</span></div>
+        <div id="crypto-status"><div class="loading">Loading crypto status…</div></div>
+      </div>
+    </section>
+
+    <section class="grid two section-gap">
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">By rule_id</h2><span class="badge real">rule cards · n shown</span></div>
+        <div id="real-by-rule"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">By catalyst</h2><span class="badge real">leaderboard · n shown</span></div>
+        <div id="real-by-catalyst"></div>
+      </div>
+    </section>
+
+    <section class="grid two section-gap">
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">By direction</h2><span class="badge real">n shown</span></div>
+        <div id="real-by-direction"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">Open positions</h2><span class="badge warn">exit_ts is null</span></div>
+        <div id="open-positions" class="loading">Loading open positions…</div>
+      </div>
+    </section>
+
+    <section class="panel section-gap">
+      <div class="panel-header"><h2 class="panel-title">Decision feed</h2><span class="badge real">catalyst · reason · MFE/MAE</span></div>
+      <div id="decision-feed"></div>
+    </section>
+
+    <section class="panel section-gap">
+      <div class="panel-header"><h2 class="panel-title">Security / wiring</h2><span class="badge warn">fail closed</span></div>
+      <div id="security-state" class="small">Loading security state…</div>
+    </section>
+
+    <div class="footer">
+      REAL cockpit reads only <code>public.agent_trades</code> via the verified backend API. No Supabase credentials live in this
+      static page — data is served by the backend using an env-only anon key with RLS.
+    </div>
+  </main>
+  <script>window.API_BASE = "https://news-trading-system-production-b13f.up.railway.app";</script>
+  <script src="./cockpit-common.js"></script>
+  <script src="./real.js"></script>
+</body>
+</html>

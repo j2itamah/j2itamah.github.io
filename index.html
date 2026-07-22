@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QuantPulse · Live Agent A/B</title>
+  <title>QuantPulse · Live Agent · IBKR vs SHADOW</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -11,15 +11,14 @@
     :root{
       --bg0:#ffffff; --bg1:#f1f5f9; --bg2:#e9eef5; --line:#e2e8f0;
       --txt:#0f172a; --muted:#64748b; --blue:#2563eb; --blue2:#3b82f6;
-      --coral:#e0652f; --coral2:#ea7a48; --dark:#0b0f1a; --ok:#16a34a; --down:#dc2626;
+      --coral:#e0652f; --violet:#7c3aed; --dark:#0b0f1a; --ok:#16a34a; --down:#dc2626;
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{
-      font-family:Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
-      color:var(--txt);
+      font-family:Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;color:var(--txt);
       background:
         radial-gradient(1100px 560px at 18% -10%, rgba(37,99,235,.08), transparent 60%),
-        radial-gradient(900px 480px at 92% 112%, rgba(224,101,47,.07), transparent 55%),
+        radial-gradient(900px 480px at 92% 112%, rgba(124,58,237,.07), transparent 55%),
         linear-gradient(160deg,var(--bg0),var(--bg1) 60%,var(--bg2));
       min-height:100vh; padding:40px 24px;
     }
@@ -29,88 +28,52 @@
     h1{font-size:1.55rem;font-weight:800;letter-spacing:.2px}
     h1 span{color:var(--blue)}
     .sub{color:var(--muted);font-size:.95rem;text-align:center;line-height:1.45}
-    .live{display:flex;align-items:center;justify-content:center;gap:7px;color:var(--muted);font-size:.8rem;margin:12px 0 18px}
+    .live{display:flex;align-items:center;justify-content:center;gap:7px;color:var(--muted);font-size:.8rem;margin:12px 0 14px}
     .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(22,163,74,.5);animation:pulse 1.8s infinite}
     @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.4)}70%{box-shadow:0 0 0 9px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
-    .status{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;padding:7px 14px;border-radius:999px;margin:0 auto 22px;border:1px solid var(--line);background:#fff;color:var(--muted);box-shadow:0 1px 2px rgba(15,23,42,.04)}
     .status-wrap{text-align:center}
+    .status{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;padding:7px 14px;border-radius:999px;margin:0 auto 22px;border:1px solid var(--line);background:#fff;color:var(--muted)}
     .status.ok{border-color:rgba(22,163,74,.30);color:#15803d;background:rgba(22,163,74,.06)}
-    .status.warn{border-color:rgba(217,119,6,.30);color:#b45309;background:rgba(217,119,6,.06)}
     .status.bad{border-color:rgba(220,38,38,.30);color:#b91c1c;background:rgba(220,38,38,.06)}
-    .champ{
-      display:block;text-decoration:none;cursor:pointer;
-      width:100%;margin-bottom:22px;background:var(--dark);color:#f8fafc;border:1px solid rgba(255,255,255,.10);
-      border-radius:18px;padding:24px 28px;box-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.4);
-      position:relative;overflow:hidden;min-height:128px;
-      transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
-    }
-    .champ > *{pointer-events:none}
+    .champ{display:block;text-decoration:none;color:#f8fafc;width:100%;margin-bottom:22px;background:var(--dark);
+      border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:24px 28px;box-shadow:0 12px 34px rgba(0,0,0,.4);position:relative;overflow:hidden;min-height:120px}
     .champ::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,#fbbf24,#f59e0b)}
-    .champ:hover{transform:translateY(-4px);border-color:rgba(251,191,36,.45);box-shadow:0 1px 2px rgba(0,0,0,.3),0 18px 44px rgba(0,0,0,.46)}
-    .champ:focus-visible{outline:3px solid rgba(251,191,36,.35);outline-offset:4px}
     .champ-label{font-size:.72rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#fcd34d;margin-bottom:8px}
-    .champ-name{font-size:1.55rem;font-weight:800;margin-bottom:14px;line-height:1.25}
+    .champ-name{font-size:1.5rem;font-weight:800;margin-bottom:14px;line-height:1.25}
     .champ-stats{display:flex;gap:32px;flex-wrap:wrap}
     .cap{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:#8a96ad;margin-bottom:3px}
-    .val{font-size:1.45rem;font-weight:800;font-variant-numeric:tabular-nums}
+    .val{font-size:1.35rem;font-weight:800;font-variant-numeric:tabular-nums}
     .up{color:#34d399}.down{color:#f87171}.flat{color:#cbd5e1}
     .cards{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
-    .card{
-      display:block;position:relative;overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:18px;padding:28px;
-      text-decoration:none;color:inherit;box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.05);
-      transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;cursor:pointer;min-height:245px;
-      touch-action:manipulation;user-select:none;
-    }
-    .card > *{pointer-events:none}
-    .card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--coral),var(--coral2))}
-    .card.dark{background:var(--dark);border-color:rgba(255,255,255,.10);color:#f8fafc;box-shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4)}
-    .card.dark::before{background:linear-gradient(90deg,var(--blue),var(--blue2))}
-    .card:hover{transform:translateY(-5px);border-color:#c7d6ee;box-shadow:0 2px 4px rgba(15,23,42,.05),0 16px 40px rgba(37,99,235,.14)}
-    .card.dark:hover{border-color:rgba(96,165,250,.55);box-shadow:0 2px 4px rgba(0,0,0,.3),0 18px 44px rgba(37,99,235,.32)}
+    .card{display:block;position:relative;overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:18px;padding:28px;
+      text-decoration:none;color:inherit;box-shadow:0 8px 24px rgba(15,23,42,.05);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;min-height:230px}
+    .card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--ok),#4ade80)}
+    .card.dark{background:var(--dark);border-color:rgba(255,255,255,.10);color:#f8fafc}
+    .card.dark::before{background:linear-gradient(90deg,var(--violet),var(--blue2))}
+    .card:hover{transform:translateY(-5px);border-color:#c7d6ee;box-shadow:0 16px 40px rgba(37,99,235,.14)}
     .card:focus-visible{outline:3px solid rgba(37,99,235,.35);outline-offset:4px}
-    .card[aria-disabled="true"]{cursor:wait;opacity:.88}
-    .card.active{border-color:rgba(224,101,47,.75);box-shadow:0 2px 4px rgba(15,23,42,.05),0 16px 40px rgba(224,101,47,.16)}
-    .card.dark.active{border-color:rgba(96,165,250,.80);box-shadow:0 2px 4px rgba(0,0,0,.3),0 18px 44px rgba(37,99,235,.36)}
-    .pill{display:inline-block;font-size:.7rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:5px 11px;border-radius:999px;margin-bottom:18px;background:rgba(224,101,47,.10);color:var(--coral)}
-    .card.dark .pill{background:rgba(96,165,250,.18);color:#93c5fd}
-    .card h2{font-size:1.45rem;font-weight:800;margin-bottom:8px}
-    .card p{color:var(--muted);font-size:.9rem;line-height:1.5;margin-bottom:18px}
+    .pill{display:inline-block;font-size:.7rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:5px 11px;border-radius:999px;margin-bottom:16px;background:rgba(22,163,74,.10);color:#15803d}
+    .card.dark .pill{background:rgba(124,58,237,.18);color:#c4b5fd}
+    .card h2{font-size:1.35rem;font-weight:800;margin-bottom:8px}
+    .card p{color:var(--muted);font-size:.9rem;line-height:1.5;margin-bottom:16px}
     .card.dark p{color:#94a3b8}
     .metric-line{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-top:1px solid rgba(148,163,184,.16);font-size:.88rem}
     .metric-line strong{font-variant-numeric:tabular-nums}
-    .go{
-      display:inline-flex;align-items:center;gap:8px;margin-top:18px;font:inherit;font-weight:800;color:var(--coral);
-      border:1px solid currentColor;border-radius:999px;background:rgba(224,101,47,.06);padding:9px 13px;cursor:pointer;
-    }
-    .card.dark .go{color:#93c5fd}
-    .card.dark .go{background:rgba(96,165,250,.10)}
-    .detail{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px 24px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.05)}
-    .detail-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px}
-    .detail h3{font-size:1rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-    .badge{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;border-radius:999px;padding:6px 10px;background:#f1f5f9;color:#475569}
-    table{width:100%;border-collapse:collapse;font-size:.86rem}
-    th{text-align:left;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;padding:10px 8px;border-bottom:1px solid var(--line)}
-    td{padding:10px 8px;border-bottom:1px solid #eef2f7;vertical-align:top}
-    tr:last-child td{border-bottom:0}
-    .mono{font-variant-numeric:tabular-nums}
-    .small{font-size:.78rem;color:var(--muted);line-height:1.4}
-    .empty{color:var(--muted);padding:20px;text-align:center;border:1px dashed var(--line);border-radius:14px}
-    footer{margin-top:24px;color:#94a3b8;font-size:.78rem;text-align:center}
-    @media(max-width:760px){
-      body{padding:22px 14px}.cards{grid-template-columns:1fr}.champ{padding:20px 18px}.champ-stats{gap:16px}.val{font-size:1.15rem}
-      .detail{padding:16px 12px;overflow-x:auto}.card{min-height:0}
-    }
+    .go{display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-weight:800;color:#15803d}
+    .card.dark .go{color:#c4b5fd}
+    footer{margin-top:20px;color:#94a3b8;font-size:.78rem;text-align:center;line-height:1.5}
+    @media(max-width:760px){body{padding:22px 14px}.cards{grid-template-columns:1fr}.champ{padding:20px 18px}.champ-stats{gap:16px}.val{font-size:1.1rem}.card{min-height:0}}
   </style>
 </head>
 <body>
   <main class="shell">
     <div class="brand"><div class="mark"></div><h1>Quant<span>Pulse</span> · Live Agent</h1></div>
-    <p class="sub">Navigate the one live build: IBKR/REAL executable trades vs SHADOW research observations.</p>
-    <div class="live"><span class="dot"></span> Verified data only for REAL · SHADOW is research-only</div>
+    <p class="sub">One live build, two navigable cockpits: IBKR / REAL executable trades vs SHADOW research observations.</p>
+    <div class="live"><span class="dot"></span> Verified data only for REAL · SHADOW is research-only, not executable</div>
     <div class="status-wrap"><div class="status" id="siteStatus">Loading live agent…</div></div>
 
-    <a class="champ" id="topCard" href="#ibkr" aria-controls="detail" data-pane="real" data-target-hash="#ibkr" aria-label="Open current top book">
-      <div class="champ-label">Top book · current A/B</div>
+    <a class="champ" id="topCard" href="./real.html" aria-label="Open the top book cockpit">
+      <div class="champ-label">Top book · live agent</div>
       <div class="champ-name" id="topName">Loading top book…</div>
       <div class="champ-stats">
         <div><span class="cap">Evidence</span><span class="val" id="topEvidence">—</span></div>
@@ -120,228 +83,101 @@
     </a>
 
     <section class="cards">
-      <a class="card" id="realCard" href="#ibkr" role="button" tabindex="0" aria-controls="detail" aria-current="true" data-pane="real" data-target-hash="#ibkr" aria-label="Open IBKR real executable trades" title="Open IBKR / REAL trades">
+      <a class="card" id="realCard" href="./real.html" aria-label="Open IBKR REAL executable cockpit" title="Open IBKR / REAL cockpit">
         <span class="pill">IBKR / REAL</span>
         <h2>Executable trades</h2>
-        <p>Broker-backed fills from <code>agent_trades</code>. This is the trusted side for actual P&L.</p>
+        <p>Verified broker-backed fills from <code>agent_trades</code>. The trusted side for actual P&L (Rule 21).</p>
         <div class="metric-line"><span>Verified closed</span><strong id="realN">—</strong></div>
         <div class="metric-line"><span>Open positions</span><strong id="realOpen">—</strong></div>
         <div class="metric-line"><span>Net P&L</span><strong id="realNet">—</strong></div>
-        <span class="go">View IBKR trades <span>→</span></span>
+        <span class="go">Open IBKR cockpit →</span>
       </a>
 
-      <a class="card dark" id="shadowCard" href="#shadow" role="button" tabindex="0" aria-controls="detail" aria-current="false" data-pane="shadow" data-target-hash="#shadow" aria-label="Open SHADOW research observations" title="Open SHADOW research observations">
+      <a class="card dark" id="shadowCard" href="./shadow.html" aria-label="Open SHADOW research cockpit" title="Open SHADOW research cockpit">
         <span class="pill">SHADOW / RESEARCH</span>
         <h2>Research observations</h2>
-        <p>Priced forward marks from <code>agent_shadow_trades</code>. Useful for edge research, not executable P&L.</p>
+        <p>Priced forward marks from <code>agent_shadow_trades</code>. Research only — not executable P&L.</p>
         <div class="metric-line"><span>Priced n</span><strong id="shadowN">—</strong></div>
         <div class="metric-line"><span>Best horizon</span><strong id="shadowHorizon">—</strong></div>
         <div class="metric-line"><span>Best avg return</span><strong id="shadowReturn">—</strong></div>
-        <span class="go">View SHADOW research <span>→</span></span>
+        <span class="go">Open SHADOW cockpit →</span>
       </a>
     </section>
 
-    <section class="detail" id="detail">
-      <div class="detail-head">
-        <div>
-          <h3 id="detailTitle">IBKR / REAL trades</h3>
-          <p class="small" id="detailSub">Closed verified rows only.</p>
-        </div>
-        <span class="badge" id="detailBadge">REAL</span>
-      </div>
-      <div id="detailBody"><div class="empty">Loading…</div></div>
-    </section>
-
     <footer>
-      Paper trading only · not financial advice · old QuantPulse landing page archived append-only under <code>/archive/</code>.
+      Paper/verified data only · not financial advice · old QuantPulse landing archived append-only under <code>/archive/</code>.
     </footer>
   </main>
 
 <script>
 const API_BASE = "https://news-trading-system-production-b13f.up.railway.app";
 let DATA = null;
-let ACTIVE = "real";
-
 const $ = (id) => document.getElementById(id);
 const money = (v) => new Intl.NumberFormat("en-US", { style:"currency", currency:"USD" }).format(Number(v || 0));
 const num = (v) => new Intl.NumberFormat("en-US").format(Number(v || 0));
 const pct = (v) => `${Number(v || 0).toFixed(3)}%`;
 const cls = (v) => Number(v || 0) > 0 ? "up" : Number(v || 0) < 0 ? "down" : "flat";
-function esc(v){return String(v ?? "—").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");}
-function when(v){if(!v)return"—"; try{return new Date(v).toLocaleString();}catch{return esc(v);}}
+function esc(v){return String(v ?? "—").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
 async function getJson(path){
   const r = await fetch(API_BASE + path, { cache:"no-store" });
   const d = await r.json().catch(() => ({}));
   if(!r.ok) throw new Error(d.error || d.detail || `HTTP ${r.status}`);
   return d;
 }
-function setClassText(id, value, klass){
-  const el = $(id); el.textContent = value; el.className = "val " + klass;
-}
+function setClassText(id, value, klass){ const el = $(id); el.textContent = value; el.className = "val " + klass; }
 function bestShadow(){
   const ladder = DATA?.shadow?.horizon_ladder || [];
   if(!ladder.length) return null;
   return ladder.slice().sort((a,b)=>Number(b.avg_direction_adjusted_return_pct||0)-Number(a.avg_direction_adjusted_return_pct||0))[0];
 }
 function renderTop(){
-  const real = DATA.real || {};
-  const shadow = DATA.shadow || {};
-  const realN = Number(real.n || 0);
-  const realNet = Number(real.net_pnl || 0);
+  const real = DATA.real || {}, shadow = DATA.shadow || {};
+  const realN = Number(real.n || 0), realNet = Number(real.net_pnl || 0);
   const sh = bestShadow();
-  const shadowAvg = sh ? Number(sh.avg_direction_adjusted_return_pct || 0) : 0;
-  const topCard = $("topCard");
-  let topPane = "real";
-
-  if(realN > 0 && realNet > 0){
-    $("topName").textContent = "IBKR / REAL is top book";
+  const top = $("topCard");
+  if(realN > 0){
+    $("topName").textContent = "IBKR / REAL is the executable book";
     $("topEvidence").textContent = `verified n=${num(realN)}`;
     setClassText("topMetric", money(realNet), cls(realNet));
-    $("topStatus").textContent = "Executable";
-    $("topStatus").className = "val up";
-  } else if(sh && shadowAvg > 0){
-    topPane = "shadow";
-    $("topName").textContent = "SHADOW is top research book";
+    $("topStatus").textContent = "Executable"; $("topStatus").className = "val up";
+    top.href = "./real.html";
+  } else if(sh){
+    $("topName").textContent = "SHADOW is the research book";
     $("topEvidence").textContent = `priced n=${num(shadow.priced_n)}`;
-    setClassText("topMetric", `${esc(sh.horizon)} ${pct(shadowAvg)}`, cls(shadowAvg));
-    $("topStatus").textContent = "Research only";
-    $("topStatus").className = "val flat";
-  } else if(realN > 0) {
-    $("topName").textContent = "IBKR / REAL has the cleanest evidence";
-    $("topEvidence").textContent = `verified n=${num(realN)}`;
-    setClassText("topMetric", money(realNet), cls(realNet));
-    $("topStatus").textContent = "Executable";
-    $("topStatus").className = "val flat";
+    setClassText("topMetric", `${esc(sh.horizon)} ${pct(sh.avg_direction_adjusted_return_pct)}`, cls(sh.avg_direction_adjusted_return_pct));
+    $("topStatus").textContent = "Research only"; $("topStatus").className = "val flat";
+    top.href = "./shadow.html";
   } else {
     $("topName").textContent = "Waiting for a top book";
-    $("topEvidence").textContent = "no winner yet";
-    $("topMetric").textContent = "—";
-    $("topStatus").textContent = "Collecting";
+    $("topEvidence").textContent = "no verified REAL yet";
+    $("topMetric").textContent = "—"; $("topStatus").textContent = "Collecting";
+    top.href = "./real.html";
   }
-  topCard.dataset.pane = topPane;
-  topCard.dataset.targetHash = hashForPane(topPane);
-  topCard.href = hashForPane(topPane);
-  topCard.setAttribute("aria-label", `Open ${topPane === "shadow" ? "SHADOW research" : "IBKR real trades"} top book`);
 }
 function renderCards(){
-  const real = DATA.real || {};
-  const shadow = DATA.shadow || {};
+  const real = DATA.real || {}, shadow = DATA.shadow || {};
   const sh = bestShadow();
   $("realN").textContent = num(real.n);
   $("realOpen").textContent = num(real.open_n);
-  $("realNet").textContent = money(real.net_pnl);
-  $("realNet").className = cls(real.net_pnl);
+  $("realNet").textContent = money(real.net_pnl); $("realNet").className = cls(real.net_pnl);
   $("shadowN").textContent = num(shadow.priced_n);
   $("shadowHorizon").textContent = sh ? sh.horizon : "—";
   $("shadowReturn").textContent = sh ? pct(sh.avg_direction_adjusted_return_pct) : "—";
   $("shadowReturn").className = sh ? cls(sh.avg_direction_adjusted_return_pct) : "";
 }
-function tradeTable(rows){
-  if(!rows.length) return `<div class="empty">No verified REAL closed trades yet.</div>`;
-  return `<table><thead><tr><th>Symbol</th><th>Dir</th><th>Exit</th><th>Net</th><th>Catalyst</th></tr></thead><tbody>${rows.map(r=>`
-    <tr>
-      <td><strong>${esc(r.symbol)}</strong><div class="small">${esc(r.rule_id)}</div></td>
-      <td>${esc(r.direction)}</td>
-      <td>${esc(r.exit_reason)}<div class="small">${when(r.exit_ts)}</div></td>
-      <td class="mono ${cls(r._net_pnl)}">${money(r._net_pnl)}</td>
-      <td>${esc(r.catalyst_type)}<div class="small">${esc(r.headline)}</div></td>
-    </tr>`).join("")}</tbody></table>`;
-}
-function shadowTable(rows){
-  if(!rows.length) return `<div class="empty">No priced SHADOW observations yet.</div>`;
-  return `<table><thead><tr><th>Symbol</th><th>Dir</th><th>Catalyst</th><th>Rule</th><th>Marks</th></tr></thead><tbody>${rows.map(r=>`
-    <tr>
-      <td><strong>${esc(r.symbol)}</strong><div class="small">${esc(r.source_provider)}</div></td>
-      <td>${esc(r.direction)}</td>
-      <td>${esc(r.catalyst_type)}<div class="small">${esc(r.headline)}</div></td>
-      <td>${esc(r.rule_id)}</td>
-      <td class="mono">5m ${esc(r.price_5m)} · 15m ${esc(r.price_15m)} · 1h ${esc(r.price_1h)} · EOD ${esc(r.price_eod)}</td>
-    </tr>`).join("")}</tbody></table>`;
-}
-function hashForPane(which){
-  return which === "shadow" ? "#shadow" : "#ibkr";
-}
-function setHashForPane(which){
-  const targetHash = hashForPane(which);
-  if(location.hash !== targetHash) history.pushState(null, "", targetHash);
-}
-function paneFromHash(){
-  return location.hash === "#shadow" ? "shadow" : "real";
-}
-function cardFromEvent(event){
-  const direct = event?.currentTarget?.dataset?.pane ? event.currentTarget : null;
-  if(direct) return direct;
-  const target = event?.target?.nodeType === 1 ? event.target : event?.target?.parentElement;
-  return target?.closest?.("[data-pane][data-target-hash]") || null;
-}
-function showPane(which, shouldScroll=false, shouldPushHash=false){
-  which = which === "shadow" ? "shadow" : "real";
-  ACTIVE = which;
-  $("realCard").classList.toggle("active", which === "real");
-  $("shadowCard").classList.toggle("active", which === "shadow");
-  $("realCard").setAttribute("aria-current", which === "real" ? "true" : "false");
-  $("shadowCard").setAttribute("aria-current", which === "shadow" ? "true" : "false");
-  if(which === "real"){
-    $("detailTitle").textContent = "IBKR / REAL trades";
-    $("detailSub").textContent = "Executable broker-backed rows from agent_trades. Verified closed rows are trusted; open rows are still live.";
-    $("detailBadge").textContent = "REAL";
-    $("detailBody").innerHTML = DATA ? tradeTable(DATA.real?.recent_closed || []) : `<div class="empty">Loading IBKR trades…</div>`;
-  } else {
-    $("detailTitle").textContent = "SHADOW / RESEARCH observations";
-    $("detailSub").textContent = "Priced forward marks from agent_shadow_trades. Research only — not executable P&L.";
-    $("detailBadge").textContent = "SHADOW";
-    $("detailBody").innerHTML = DATA ? shadowTable(DATA.shadow?.recent_priced || []) : `<div class="empty">Loading SHADOW research…</div>`;
-  }
-  if(shouldPushHash) setHashForPane(which);
-  if(shouldScroll) $("detail").scrollIntoView({behavior:"smooth", block:"start"});
-}
-function setStatus(kind, text){
-  $("siteStatus").className = "status " + kind;
-  $("siteStatus").textContent = text;
-}
 async function load(){
   try{
     DATA = await getJson("/api/live-agent/dashboard");
-    renderTop();
-    renderCards();
-    showPane(location.hash ? paneFromHash() : ACTIVE);
-    setStatus("ok", `Live · REAL n=${num(DATA.real?.n)} · SHADOW priced n=${num(DATA.shadow?.priced_n)}`);
+    renderTop(); renderCards();
+    $("siteStatus").className = "status ok";
+    $("siteStatus").textContent = `Live · REAL n=${num(DATA.real?.n)} · SHADOW priced n=${num(DATA.shadow?.priced_n)}`;
   }catch(e){
-    setStatus("bad", "Live agent failed closed");
+    $("siteStatus").className = "status bad";
+    $("siteStatus").textContent = "Live agent failed closed";
     $("topName").textContent = "Data unavailable";
-    $("topEvidence").textContent = "blocked";
-    $("topMetric").textContent = "—";
-    $("topStatus").textContent = "Fail closed";
-    $("detailBody").innerHTML = `<div class="empty">${esc(e.message)}</div>`;
+    $("topEvidence").textContent = "blocked"; $("topMetric").textContent = "—"; $("topStatus").textContent = "Fail closed";
   }
 }
-window.addEventListener("hashchange", () => showPane(paneFromHash(), true, false));
-function activateCard(cardOrPane, event){
-  if(event){
-    event.preventDefault();
-    event.stopPropagation();
-  }
-  const card = typeof cardOrPane === "string" ? null : cardOrPane;
-  const pane = typeof cardOrPane === "string" ? cardOrPane : card?.dataset?.pane;
-  if(!pane) return false;
-  showPane(pane, true, true);
-  return false;
-}
-["topCard","realCard","shadowCard"].forEach((id) => {
-  const card = $(id);
-  card.addEventListener("click", (event) => {
-    activateCard(card, event);
-  });
-  card.addEventListener("keydown", (event) => {
-    if(event.key !== "Enter" && event.key !== " ") return;
-    activateCard(card, event);
-  });
-});
-document.addEventListener("click", (event) => {
-  const card = cardFromEvent(event);
-  if(!card) return;
-  activateCard(card, event);
-});
 load();
 setInterval(load, 30000);
 </script>
