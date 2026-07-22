@@ -120,7 +120,7 @@ function renderAll() {
   setupFilter(state.raw || {});
   renderHero(real); renderMetrics(real); renderPnlBars(real); renderGauges(real);
   renderEquity(real); renderGroups(real); renderOpenPositions(real);
-  renderCryptoStatus(real); renderDecisionFeed(real);
+  renderCryptoStatus(real); renderDecisionFeed(real); renderReconciliation(real);
   $("refresh-status").className = "status-pill ok";
   const filterText = state.filter === "ALL" ? "" : ` · ${catalystDisplay(state.filter)}`;
   $("refresh-status").innerHTML = `<strong>Live${filterText}</strong> · REAL n=${num(real.n)} · updated ${state.lastLoadedAt?.toLocaleTimeString?.() || "now"}`;
@@ -146,8 +146,26 @@ function renderMetrics(real) {
     metric("Commissions", money(real.commissions), real.n, "IBKR reported"),
     metric("Win rate", pct(real.win_rate), real.n, `${num(real.wins)} wins / ${num(real.losses)} losses`),
     metric("Avg capital used", money(avgDeployed), real.n, `${money(deployed)} total entry notional in visible costed rows`),
-    metric("Open positions", num(real.open_n), real.open_n, `${num(real.stale_open_n)} stale-open flags`),
+    metric("Open positions", num(real.open_n), real.open_n,
+      `${num(real.stale_open_n)} superseded open rows · ${num(real.anomalous_closed_missing_exit_n)} anomalous closed rows`),
   ].join("");
+}
+
+function renderReconciliation(real) {
+  const target = $("reconciliation-state");
+  if (!target) return;
+  const rec = real.reconciliation || {};
+  const warnings = rec.warnings || [];
+  const status = rec.status || real.reconciliation_status || "UNKNOWN";
+  target.innerHTML = `
+    <div><strong>Status:</strong> ${safe(status)} ${status === "PASS" ? "✅" : "⚠️"}</div>
+    <div><strong>Scope:</strong> ${safe(rec.scope || "IBKR/PAPER only")}</div>
+    <div><strong>Open count basis:</strong> latest lifecycle projection; broker-backed close evidence supersedes older open rows.</div>
+    <div><strong>Broker live check:</strong> ${safe(rec.broker_live_check || "not reported")}</div>
+    <div><strong>Ledger mirror check:</strong> ${safe(rec.ledger_live_check || "not reported")}</div>
+    <div><strong>Hidden stale/anomaly rows:</strong> ${num(real.stale_open_n)} stale open · ${num(real.anomalous_closed_missing_exit_n)} anomalous closed</div>
+    ${warnings.length ? `<ul>${warnings.map((w) => `<li>${safe(w)}</li>`).join("")}</ul>` : `<div>No reconciliation warnings from the API projection.</div>`}
+  `;
 }
 
 function renderPnlBars(real) {
