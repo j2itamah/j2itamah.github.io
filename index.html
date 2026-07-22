@@ -112,7 +112,7 @@
     </section>
 
     <section class="cards">
-      <a class="card" id="realCard" href="#ibkr" aria-controls="detail" aria-current="true" data-pane="real" data-target-hash="#ibkr" title="Open IBKR / REAL trades">
+      <a class="card" id="realCard" href="#ibkr" role="button" aria-controls="detail" aria-current="true" data-pane="real" data-target-hash="#ibkr" title="Open IBKR / REAL trades">
         <span class="pill">IBKR / REAL</span>
         <h2>Executable trades</h2>
         <p>Broker-backed fills from <code>agent_trades</code>. This is the trusted side for actual P&L.</p>
@@ -122,7 +122,7 @@
         <span class="go">View IBKR trades <span>→</span></span>
       </a>
 
-      <a class="card dark" id="shadowCard" href="#shadow" aria-controls="detail" aria-current="false" data-pane="shadow" data-target-hash="#shadow" title="Open SHADOW research observations">
+      <a class="card dark" id="shadowCard" href="#shadow" role="button" aria-controls="detail" aria-current="false" data-pane="shadow" data-target-hash="#shadow" title="Open SHADOW research observations">
         <span class="pill">SHADOW / RESEARCH</span>
         <h2>Research observations</h2>
         <p>Priced forward marks from <code>agent_shadow_trades</code>. Useful for edge research, not executable P&L.</p>
@@ -243,7 +243,11 @@ function shadowTable(rows){
       <td class="mono">5m ${esc(r.price_5m)} · 15m ${esc(r.price_15m)} · 1h ${esc(r.price_1h)} · EOD ${esc(r.price_eod)}</td>
     </tr>`).join("")}</tbody></table>`;
 }
-function showPane(which, shouldScroll=false){
+function setHashForPane(which){
+  const targetHash = which === "real" ? "#ibkr" : "#shadow";
+  if(location.hash !== targetHash) history.pushState(null, "", targetHash);
+}
+function showPane(which, shouldScroll=false, shouldPushHash=false){
   ACTIVE = which;
   $("realCard").classList.toggle("active", which === "real");
   $("shadowCard").classList.toggle("active", which === "shadow");
@@ -260,8 +264,7 @@ function showPane(which, shouldScroll=false){
     $("detailBadge").textContent = "SHADOW";
     $("detailBody").innerHTML = DATA ? shadowTable(DATA.shadow?.recent_priced || []) : `<div class="empty">Loading SHADOW research…</div>`;
   }
-  const targetHash = which === "real" ? "#ibkr" : "#shadow";
-  if(location.hash !== targetHash) history.replaceState(null, "", targetHash);
+  if(shouldPushHash) setHashForPane(which);
   if(shouldScroll) $("detail").scrollIntoView({behavior:"smooth", block:"start"});
 }
 function setStatus(kind, text){
@@ -285,18 +288,18 @@ async function load(){
   }
 }
 window.addEventListener("hashchange", () => showPane(location.hash === "#shadow" ? "shadow" : "real"));
-document.addEventListener("click", (event) => {
-  const card = event.target.closest("[data-pane]");
-  if(!card) return;
-  event.preventDefault();
-  showPane(card.dataset.pane, true);
-});
-document.addEventListener("keydown", (event) => {
-  if(event.key !== "Enter" && event.key !== " ") return;
-  const card = event.target.closest("[data-pane]");
-  if(!card) return;
-  event.preventDefault();
-  showPane(card.dataset.pane, true);
+function activateCard(card, event){
+  if(event) event.preventDefault();
+  if(!card || !card.dataset.pane) return;
+  showPane(card.dataset.pane, true, true);
+}
+["realCard","shadowCard"].forEach((id) => {
+  const card = $(id);
+  card.addEventListener("click", (event) => activateCard(card, event));
+  card.addEventListener("keydown", (event) => {
+    if(event.key !== "Enter" && event.key !== " ") return;
+    activateCard(card, event);
+  });
 });
 load();
 setInterval(load, 30000);
