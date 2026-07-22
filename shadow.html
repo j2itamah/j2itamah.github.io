@@ -30,25 +30,37 @@
 
     <section class="hero-strip">
       <div class="hero-card primary">
-        <div class="metric-label">Priced observations (evidence)</div>
+        <div class="metric-label">Research trades priced</div>
         <div class="metric-value" id="hero-priced">—</div>
-        <div class="metric-sub">entry reference + forward mark</div>
+        <div class="metric-sub">shadow observations with at least one forward mark</div>
       </div>
       <div class="hero-card">
-        <div class="metric-label">Modeled P&L rows</div>
-        <div class="metric-value" id="hero-modeled">—</div>
-        <div class="metric-sub">qty + modeled comm + net</div>
+        <div class="metric-label">Real cash / equity</div>
+        <div class="metric-value muted" id="hero-modeled">$0</div>
+        <div class="metric-sub">Shadow is research only; real cash lives in IBKR / REAL</div>
       </div>
       <div class="hero-card">
-        <div class="metric-label">Multi-day captured</div>
+        <div class="metric-label">Best avg return</div>
         <div class="metric-value" id="hero-multi">—</div>
-        <div class="metric-sub" id="hero-multi-sub">—</div>
+        <div class="metric-sub" id="hero-multi-sub">priced horizon</div>
       </div>
       <div class="hero-card">
-        <div class="metric-label">Diagnostic rows</div>
+        <div class="metric-label">Pending / unpriced</div>
         <div class="metric-value muted" id="hero-diag">—</div>
-        <div class="metric-sub">not used as evidence</div>
+        <div class="metric-sub">not counted as evidence</div>
       </div>
+    </section>
+
+    <section class="panel section-gap">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Dollar view · if each SHADOW idea used a $10K test size</h2>
+          <div class="small">Research math only. This is not real cash, not IBKR equity, and not executable P&L.</div>
+        </div>
+        <span class="badge shadow">$10K per observation</span>
+      </div>
+      <div class="grid four" id="shadow-dollar-cards"><div class="loading">Loading dollar view…</div></div>
+      <div class="small section-note" id="shadow-dollar-note"></div>
     </section>
 
     <section class="panel">
