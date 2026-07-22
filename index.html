@@ -38,11 +38,16 @@
     .status.warn{border-color:rgba(217,119,6,.30);color:#b45309;background:rgba(217,119,6,.06)}
     .status.bad{border-color:rgba(220,38,38,.30);color:#b91c1c;background:rgba(220,38,38,.06)}
     .champ{
+      display:block;text-decoration:none;cursor:pointer;
       width:100%;margin-bottom:22px;background:var(--dark);color:#f8fafc;border:1px solid rgba(255,255,255,.10);
       border-radius:18px;padding:24px 28px;box-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.4);
       position:relative;overflow:hidden;min-height:128px;
+      transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
     }
+    .champ > *{pointer-events:none}
     .champ::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,#fbbf24,#f59e0b)}
+    .champ:hover{transform:translateY(-4px);border-color:rgba(251,191,36,.45);box-shadow:0 1px 2px rgba(0,0,0,.3),0 18px 44px rgba(0,0,0,.46)}
+    .champ:focus-visible{outline:3px solid rgba(251,191,36,.35);outline-offset:4px}
     .champ-label{font-size:.72rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#fcd34d;margin-bottom:8px}
     .champ-name{font-size:1.55rem;font-weight:800;margin-bottom:14px;line-height:1.25}
     .champ-stats{display:flex;gap:32px;flex-wrap:wrap}
@@ -104,7 +109,7 @@
     <div class="live"><span class="dot"></span> Verified data only for REAL · SHADOW is research-only</div>
     <div class="status-wrap"><div class="status" id="siteStatus">Loading live agent…</div></div>
 
-    <section class="champ">
+    <a class="champ" id="topCard" href="#ibkr" aria-controls="detail" data-pane="real" data-target-hash="#ibkr" aria-label="Open current top book">
       <div class="champ-label">Top book · current A/B</div>
       <div class="champ-name" id="topName">Loading top book…</div>
       <div class="champ-stats">
@@ -112,7 +117,7 @@
         <div><span class="cap">Primary metric</span><span class="val" id="topMetric">—</span></div>
         <div><span class="cap">Status</span><span class="val" id="topStatus">—</span></div>
       </div>
-    </section>
+    </a>
 
     <section class="cards">
       <a class="card" id="realCard" href="#ibkr" role="button" tabindex="0" aria-controls="detail" aria-current="true" data-pane="real" data-target-hash="#ibkr" aria-label="Open IBKR real executable trades" title="Open IBKR / REAL trades">
@@ -185,6 +190,8 @@ function renderTop(){
   const realNet = Number(real.net_pnl || 0);
   const sh = bestShadow();
   const shadowAvg = sh ? Number(sh.avg_direction_adjusted_return_pct || 0) : 0;
+  const topCard = $("topCard");
+  let topPane = "real";
 
   if(realN > 0 && realNet > 0){
     $("topName").textContent = "IBKR / REAL is top book";
@@ -193,6 +200,7 @@ function renderTop(){
     $("topStatus").textContent = "Executable";
     $("topStatus").className = "val up";
   } else if(sh && shadowAvg > 0){
+    topPane = "shadow";
     $("topName").textContent = "SHADOW is top research book";
     $("topEvidence").textContent = `priced n=${num(shadow.priced_n)}`;
     setClassText("topMetric", `${esc(sh.horizon)} ${pct(shadowAvg)}`, cls(shadowAvg));
@@ -210,6 +218,10 @@ function renderTop(){
     $("topMetric").textContent = "—";
     $("topStatus").textContent = "Collecting";
   }
+  topCard.dataset.pane = topPane;
+  topCard.dataset.targetHash = hashForPane(topPane);
+  topCard.href = hashForPane(topPane);
+  topCard.setAttribute("aria-label", `Open ${topPane === "shadow" ? "SHADOW research" : "IBKR real trades"} top book`);
 }
 function renderCards(){
   const real = DATA.real || {};
@@ -305,14 +317,17 @@ async function load(){
 }
 window.addEventListener("hashchange", () => showPane(paneFromHash(), true, false));
 function activateCard(cardOrPane, event){
-  if(event) event.preventDefault();
+  if(event){
+    event.preventDefault();
+    event.stopPropagation();
+  }
   const card = typeof cardOrPane === "string" ? null : cardOrPane;
   const pane = typeof cardOrPane === "string" ? cardOrPane : card?.dataset?.pane;
   if(!pane) return false;
   showPane(pane, true, true);
   return false;
 }
-["realCard","shadowCard"].forEach((id) => {
+["topCard","realCard","shadowCard"].forEach((id) => {
   const card = $(id);
   card.addEventListener("click", (event) => {
     activateCard(card, event);
@@ -321,6 +336,11 @@ function activateCard(cardOrPane, event){
     if(event.key !== "Enter" && event.key !== " ") return;
     activateCard(card, event);
   });
+});
+document.addEventListener("click", (event) => {
+  const card = cardFromEvent(event);
+  if(!card) return;
+  activateCard(card, event);
 });
 load();
 setInterval(load, 30000);
