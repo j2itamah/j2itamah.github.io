@@ -115,7 +115,7 @@
     </section>
 
     <section class="cards">
-      <a class="card" id="realCard" href="#ibkr" role="button" tabindex="0" aria-controls="detail" aria-current="true" data-pane="real" data-target-hash="#ibkr" aria-label="Open IBKR real executable trades" title="Open IBKR / REAL trades">
+      <a class="card" id="realCard" href="#ibkr" tabindex="0" aria-controls="detail" aria-current="true" data-pane="real" data-target-hash="#ibkr" aria-label="Open IBKR real executable trades" title="Open IBKR / REAL trades">
         <span class="pill">IBKR / REAL</span>
         <h2>Executable trades</h2>
         <p>Broker-backed fills from <code>agent_trades</code>. This is the trusted side for actual P&L.</p>
@@ -125,7 +125,7 @@
         <span class="go">View IBKR trades <span>→</span></span>
       </a>
 
-      <a class="card dark" id="shadowCard" href="#shadow" role="button" tabindex="0" aria-controls="detail" aria-current="false" data-pane="shadow" data-target-hash="#shadow" aria-label="Open SHADOW research observations" title="Open SHADOW research observations">
+      <a class="card dark" id="shadowCard" href="#shadow" tabindex="0" aria-controls="detail" aria-current="false" data-pane="shadow" data-target-hash="#shadow" aria-label="Open SHADOW research observations" title="Open SHADOW research observations">
         <span class="pill">SHADOW / RESEARCH</span>
         <h2>Research observations</h2>
         <p>Priced forward marks from <code>agent_shadow_trades</code>. Useful for edge research, not executable P&L.</p>
@@ -256,6 +256,12 @@ function setHashForPane(which){
 function paneFromHash(){
   return location.hash === "#shadow" ? "shadow" : "real";
 }
+function cardFromEvent(event){
+  const direct = event?.currentTarget?.dataset?.pane ? event.currentTarget : null;
+  if(direct) return direct;
+  const target = event?.target?.nodeType === 1 ? event.target : event?.target?.parentElement;
+  return target?.closest?.("[data-pane][data-target-hash]") || null;
+}
 function showPane(which, shouldScroll=false, shouldPushHash=false){
   which = which === "shadow" ? "shadow" : "real";
   ACTIVE = which;
@@ -300,23 +306,24 @@ async function load(){
 window.addEventListener("hashchange", () => showPane(paneFromHash(), true, false));
 function activateCard(cardOrPane, event){
   if(event) event.preventDefault();
-  const pane = typeof cardOrPane === "string" ? cardOrPane : cardOrPane?.dataset?.pane;
+  const card = typeof cardOrPane === "string" ? null : cardOrPane;
+  const pane = typeof cardOrPane === "string" ? cardOrPane : card?.dataset?.pane;
   if(!pane) return false;
   showPane(pane, true, true);
   return false;
 }
 document.addEventListener("click", (event) => {
-  const card = event.target.closest?.("[data-pane][data-target-hash]");
+  const card = cardFromEvent(event);
   if(!card || !document.querySelector(".cards")?.contains(card)) return;
   if(event.defaultPrevented) return;
   activateCard(card, event);
 });
 ["realCard","shadowCard"].forEach((id) => {
   const card = $(id);
-  card.addEventListener("click", (event) => activateCard(event.currentTarget, event));
+  card.addEventListener("click", (event) => activateCard(cardFromEvent(event), event));
   card.addEventListener("keydown", (event) => {
     if(event.key !== "Enter" && event.key !== " ") return;
-    activateCard(event.currentTarget, event);
+    activateCard(cardFromEvent(event), event);
   });
 });
 load();
