@@ -56,7 +56,6 @@
       transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;cursor:pointer;min-height:245px;
       touch-action:manipulation;user-select:none;
     }
-    .card *{pointer-events:none}
     .card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--coral),var(--coral2))}
     .card.dark{background:var(--dark);border-color:rgba(255,255,255,.10);color:#f8fafc;box-shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4)}
     .card.dark::before{background:linear-gradient(90deg,var(--blue),var(--blue2))}
@@ -114,7 +113,7 @@
     </section>
 
     <section class="cards">
-      <a class="card" id="realCard" href="#ibkr" role="button" tabindex="0" aria-controls="detail" aria-current="true" data-pane="real" data-target-hash="#ibkr" title="Open IBKR / REAL trades" onclick="return openPaneFromCard(this, event)">
+      <a class="card" id="realCard" href="#ibkr" role="button" tabindex="0" aria-controls="detail" aria-current="true" data-pane="real" data-target-hash="#ibkr" aria-label="Open IBKR real executable trades" title="Open IBKR / REAL trades">
         <span class="pill">IBKR / REAL</span>
         <h2>Executable trades</h2>
         <p>Broker-backed fills from <code>agent_trades</code>. This is the trusted side for actual P&L.</p>
@@ -124,7 +123,7 @@
         <span class="go">View IBKR trades <span>→</span></span>
       </a>
 
-      <a class="card dark" id="shadowCard" href="#shadow" role="button" tabindex="0" aria-controls="detail" aria-current="false" data-pane="shadow" data-target-hash="#shadow" title="Open SHADOW research observations" onclick="return openPaneFromCard(this, event)">
+      <a class="card dark" id="shadowCard" href="#shadow" role="button" tabindex="0" aria-controls="detail" aria-current="false" data-pane="shadow" data-target-hash="#shadow" aria-label="Open SHADOW research observations" title="Open SHADOW research observations">
         <span class="pill">SHADOW / RESEARCH</span>
         <h2>Research observations</h2>
         <p>Priced forward marks from <code>agent_shadow_trades</code>. Useful for edge research, not executable P&L.</p>
@@ -249,6 +248,9 @@ function setHashForPane(which){
   const targetHash = which === "real" ? "#ibkr" : "#shadow";
   if(location.hash !== targetHash) history.pushState(null, "", targetHash);
 }
+function paneFromHash(){
+  return location.hash === "#shadow" ? "shadow" : "real";
+}
 function showPane(which, shouldScroll=false, shouldPushHash=false){
   ACTIVE = which;
   $("realCard").classList.toggle("active", which === "real");
@@ -278,7 +280,7 @@ async function load(){
     DATA = await getJson("/api/live-agent/dashboard");
     renderTop();
     renderCards();
-    showPane(location.hash === "#shadow" ? "shadow" : ACTIVE);
+    showPane(location.hash ? paneFromHash() : ACTIVE);
     setStatus("ok", `Live · REAL n=${num(DATA.real?.n)} · SHADOW priced n=${num(DATA.shadow?.priced_n)}`);
   }catch(e){
     setStatus("bad", "Live agent failed closed");
@@ -289,19 +291,20 @@ async function load(){
     $("detailBody").innerHTML = `<div class="empty">${esc(e.message)}</div>`;
   }
 }
-window.addEventListener("hashchange", () => showPane(location.hash === "#shadow" ? "shadow" : "real"));
+window.addEventListener("hashchange", () => showPane(paneFromHash()));
 function activateCard(card, event){
   if(event) event.preventDefault();
   if(!card || !card.dataset.pane) return;
   showPane(card.dataset.pane, true, true);
   return false;
 }
-function openPaneFromCard(card, event){
-  return activateCard(card, event);
-}
+document.addEventListener("click", (event) => {
+  const card = event.target.closest?.("[data-pane][data-target-hash]");
+  if(!card || !document.querySelector(".cards")?.contains(card)) return;
+  activateCard(card, event);
+});
 ["realCard","shadowCard"].forEach((id) => {
   const card = $(id);
-  card.addEventListener("click", (event) => activateCard(event.currentTarget, event));
   card.addEventListener("keydown", (event) => {
     if(event.key !== "Enter" && event.key !== " ") return;
     activateCard(event.currentTarget, event);
