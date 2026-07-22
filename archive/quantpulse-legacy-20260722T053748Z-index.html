@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuantPulse — Trading Lab</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<style>
+  :root{
+    --bg0:#ffffff; --bg1:#f1f5f9; --bg2:#e9eef5;
+    --line:#e2e8f0;
+    --txt:#0f172a; --muted:#64748b;
+    --blue:#2563eb; --blue2:#3b82f6;
+    --coral:#e0652f; --coral2:#ea7a48;
+    --ok:#16a34a; --down:#dc2626;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    color:var(--txt);
+    background:
+      radial-gradient(1100px 560px at 18% -10%, rgba(37,99,235,.07), transparent 60%),
+      radial-gradient(900px 480px at 92% 112%, rgba(224,101,47,.06), transparent 55%),
+      linear-gradient(160deg,var(--bg0),var(--bg1) 60%,var(--bg2));
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    padding:40px 24px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .mark{width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;
+        border-bottom:16px solid var(--blue);transform:translateY(-1px)}
+  .brand h1{font-size:1.5rem;font-weight:700;letter-spacing:.2px}
+  .brand h1 span{color:var(--blue)}
+  .sub{color:var(--muted);font-size:.95rem;margin-bottom:6px;text-align:center}
+  .live{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:.8rem;margin-bottom:14px}
+  /* Dashboard-accuracy health badge */
+  .health{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:600;
+    padding:7px 14px;border-radius:999px;margin-bottom:24px;border:1px solid var(--line);
+    background:#fff;color:var(--muted);box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .health-dot{width:9px;height:9px;border-radius:50%;background:#94a3b8;flex:none}
+  .health.ok{border-color:rgba(22,163,74,.30);color:#15803d;background:rgba(22,163,74,.06)}
+  .health.ok .health-dot{background:var(--ok)}
+  .health.warn{border-color:rgba(217,119,6,.30);color:#b45309;background:rgba(217,119,6,.06)}
+  .health.warn .health-dot{background:#d97706}
+  .health.bad{border-color:rgba(220,38,38,.30);color:#b91c1c;background:rgba(220,38,38,.06)}
+  .health.bad .health-dot{background:var(--down)}
+  .trust-note{width:100%;max-width:880px;margin:-8px 0 22px;padding:12px 16px;border-radius:14px;
+    border:1px solid rgba(217,119,6,.28);background:rgba(217,119,6,.07);color:#92400e;
+    font-size:.84rem;line-height:1.45;text-align:center}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(22,163,74,.5);
+       animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.4)}70%{box-shadow:0 0 0 9px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
+
+  /* Top Performer card */
+  .champ{width:100%;max-width:880px;margin-bottom:22px;background:#0b0f1a;color:#f8fafc;
+    border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:24px 28px;
+    box-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.4);position:relative;overflow:hidden;
+    min-height:120px}
+  .champ::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;
+    background:linear-gradient(90deg,#fbbf24,#f59e0b)}
+  .champ-label{font-size:.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fcd34d;margin-bottom:8px}
+  .champ-name{font-size:1.5rem;font-weight:700;margin-bottom:18px;line-height:1.3;word-wrap:break-word;overflow-wrap:break-word}
+  .champ-build{font-size:.8rem;font-weight:600;color:#93c5fd;background:rgba(96,165,250,.16);
+    padding:3px 9px;border-radius:999px;margin-left:8px;vertical-align:middle;white-space:nowrap;display:inline-block;margin-top:4px}
+  .champ-stats{display:flex;gap:32px;flex-wrap:wrap}
+  .champ-cap{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:#8a96ad;margin-bottom:3px}
+  .champ-val{font-size:1.55rem;font-weight:700;font-variant-numeric:tabular-nums;word-break:break-word;display:block;-webkit-text-size-adjust:100%}
+  .champ-val.up{color:#34d399}.champ-val.down{color:#f87171}
+
+  /* Leaderboard */
+  .leaderboard{width:100%;max-width:880px;margin-bottom:22px;background:#fff;
+    border:1px solid var(--line);border-radius:18px;padding:20px 24px;
+    box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.05);
+    overflow-anchor:none}
+  .lb-title{font-size:.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:0;display:flex;align-items:center;justify-content:space-between}
+  .lb-toggle{font-size:.78rem;font-weight:600;color:var(--blue);background:none;border:1px solid var(--blue);
+    border-radius:8px;padding:5px 14px;cursor:pointer;transition:background .15s,color .15s}
+  .lb-toggle:hover{background:var(--blue);color:#fff}
+  .lb-rows-wrap{overflow:hidden;max-height:0;transition:max-height .35s ease;}
+  .lb-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:4px;transition:background .15s}
+  .lb-row:hover{background:#f8fafc}
+  .lb-row.leader{background:linear-gradient(90deg,rgba(251,191,36,.08),rgba(251,191,36,.02))}
+  .lb-rank{font-weight:800;font-size:.9rem;color:var(--muted);min-width:24px;text-align:center}
+  .lb-row.leader .lb-rank{color:#d97706}
+  .lb-name{flex:1;font-weight:600;font-size:.9rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lb-build{font-size:.68rem;font-weight:600;padding:3px 8px;border-radius:999px;white-space:nowrap}
+  .lb-build.a{background:rgba(224,101,47,.10);color:var(--coral)}
+  .lb-build.b{background:rgba(37,99,235,.10);color:var(--blue)}
+  .lb-build.crypto{background:rgba(251,191,36,.10);color:#92400e}
+  .lb-pct{font-weight:700;font-size:.9rem;font-variant-numeric:tabular-nums;min-width:70px;text-align:right}
+  .lb-pct.up{color:var(--ok)}.lb-pct.down{color:var(--down)}
+  .lb-val{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums;min-width:80px;text-align:right}
+  .lb-empty{color:var(--muted);font-size:.85rem;text-align:center;padding:16px}
+
+  /* Build cards */
+  .cards{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;width:100%;max-width:880px}
+  .card{
+    flex:1 1 360px;position:relative;overflow:hidden;
+    background:#ffffff;
+    border:1px solid var(--line);border-radius:18px;padding:30px 28px 26px;
+    text-decoration:none;color:inherit;
+    box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.05);
+    transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+  }
+  .card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;
+    background:linear-gradient(90deg,var(--blue),var(--blue2))}
+  .card.coral::before{background:linear-gradient(90deg,var(--coral),var(--coral2))}
+  .card:hover{transform:translateY(-5px);border-color:#c7d6ee;
+    box-shadow:0 2px 4px rgba(15,23,42,.05),0 16px 40px rgba(37,99,235,.14)}
+  .card.coral:hover{border-color:#f0cdb9;box-shadow:0 2px 4px rgba(15,23,42,.05),0 16px 40px rgba(224,101,47,.14)}
+  .pill{display:inline-block;font-size:.7rem;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
+    padding:5px 11px;border-radius:999px;margin-bottom:18px;
+    background:rgba(37,99,235,.10);color:var(--blue)}
+  .card.coral .pill{background:rgba(224,101,47,.10);color:var(--coral)}
+  .card h2{font-size:1.45rem;font-weight:700;margin-bottom:6px}
+  .card p{color:var(--muted);font-size:.9rem;line-height:1.5;margin-bottom:20px;min-height:40px}
+  .stack{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+  .tag{font-size:.74rem;font-weight:500;padding:5px 10px;border-radius:8px;
+    background:#f1f5f9;border:1px solid var(--line);color:#475569}
+  .go{display:inline-flex;align-items:center;gap:8px;font-weight:600;color:var(--blue)}
+  .card.coral .go{color:var(--coral)}
+  .go .arr{transition:transform .18s ease}
+  .card:hover .go .arr{transform:translateX(4px)}
+  .card.dark{background:#0b0f1a;border-color:rgba(255,255,255,.10);
+    box-shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4)}
+  .card.dark::before{background:linear-gradient(90deg,var(--blue),var(--blue2))}
+  .card.dark h2{color:#f8fafc}
+  .card.dark p{color:#94a3b8}
+  .card.dark .pill{background:rgba(96,165,250,.18);color:#93c5fd}
+  .card.dark .tag{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);color:#cbd5e1}
+  .card.dark .go{color:#93c5fd}
+  .card.dark:hover{transform:translateY(-5px);border-color:rgba(96,165,250,.55);
+    box-shadow:0 2px 4px rgba(0,0,0,.3),0 18px 44px rgba(37,99,235,.32)}
+  footer{margin-top:34px;color:#94a3b8;font-size:.78rem;text-align:center}
+
+  /* Mobile fixes */
+  @media(max-width:600px){
+    body{padding:20px 14px}
+    .champ{padding:18px 16px;min-height:100px}
+    .champ-name{font-size:1.15rem;margin-bottom:12px}
+    .champ-build{margin-left:0;display:block;margin-top:6px;width:fit-content}
+    .champ-val{font-size:1.2rem}
+    .champ-stats{gap:16px}
+    .leaderboard{padding:14px 12px}
+    .lb-row{padding:8px 8px;gap:8px}
+    .lb-name{font-size:.8rem}
+    .lb-val{display:none}
+    .card p{min-height:0}
+    .brand h1{font-size:1.2rem}
+  }
+  @media(max-width:380px){
+    .champ-stats{flex-direction:column;gap:10px}
+    .champ-val{font-size:1.1rem}
+  }
+</style>
+</head>
+<body>
+  <div class="brand"><div class="mark"></div><h1>Quant<span>Pulse</span> &middot; Trading Lab</h1></div>
+  <div class="sub">Two parallel news-driven trading systems, running head to head.</div>
+  <div class="live"><span class="dot"></span> Engines monitored live &middot; paper trading diagnostics</div>
+
+  <div class="health" id="siteHealth" title="Reflects whether the diagnostic dashboard data is loading and internally consistent">
+    <span class="health-dot" id="healthDot"></span><span id="healthText">Checking dashboard health&hellip;</span>
+  </div>
+
+  <div class="trust-note">
+    Rule 21 trust status: Build A / legacy metrics shown here are diagnostic and unverified unless a row is explicitly marked VALIDATED.
+    Do not treat leaderboard, P&amp;L, or edge labels as trusted trade results.
+  </div>
+
+  <div class="champ">
+    <div class="champ-label">&#127942; Diagnostic leader &middot; legacy/unverified</div>
+    <div class="champ-name" id="champName">Loading diagnostic results&hellip;</div>
+    <div class="champ-stats">
+      <div><span class="champ-cap">Diagnostic value</span><span class="champ-val" id="champValue">&mdash;</span></div>
+      <div><span class="champ-cap">Diagnostic P/L today</span><span class="champ-val" id="champDay">&mdash;</span></div>
+      <div><span class="champ-cap">Diagnostic return since baseline</span><span class="champ-val" id="champAll">&mdash;</span></div>
+    </div>
+  </div>
+
+  <div class="leaderboard">
+    <div class="lb-title">Diagnostic Leaderboard &middot; legacy/unverified return
+      <button class="lb-toggle" id="lbToggle" onclick="var w=document.getElementById('lbRowsWrap');var open=w.style.maxHeight!=='0px'&&w.style.maxHeight;w.style.maxHeight=open?'0px':'2000px';this.textContent=open?'Show standings':'Hide standings'">Show standings</button>
+    </div>
+    <div class="lb-rows-wrap" id="lbRowsWrap">
+      <div id="lbRows" style="padding-top:12px"><div class="lb-empty">Loading leaderboard&hellip;</div></div>
+    </div>
+  </div>
+
+  <div class="cards">
+    <a class="card coral" href="https://j2itamah.github.io/trading-dashboard/" target="_blank" rel="noopener">
+      <span class="pill">Build A</span>
+      <h2>Cursor&nbsp;+&nbsp;Claude</h2>
+      <p>Supabase-backed V2 pipeline. Legacy paper-trading metrics are shown as diagnostics until VALIDATED-only reporting is available.</p>
+      <div class="stack">
+        <span class="tag">Cursor</span><span class="tag">Claude</span>
+        <span class="tag">Supabase</span><span class="tag">n8n</span>
+        <span class="tag">CryptoLab</span>
+      </div>
+      <span class="go">Open dashboard <span class="arr">&rarr;</span></span>
+    </a>
+
+    <a class="card dark" href="https://news-trading-system-production-b13f.up.railway.app/" target="_blank" rel="noopener">
+      <span class="pill">Build B</span>
+      <h2>OpenAI&nbsp;+&nbsp;Antigravity</h2>
+      <p>FastAPI engine on Railway. Trusted trade drawers now require VALIDATED rows; legacy portfolio views remain diagnostic unless labeled.</p>
+      <div class="stack">
+        <span class="tag">Antigravity</span><span class="tag">OpenAI GPT</span>
+        <span class="tag">FastAPI</span><span class="tag">Railway</span>
+      </div>
+      <span class="go">Open dashboard <span class="arr">&rarr;</span></span>
+    </a>
+  </div>
+
+  <a href="cockpit/" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:880px;margin-top:22px;
+     padding:16px 22px;border-radius:16px;text-decoration:none;background:#0b0f1a;color:#f8fafc;border:1px solid rgba(45,212,191,.28);
+     box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 22px rgba(45,212,191,.10);font-weight:600;font-size:.95rem;transition:transform .18s,border-color .18s">
+    <span style="color:#2dd4bf;text-shadow:0 0 12px rgba(45,212,191,.5)">&#x2B21;</span>
+    Master System Health Cockpit
+    <span style="color:#94a3b8;font-weight:500;font-size:.84rem">&mdash; diagnostic pipeline map &middot; both builds</span>
+    <span style="color:#2dd4bf">&rarr;</span>
+  </a>
+
+  <footer>Paper trading only &middot; not financial advice &middot; BUILD 20260630-02 &middot; legacy/unverified diagnostics unless explicitly VALIDATED</footer>
+
+<script>
+/* === BUILD 20260630-02 === unified feed (single source for both builds) */
+var BUILD='20260630-02';
+var UNIFIED_URL='https://news-trading-system-production-b13f.up.railway.app/api/unified/data';
+var LOCAL_V2_URL='data.v2.json';
+
+var NAMES={news_only:'News Only',news_plus_ta:'Trend Gate',trend_strict:'Strict Trend',
+  mean_reversion:'Mean Reversion',full_confluence:'Full Confluence',
+  strict_trend_gate:'Strict Trend',cryptolab:'CryptoLab'};
+
+function num(v){return(v==null||v==='')?NaN:+v;}
+function money(n){return isNaN(n)?'---':'$'+Number(n).toLocaleString(undefined,{maximumFractionDigits:2});}
+function pnlFmt(p,pct){if(isNaN(p))return'---';var s=p>=0?'+':'-';var pc=isNaN(pct)?'':' ('+(pct>=0?'+':'')+Number(pct).toFixed(2)+'%)';return s+'$'+Math.abs(p).toLocaleString(undefined,{maximumFractionDigits:2})+pc;}
+function setPnl(id,p,pct){var e=document.getElementById(id);if(!e)return;if(isNaN(p)){e.textContent='---';e.className='champ-val';return;}e.textContent=pnlFmt(p,pct);e.className='champ-val '+(p>=0?'up':'down');}
+function stratLabel(key){
+  var parts=(key||'').replace(/^v2_/,'').split('_');
+  var pf=parts[0]||'';
+  if(parts.length>=2&&NAMES[parts[0]+'_'+parts[1]])pf=parts[0]+'_'+parts[1];
+  else if(parts.length>=2&&parts[1]==='reversion')pf=parts[0]+'_'+parts[1];
+  else if(parts.length>=2&&parts[1]==='confluence')pf=parts[0]+'_'+parts[1];
+  else if(parts.length>=2&&parts[1]==='strict')pf=parts[0]+'_'+parts[1];
+  else if(parts.length>=3&&parts[1]==='plus')pf=parts[0]+'_'+parts[1]+'_'+parts[2];
+  else if(parts.length>=3&&parts[1]==='trend')pf=parts[0]+'_'+parts[1]+'_'+parts[2];
+  return NAMES[pf]||pf.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+}
+
+function normalizeUnified(d){
+    if(d.error)throw new Error(d.error);
+
+    /* Build a map of book_key -> {starting_balance, target_model, P&L accumulators} */
+    var bookMap={};
+    var books=d.books||d.book_metrics||[];
+    for(var i=0;i<books.length;i++){
+      var b=books[i];
+      var inferredEngine=b.engine||(b.history_preserved_backend_key?'A':'A');
+      var key=inferredEngine+'|'+b.book_key;
+      bookMap[key]={
+        engine:inferredEngine,
+        book_key:b.book_key,
+        starting_balance:num(b.starting_balance)||10000,
+        target_model:b.target_model||'fixed',
+        realized:num(b.realized_pnl)||0,
+        unrealized:num(b.unrealized_pnl)||0,
+        tradeCount:num(b.open_count)||num(b.closed_count)||0
+      };
+    }
+
+    /* Accumulate per-book P&L from trades */
+    var trades=d.trades||d.closed_trades||[];
+    for(var j=0;j<trades.length;j++){
+      var t=trades[j];
+      var tEngine=t.engine||(t.book_key?'A':'A');
+      var tk=tEngine+'|'+t.book_key;
+      if(!bookMap[tk]){
+        bookMap[tk]={engine:tEngine,book_key:t.book_key,starting_balance:num(t.book_starting_balance)||10000,
+          target_model:'fixed',realized:0,unrealized:0,tradeCount:0};
+      }
+      if(!(d.book_metrics||[]).length){
+        bookMap[tk].realized+=num(t.realized_pnl)||0;
+        bookMap[tk].unrealized+=num(t.unrealized_pnl)||0;
+      }
+      bookMap[tk].tradeCount++;
+    }
+
+    /* Convert to leaderboard entries */
+    var results=[],hasA=false,hasB=false;
+    for(var k in bookMap){
+      if(!bookMap.hasOwnProperty(k))continue;
+      var bk=bookMap[k];
+      if(bk.tradeCount===0)continue;
+      var eng=bk.engine;
+      if(eng==='A')hasA=true;
+      if(eng==='B')hasB=true;
+      var start=bk.starting_balance;
+      var totalPnl=bk.realized+bk.unrealized;
+      var eq=start+totalPnl;
+      var pctAll=start?totalPnl/start*100:0;
+      var buildLabel=eng==='A'?'Build A':'Build B';
+      var buildCls=eng==='A'?'a':'b';
+      if((bk.book_key||'').toLowerCase()==='cryptolab'){buildLabel='CryptoLab';buildCls='crypto';}
+      var exitModel=bk.target_model||'fixed';
+      var label=stratLabel(bk.book_key);
+      if(exitModel==='volatility')label+=' ATR';
+      else if(exitModel==='fixed')label+=' Fixed';
+      results.push({
+        build:buildLabel,buildCls:buildCls,
+        name:label,
+        value:eq,
+        pnlDay:0,pctDay:0,
+        pnlAll:totalPnl,pctAll:pctAll
+      });
+    }
+
+    /* Add CryptoLab accounts if not already covered by book trades */
+    var clAccts=d.crypto_lab_accounts||[];
+    for(var ci=0;ci<clAccts.length;ci++){
+      var ca=clAccts[ci];
+      var clStart=num(ca.initial_balance)||100000;
+      var clCurrent=num(ca.current_balance);
+      var clPnl=num(ca.total_pnl)||0;
+      if(isNaN(clCurrent)||clCurrent===0)continue;
+      var existing=false;
+      for(var ri=0;ri<results.length;ri++){
+        if(results[ri].buildCls==='crypto'){existing=true;break;}
+      }
+      if(existing)continue;
+      if(ca.engine==='A')hasA=true;
+      if(ca.engine==='B')hasB=true;
+      results.push({
+        build:'CryptoLab',buildCls:'crypto',
+        name:'CryptoLab',
+        value:clCurrent,
+        pnlDay:0,pctDay:0,
+        pnlAll:clPnl,pctAll:clStart?clPnl/clStart*100:0
+      });
+    }
+    return {results:results,hasA:hasA,hasB:hasB};
+}
+
+/* --- Load from same-origin static Build A diagnostic data first; fall back to
+   the unified Railway feed only if local data is unavailable. This avoids CORS
+   noise on GitHub Pages while preserving Rule 21: all rendered results remain
+   legacy/unverified diagnostics unless a row is explicitly marked VALIDATED. --- */
+function loadUnified(){
+  return fetch(LOCAL_V2_URL+'?t='+Date.now(),{cache:'no-store'}).then(function(r){
+    if(!r.ok)throw new Error('local '+r.status);return r.json();
+  }).catch(function(localErr){
+    console.warn('local diagnostic feed failed; falling back to unified feed:',localErr);
+    return fetch(UNIFIED_URL+'?t='+Date.now(),{cache:'no-store'}).then(function(r){
+      if(!r.ok)throw new Error('unified '+r.status);return r.json();
+    });
+  }).then(function(d){
+    return normalizeUnified(d);
+  });
+}
+
+var LB_CAP=10;
+
+/* --- Render leaderboard + top performer --- */
+function renderBoard(all){
+  var ranked=all.filter(function(r){return !isNaN(r.pctAll);});
+  ranked.sort(function(a,b){
+    var d=(b.pctAll||0)-(a.pctAll||0); if(Math.abs(d)>1e-9)return d;
+    var dv=(num(b.value)||0)-(num(a.value)||0); if(Math.abs(dv)>1e-9)return dv;
+    return String(a.name||'').localeCompare(String(b.name||''));
+  });
+  var best=null;
+  for(var k=0;k<ranked.length;k++){ if(!isNaN(num(ranked[k].value))){ best=ranked[k]; break; } }
+  if(!best)best=ranked[0]||null;
+
+  var nm=document.getElementById('champName');
+  if(!best){
+    nm.textContent='Waiting for diagnostic data…';
+    document.getElementById('champValue').textContent='—';
+    setPnl('champDay',NaN,NaN);
+    document.getElementById('champAll').textContent='—';
+    var le=document.getElementById('lbRows'); if(le)le.innerHTML='<div class="lb-empty">No diagnostic data available</div>';
+    return {count:0,allFlat:true,best:null,bestValid:false};
+  }
+  nm.innerHTML=best.name+' <span class="champ-build">'+best.build+'</span>';
+  var initGuess=10000;
+  var bVal=!isNaN(num(best.value))?num(best.value):(initGuess+(num(best.pnlAll)||0));
+  var bDay=isNaN(num(best.pnlDay))?0:num(best.pnlDay);
+  var bDayPct=isNaN(num(best.pctDay))?0:num(best.pctDay);
+  var bAll=isNaN(num(best.pctAll))?0:num(best.pctAll);
+  var bAllUsd=isNaN(num(best.pnlAll))?(bVal-initGuess):num(best.pnlAll);
+  document.getElementById('champValue').textContent=money(bVal);
+  setPnl('champDay',bDay,bDayPct);
+  var allEl=document.getElementById('champAll');
+  if(allEl){
+    allEl.textContent=(bAll>=0?'+':'')+Number(bAll).toFixed(2)+'%'+' ('+pnlFmt(bAllUsd,NaN)+')';
+    allEl.className='champ-val '+(bAll>=0?'up':'down');
+  }
+  var el=document.getElementById('lbRows');
+  if(el){
+    if(!ranked.length){el.innerHTML='<div class="lb-empty">No diagnostic data available</div>';}
+    else{
+      var shown=Math.min(ranked.length,LB_CAP),html='';
+      for(var i=0;i<shown;i++){
+        var r=ranked[i],isLeader=i===0;
+        html+='<div class="lb-row'+(isLeader?' leader':'')+'">';
+        html+='<span class="lb-rank">'+(i+1)+'</span>';
+        html+='<span class="lb-name">'+r.name+'</span>';
+        html+='<span class="lb-build '+r.buildCls+'">'+r.build+'</span>';
+        html+='<span class="lb-pct '+(r.pctAll>=0?'up':'down')+'">'+(r.pctAll>=0?'+':'')+Number(r.pctAll).toFixed(2)+'%</span>';
+        html+='<span class="lb-val">'+money(r.value)+'</span>';
+        html+='</div>';
+      }
+      if(ranked.length>shown){
+        html+='<div class="lb-empty">+'+(ranked.length-shown)+' more books · showing top '+LB_CAP+'</div>';
+      }
+      el.innerHTML=html;
+    }
+  }
+  var allFlat=ranked.every(function(r){return Math.abs(r.pctAll||0)<1e-9;});
+  return {count:ranked.length,allFlat:allFlat,best:best,bestValid:!isNaN(num(best.value))};
+}
+
+function setHealth(state,msg){
+  var el=document.getElementById('siteHealth'),tx=document.getElementById('healthText');
+  if(!el||!tx)return;
+  el.className='health '+(state==='ok'?'ok':(state==='warn'?'warn':'bad'));
+  tx.textContent=msg;
+}
+
+function refresh(){
+  loadUnified().then(function(res){
+    var all=res.results;
+    var summary=renderBoard(all);
+    if(!summary.count || !summary.bestValid){
+      setHealth('bad','Dashboard data unavailable — unified feed returned no books');
+    }else if(!res.hasA||!res.hasB){
+      setHealth('warn','Partial data — '+(res.hasA?'Build B':'Build A')+' has no trades yet');
+    }else if(summary.allFlat){
+      setHealth('warn','Diagnostic feed loaded · both builds flat (no diagnostic P&L moves yet)');
+    }else{
+      setHealth('warn','Diagnostic feed loaded · legacy/unverified leader '+(summary.best.pctAll>=0?'+':'')+Number(summary.best.pctAll).toFixed(2)+'%');
+    }
+  }).catch(function(e){
+    console.warn('refresh failed:',e);
+    setHealth('bad','Dashboard failed to load unified feed');
+  });
+}
+refresh();setInterval(refresh,60000);
+</script>
+</body>
+</html>
