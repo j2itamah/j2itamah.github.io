@@ -84,8 +84,14 @@
 
     <section class="panel section-gap">
       <div class="panel-header">
-        <h2 class="panel-title">Recent priced observations</h2>
-        <span class="badge shadow">RESEARCH — NOT EXECUTABLE</span>
+        <div>
+          <h2 class="panel-title">Recent complete observations</h2>
+          <div class="small" id="recent-shadow-subtitle">Default view: EOD-resolved rows with forward returns.</div>
+        </div>
+        <div class="filter-pills" aria-label="Shadow observation filter">
+          <button class="filter-pill active" type="button" data-shadow-filter="complete">Complete</button>
+          <button class="filter-pill" type="button" data-shadow-filter="pending">Pending marks</button>
+        </div>
       </div>
       <div id="recent-shadow"></div>
     </section>

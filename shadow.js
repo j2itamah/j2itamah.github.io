@@ -1,7 +1,7 @@
 /* SHADOW / RESEARCH cockpit — reads ONLY data.shadow (public.agent_shadow_trades).
  * This is research reference, NOT executable and NOT a go/no-go for real capital.
  * Only priced observations are treated as evidence; total rows are diagnostic. */
-const state = { lastLoadedAt: null };
+const state = { lastLoadedAt: null, observationFilter: "complete" };
 
 function renderHero(shadow) {
   $("hero-priced").textContent = num(shadow.priced_n);
@@ -70,32 +70,90 @@ function renderGroups(shadow) {
   $("shadow-by-direction").innerHTML = pricedGroup(shadow.by_direction, "No priced SHADOW rows by direction yet.");
 }
 
-function markSummary(r) {
-  const marks = [["5m", r.price_5m, r.price_5m_ts], ["15m", r.price_15m, r.price_15m_ts],
-    ["1h", r.price_1h, r.price_1h_ts], ["EOD", r.price_eod, r.price_eod_ts],
-    ["+1d", r.price_1d, r.price_1d_ts], ["+3d", r.price_3d, r.price_3d_ts], ["+5d", r.price_5d, r.price_5d_ts]];
-  return marks.map(([label, v, ts]) => (v == null || v === "") ? `${label} —` : `${label} ${safe(v)} @ ${shortTime(ts)}`).join(" · ");
+function hasValue(v) {
+  return v !== null && v !== undefined && v !== "";
+}
+
+function returnValue(r, horizon) {
+  return r[`direction_adjusted_return_${horizon}_pct`] ?? r[`return_${horizon}_pct`];
+}
+
+function markCompleteness(r) {
+  return ["5m", "15m", "1h", "eod", "1d", "3d", "5d"].filter((h) => hasValue(r[`price_${h}`])).length;
+}
+
+function isCompleteObservation(r) {
+  return String(r.status || "").toUpperCase() === "COMPLETE" || hasValue(r.price_eod) || hasValue(returnValue(r, "eod"));
+}
+
+function sortedObservations(rows, filter) {
+  const all = (rows || []).slice();
+  const wanted = all.filter((r) => filter === "pending" ? !isCompleteObservation(r) : isCompleteObservation(r));
+  return wanted.sort((a, b) => {
+    const completeDelta = Number(isCompleteObservation(b)) - Number(isCompleteObservation(a));
+    if (completeDelta) return completeDelta;
+    const markDelta = markCompleteness(b) - markCompleteness(a);
+    if (markDelta) return markDelta;
+    return new Date(b.decision_ts || b.created_at || 0) - new Date(a.decision_ts || a.created_at || 0);
+  });
+}
+
+function returnSummary(r) {
+  return `<div class="return-grid">${[
+    ["5m", "5m"], ["15m", "15m"], ["1h", "1h"], ["EOD", "eod"],
+  ].map(([label, key]) => {
+    const ret = returnValue(r, key);
+    const price = r[`price_${key}`];
+    const ts = r[`price_${key}_ts`];
+    return `<div class="return-cell">
+      <span class="label">${label}</span>
+      <strong class="${hasValue(ret) ? cls(ret) : "muted"}">${hasValue(ret) ? pct3(ret) : "—"}</strong>
+      <div class="small">${hasValue(price) ? `px ${safe(price)} · ${shortTime(ts)}` : "mark pending"}</div>
+    </div>`;
+  }).join("")}</div>`;
+}
+
+function pendingCapture(label) {
+  return `<span class="pending-capture">${esc(label)} pending capture</span>`;
 }
 
 function renderRecent(shadow) {
+  const all = shadow.recent_priced || [];
+  const completeCount = all.filter(isCompleteObservation).length;
+  const pendingCount = all.length - completeCount;
+  const rows = sortedObservations(all, state.observationFilter);
+  const showingPending = state.observationFilter === "pending";
+  if ($("recent-shadow-subtitle")) {
+    $("recent-shadow-subtitle").textContent = showingPending
+      ? `Pending marks view: ${num(pendingCount)} newest rows still waiting for later horizons.`
+      : `Default view: ${num(completeCount)} EOD-resolved rows first; ${num(pendingCount)} pending rows are behind the Pending Marks filter.`;
+  }
+  document.querySelectorAll("[data-shadow-filter]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.shadowFilter === state.observationFilter);
+    const count = button.dataset.shadowFilter === "pending" ? pendingCount : completeCount;
+    button.textContent = `${button.dataset.shadowFilter === "pending" ? "Pending marks" : "Complete"} (${num(count)})`;
+  });
   $("recent-shadow").innerHTML = table(
-    ["Symbol", "Dir", "Catalyst", "Rule", "$10k sim net", "Path (MFE/MAE)", "Forward marks"],
-    shadow.recent_priced || [],
+    ["Symbol", "Dir", "Catalyst", "Rule", "Forward returns", "$10k sim net", "MFE/MAE + outcome"],
+    rows,
     (r) => {
-      const simNet = (r.sim_net_pnl == null) ? "—" : `<span class="${cls(r.sim_net_pnl)}">${money(r.sim_net_pnl)}</span> ${safe(r.sim_horizon || r.sim_exit_reason || "SIM")}`;
-      const mfe = r.mfe_pct == null ? "—" : pct(r.mfe_pct);
-      const mae = r.mae_pct == null ? "—" : pct(r.mae_pct);
+      const simNet = hasValue(r.sim_net_pnl)
+        ? `<span class="${cls(r.sim_net_pnl)}">${money(r.sim_net_pnl)}</span> ${safe(r.sim_horizon || r.sim_exit_reason || "SIM")}`
+        : pendingCapture("$10k net");
+      const mfe = hasValue(r.mfe_pct) ? pct3(r.mfe_pct) : "—";
+      const mae = hasValue(r.mae_pct) ? pct3(r.mae_pct) : "—";
+      const outcome = r.outcome || r.exit_reason || (isCompleteObservation(r) ? "priced returns only" : "pending marks");
       return `<tr>
-        <td><strong>${safe(r.symbol)}</strong><div class="small">${populationLabel(r)} · ${safe(r.source_provider)}</div></td>
+        <td><strong>${safe(r.symbol)}</strong><div class="small">${populationLabel(r)} · ${safe(r.source_provider)}</div><div class="small"><span class="chip ${isCompleteObservation(r) ? "" : "warn"}">${isCompleteObservation(r) ? "EOD resolved" : "pending marks"}</span></div></td>
         <td>${safe(r.direction)}</td>
         <td>${catalystLabel(r)}<div class="small">${safe(r.headline)}</div></td>
         <td>${safe(r.rule_id)}</td>
+        <td class="mono">${returnSummary(r)}<div class="small">entry ${safe(r.entry_reference_price)} @ ${shortTime(r.entry_reference_ts)} · ${safe(shortSource(r.entry_reference_source))}</div></td>
         <td class="mono">${simNet}</td>
-        <td class="mono">outcome ${safe(r.outcome || r.exit_reason)}<div class="small">MFE ${mfe} / MAE ${mae}</div></td>
-        <td class="mono">${markSummary(r)}<div class="small">entry ${safe(r.entry_reference_price)} @ ${shortTime(r.entry_reference_ts)} · ${safe(shortSource(r.entry_reference_source))}</div></td>
+        <td class="mono">outcome ${safe(outcome)}<div class="small">MFE ${mfe} / MAE ${mae}</div><div class="small">${(!hasValue(r.mfe_pct) && !hasValue(r.mae_pct)) ? pendingCapture("MFE/MAE") : ""} ${(!r.outcome && !r.exit_reason) ? pendingCapture("outcome") : ""} ${pendingCapture("multi-day")}</div></td>
       </tr>`;
     },
-    "No priced SHADOW observations yet."
+    showingPending ? "No pending priced SHADOW observations right now." : "No complete/EOD-resolved SHADOW observations in the current feed yet."
   );
 }
 
@@ -122,3 +180,9 @@ async function load() {
 }
 
 document.addEventListener("DOMContentLoaded", () => { load(); setInterval(load, 30000); });
+document.addEventListener("click", (event) => {
+  const button = event.target.closest?.("[data-shadow-filter]");
+  if (!button) return;
+  state.observationFilter = button.dataset.shadowFilter || "complete";
+  load();
+});
