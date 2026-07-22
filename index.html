@@ -118,6 +118,11 @@ const num = (v) => new Intl.NumberFormat("en-US").format(Number(v || 0));
 const pct = (v) => `${Number(v || 0).toFixed(3)}%`;
 const cls = (v) => Number(v || 0) > 0 ? "up" : Number(v || 0) < 0 ? "down" : "flat";
 function esc(v){return String(v ?? "—").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
+function routeHash(){
+  const hash = String(window.location.hash || "").toLowerCase();
+  if(hash === "#shadow") window.location.replace("./shadow.html");
+  if(hash === "#ibkr" || hash === "#real") window.location.replace("./real.html");
+}
 async function getJson(path){
   const r = await fetch(API_BASE + path, { cache:"no-store" });
   const d = await r.json().catch(() => ({}));
@@ -178,8 +183,10 @@ async function load(){
     $("topEvidence").textContent = "blocked"; $("topMetric").textContent = "—"; $("topStatus").textContent = "Fail closed";
   }
 }
+routeHash();
 load();
 setInterval(load, 30000);
+window.addEventListener("hashchange", routeHash);
 </script>
 </body>
 </html>
