@@ -120,7 +120,7 @@ function setDay(day) {
 }
 function syncDayFromHash() {
   const hash = String(window.location.hash || "");
-  const match = hash.match(/^#day=(\\d{4}-\\d{2}-\\d{2})$/);
+  const match = hash.match(/^#day=(\d{4}-\d{2}-\d{2})$/);
   state.day = match ? match[1] : "ALL";
 }
 function renderDateNav(days) {
@@ -133,8 +133,8 @@ function renderDateNav(days) {
     return `<button class="filter-pill real${active}" type="button" data-day-filter="${esc(key)}">${esc(label)}<span class="pill-count">${num(count)}</span></button>`;
   }).join("");
   $("date-copy").textContent = state.day === "ALL"
-    ? "Showing all days. Click a date to inspect that day by itself."
-    : `Showing ${state.day}. Click All days to go back to the full journal.`;
+    ? "Showing all days from the live visible feed. Click a date to inspect that day by itself."
+    : `Showing ${state.day} from the live visible feed. Click All days to go back to the full journal.`;
   $("date-filter")?.querySelectorAll("[data-day-filter]").forEach((button) => {
     button.addEventListener("click", () => setDay(button.getAttribute("data-day-filter") || "ALL"));
   });
@@ -159,7 +159,7 @@ function renderDayDetail(allDays, days) {
     $("day-detail").innerHTML = [
       metric("Selected day", "All days", allDays.length, "click a date above to isolate one day"),
       metric("Best REAL day", best ? safe(best.day) : "—", best ? best.realClosed.length : 0, best ? `${money(summarizeReal(best.realClosed).net)} net` : "waiting for closed trades"),
-      metric("Why this matters", "compare changes", allDays.length, "daily view shows whether new changes improve results"),
+      metric("Why this matters", "compare changes", allDays.length, "daily view shows whether new changes improve results; counts are from the visible feed"),
     ].join("");
     return;
   }

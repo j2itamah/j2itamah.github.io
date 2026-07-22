@@ -44,10 +44,16 @@ function filteredLadder(rows) {
     };
   });
 }
+function visibleSliceLabel(shadow) {
+  return `${num((shadow.recent_priced || []).length)} recent rows visible`;
+}
+function basisLabel(shadow) {
+  return shadow?._basis || "backend aggregate";
+}
 function shadowForFilter(shadow) {
-  if (state.filter === "ALL") return shadow;
+  if (state.filter === "ALL") return { ...shadow, _basis: "backend aggregate", _visible_n: (shadow.recent_priced || []).length };
   const detail = shadow.by_catalyst_detail?.[state.filter];
-  if (detail) return { ...shadow, ...detail };
+  if (detail) return { ...shadow, ...detail, _basis: "backend catalyst aggregate", _visible_n: (detail.recent_priced || shadow.recent_priced || []).length };
   const allRows = shadow.recent_priced || [];
   const rows = allRows.filter(rowMatchesFilter);
   const priced = rows.filter(_isPricedLocal);
@@ -63,6 +69,8 @@ function shadowForFilter(shadow) {
     by_catalyst: pricedCounts(priced, "catalyst_type"),
     by_direction: pricedCounts(priced, "direction"),
     recent_priced: rows,
+    _basis: "visible recent slice",
+    _visible_n: rows.length,
   };
 }
 function _isPricedLocal(row) {
@@ -86,6 +94,7 @@ function eodStats(shadow) {
   const eod = horizonByName(shadow, "eod") || bestHorizon(shadow.horizon_ladder);
   if (!eod) return null;
   const n = Number(eod.priced_n || 0);
+  if (!n) return null;
   const avgReturn = Number(eod.avg_direction_adjusted_return_pct || 0);
   const hitRate = Number(eod.hit_rate || 0);
   const avgPnl = hypotheticalPnl(avgReturn);
@@ -107,8 +116,13 @@ function researchCurve(rows) {
 }
 function renderHero(shadow) {
   const eod = eodStats(shadow);
+  const visibleBasis = basisLabel(shadow).includes("visible");
+  $("hero-priced-label").textContent = visibleBasis ? "Visible priced observations" : "Backend priced observations";
+  $("hero-priced-sub").textContent = visibleBasis ? "current filter uses recent rows only" : "priced evidence, not total rows";
+  $("hero-pending-label").textContent = visibleBasis ? "Visible unpriced rows" : "Unpriced / diagnostic";
+  $("hero-pending-sub").textContent = visibleBasis ? "not yet priced in visible feed" : "not used as priced evidence";
   $("hero-net").innerHTML = eod ? `<span class="${cls(eod.totalPnl)}">${money(eod.totalPnl)}</span>` : "—";
-  $("hero-net-sub").textContent = eod ? `${money(eod.avgPnl)} avg per ${money(RESEARCH_NOTIONAL)} idea · ${safe(eod.horizon || "EOD")} n=${num(eod.n)}` : "waiting for priced EOD horizon";
+  $("hero-net-sub").textContent = eod ? `${basisLabel(shadow)} · ${money(eod.avgPnl)} avg per ${money(RESEARCH_NOTIONAL)} idea · ${safe(eod.horizon || "EOD")} n=${num(eod.n)}` : "waiting for priced EOD horizon";
   $("hero-real-n").textContent = num(shadow.priced_n);
   $("hero-open-n").textContent = num(shadow.pending_or_unpriced_n);
   $("hero-win").textContent = eod ? pct(eod.hitRate) : "—";
@@ -118,7 +132,7 @@ function renderMetrics(shadow) {
   const eod = eodStats(shadow);
   const best = bestHorizon(shadow.horizon_ladder);
   $("real-metrics").innerHTML = [
-    metric("Research P/L", eod ? `<span class="${cls(eod.totalPnl)}">${money(eod.totalPnl)}</span>` : "—", eod?.n || 0, `${money(RESEARCH_NOTIONAL)} test size · not real cash`),
+    metric("Modeled P/L basis", eod ? `<span class="${cls(eod.totalPnl)}">${money(eod.totalPnl)}</span>` : "—", eod?.n || 0, `${basisLabel(shadow)} · ${money(RESEARCH_NOTIONAL)} test size · not real cash`),
     metric("Avg per trade", eod ? `<span class="${cls(eod.avgPnl)}">${money(eod.avgPnl)}</span>` : "—", eod?.n || 0, eod ? `${pct3(eod.avgReturn)} avg direction-adjusted return` : "no EOD average yet"),
     metric("Hypothetical size", money(RESEARCH_NOTIONAL), shadow.priced_n, "Every SHADOW idea is modeled as the same test size", "muted"),
     metric("Hit rate", eod ? pct(eod.hitRate) : "—", eod?.n || 0, eod ? `${num(eod.winners)} wins / ${num(eod.losses)} losses` : "no EOD hit rate yet"),
@@ -128,13 +142,13 @@ function renderMetrics(shadow) {
 }
 function renderPnlBars(shadow) {
   const eod = eodStats(shadow);
-  const total = eod?.totalPnl || 0;
-  const avg = eod?.avgPnl || 0;
+  const total = eod?.totalPnl;
+  const avg = eod?.avgPnl;
   const zero = 0;
-  const maxAbs = Math.max(Math.abs(total), Math.abs(avg), 1);
+  const maxAbs = Math.max(Math.abs(total || 0), Math.abs(avg || 0), 1);
   $("pnl-bars").innerHTML = [
-    barRow("Total research P/L", total, maxAbs, money(total), cls(total), "shadow"),
-    barRow("Average per idea", avg, maxAbs, money(avg), cls(avg), "shadow"),
+    barRow(`Modeled P/L (${basisLabel(shadow)})`, total || 0, maxAbs, eod ? money(total) : "—", eod ? cls(total) : "muted", "shadow"),
+    barRow("Average per idea", avg || 0, maxAbs, eod ? money(avg) : "—", eod ? cls(avg) : "muted", "shadow"),
     barRow("Real cash/equity", zero, maxAbs, "$0", "muted", "shadow"),
   ].join("");
 }
@@ -146,7 +160,7 @@ function renderGauges(shadow) {
   $("win-gauges").innerHTML = [
     donutGauge("EOD hit", eod?.hitRate || 0, eod?.n || 0, "#c4b5fd"),
     donutGauge("Priced coverage", total ? priced * 100 / total : 0, priced, "#60a5fa"),
-    donutGauge("Pending share", total ? pending * 100 / total : 0, pending, "#fbbf24"),
+    donutGauge("Unpriced share", total ? pending * 100 / total : 0, pending, "#fbbf24"),
   ].join("");
 }
 function renderEquity(shadow) {
@@ -159,10 +173,14 @@ function renderLadder(shadow) {
   $("shadow-horizon-ladder").innerHTML = `<div class="ladder">${ladder.map((r) => {
     const avg = Number(r.avg_direction_adjusted_return_pct || 0);
     const hit = Number(r.hit_rate || 0);
+    const n = Number(r.priced_n || 0);
+    const horizonName = String(r.horizon || "").toLowerCase();
+    const valueText = n ? pct3(avg) : (horizonName === "30m" ? "not captured" : "—");
+    const hitText = n ? pct(hit) : "—";
     return `<div class="ladder-card">
-      <div class="ladder-top"><strong>${safe(r.horizon)}</strong><span class="mono ${cls(avg)}">${pct3(avg)}</span></div>
-      <div class="bar-track"><div class="bar-fill shadow" style="width:${Math.max(3, Math.min(100, Math.abs(avg) * 20 || hit))}%"></div></div>
-      <div class="small">priced n=${num(r.priced_n)} · hit rate ${pct(hit)}</div>
+      <div class="ladder-top"><strong>${safe(r.horizon)}</strong><span class="mono ${n ? cls(avg) : "muted"}">${valueText}</span></div>
+      <div class="bar-track"><div class="bar-fill shadow" style="width:${n ? Math.max(3, Math.min(100, Math.abs(avg) * 20 || hit)) : 0}%"></div></div>
+      <div class="small">priced n=${num(r.priced_n)} · hit rate ${hitText}</div>
     </div>`;
   }).join("")}</div>`;
 }
@@ -197,8 +215,8 @@ function renderForwardReturns(shadow) {
   const filteredName = state.filter === "ALL" ? "Filing" : catalystDisplay(state.filter);
   $("forward-title").textContent = `${filteredName} forward returns`;
   $("forward-note").textContent = state.filter === "ALL"
-    ? "Defaulting this section to filing observations so the SEC filing move data is not buried by newer mixed catalysts. Use the chips above to switch the whole cockpit to crypto news or trading halts."
-    : `${filteredName} observations only. Returns are direction-adjusted percentage moves from the entry reference; pending horizons stay blank instead of being guessed.`;
+    ? `Defaulting this section to filing observations from the visible recent feed (${visibleSliceLabel(shadow)}) so SEC filing move data is not buried by newer mixed catalysts. Use the chips above to switch the whole cockpit to crypto news or trading halts.`
+    : `${filteredName} observations only from the visible recent feed (${visibleSliceLabel(shadow)}). Returns are direction-adjusted percentage moves from the entry reference; pending horizons stay blank instead of being guessed.`;
 
   const summary = horizonSummary(rows);
   $("forward-summary").innerHTML = summary.map((s) => {
@@ -292,7 +310,7 @@ function returnGrid(r) {
 function renderDecisionFeed(shadow) {
   const rows = completeRows(shadow).slice().sort((a, b) => new Date(b.decision_ts || 0) - new Date(a.decision_ts || 0));
   if (!rows.length) { $("decision-feed").innerHTML = `<div class="empty">No complete SHADOW observations to show yet.</div>`; return; }
-  $("decision-feed").innerHTML = rows.slice(0, 14).map((r) => {
+  $("decision-feed").innerHTML = `<div class="small section-note">Showing complete observations from the visible recent feed only (${visibleSliceLabel(shadow)}). Aggregate priced totals above may be larger than this feed.</div>` + rows.slice(0, 14).map((r) => {
     const pnl = rowPnl(r);
     const latest = latestReturn(r);
     const qty = impliedQuantity(r);
@@ -311,9 +329,20 @@ function renderShadowStatus(shadow) {
   const rows = shadow.recent_priced || [];
   const complete = completeRows(shadow).length;
   const pending = pendingRows(shadow).length;
+  const hasCatalystDetail = Boolean(state.raw?.by_catalyst_detail);
+  const aggregatePriced = Number(state.raw?.priced_n || shadow.priced_n || 0);
+  const selectedAggregate = state.filter === "ALL"
+    ? aggregatePriced
+    : Number((state.raw?.by_catalyst || []).find((row) => String(row.value) === state.filter)?.priced_n || shadow.priced_n || 0);
+  const visiblePriced = rows.filter(_isPricedLocal).length;
   $("shadow-status").innerHTML = `
     <div class="metric" style="margin-bottom:12px"><div class="metric-label">Research contract</div><div class="metric-value muted">SHADOW</div><div class="metric-sub">not executable · no real cash/equity · no broker fills</div></div>
-    ${table(["Bucket", "Rows"], [["complete in feed", complete], ["pending in feed", pending], ["priced total", shadow.priced_n || 0], ["diagnostic total", shadow.total_rows_diagnostic || 0]], ([k, v]) => `<tr><td>${esc(k)}</td><td class="mono">${num(v)}</td></tr>`, "No shadow status.")}`;
+    <div class="small section-note">
+      Accuracy note: backend aggregate priced evidence is n=${num(aggregatePriced)}${state.filter === "ALL" ? "" : `; selected ${catalystDisplay(state.filter)} aggregate is n=${num(selectedAggregate)}`}, but this static page currently receives ${num(rows.length)} recent rows for tables, curves, and the observation feed.
+      ${hasCatalystDetail ? "Catalyst filters use backend aggregate detail." : "Catalyst filters use the visible recent slice until the backend exposes per-catalyst aggregate detail."}
+      30m is labeled not captured because the live API does not send a 30m mark.
+    </div>
+    ${table(["Bucket", "Rows"], [["complete visible feed", complete], ["later-horizon pending visible feed", pending], ["priced visible feed", visiblePriced], ["selected catalyst aggregate priced", selectedAggregate], ["global priced aggregate total", aggregatePriced], ["diagnostic aggregate total", state.raw?.total_rows_diagnostic || shadow.total_rows_diagnostic || 0]], ([k, v]) => `<tr><td>${esc(k)}</td><td class="mono">${num(v)}</td></tr>`, "No shadow status.")}`;
 }
 function renderAll() {
   const shadow = shadowForFilter(state.raw || {});
