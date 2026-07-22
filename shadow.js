@@ -3,13 +3,29 @@
  * $10K hypothetical translations from observed forward returns, not real fills. */
 const state = { lastLoadedAt: null, filter: "ALL", raw: null };
 const RESEARCH_NOTIONAL = 10000;
-const FORWARD_HORIZONS = ["5m", "15m", "30m", "1h", "eod"];
+const FORWARD_HORIZONS = ["5m", "15m", "1h", "eod", "1d", "3d", "5d"];
 
 function hasValue(v) { return v !== null && v !== undefined && v !== ""; }
 function returnValue(r, horizon) { return r[`direction_adjusted_return_${horizon}_pct`] ?? r[`return_${horizon}_pct`]; }
 function isCompleteObservation(r) { return String(r.status || "").toUpperCase() === "COMPLETE" || hasValue(r.price_eod) || hasValue(returnValue(r, "eod")); }
+function rowIdentity(row) {
+  return row?.observation_id
+    || row?.event_id
+    || [row?.symbol, row?.direction, row?.decision_ts, row?.entry_reference_price, row?.headline].join("|");
+}
+function dedupeRows(rows) {
+  const seen = new Set();
+  const out = [];
+  for (const row of rows || []) {
+    const key = rowIdentity(row);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(row);
+  }
+  return out;
+}
 function latestReturn(r) {
-  for (const key of ["eod", "1h", "30m", "15m", "5m"]) {
+  for (const key of ["5d", "3d", "1d", "eod", "1h", "15m", "5m"]) {
     const value = returnValue(r, key);
     if (hasValue(value)) return { horizon: key.toUpperCase(), value: Number(value) };
   }
@@ -20,8 +36,9 @@ function impliedQuantity(row, notional = RESEARCH_NOTIONAL) {
   const entry = Number(row?.entry_reference_price || 0);
   return entry ? notional / entry : null;
 }
-function completeRows(shadow) { return (shadow.recent_priced || []).filter(isCompleteObservation); }
-function pendingRows(shadow) { return (shadow.recent_priced || []).filter((r) => !isCompleteObservation(r)); }
+function visibleRows(shadow) { return dedupeRows(shadow.recent_priced || []); }
+function completeRows(shadow) { return visibleRows(shadow).filter(isCompleteObservation); }
+function pendingRows(shadow) { return visibleRows(shadow).filter((r) => !isCompleteObservation(r)); }
 function horizonByName(shadow, name) { return (shadow.horizon_ladder || []).find((r) => String(r.horizon || "").toLowerCase() === name); }
 function rowMatchesFilter(row) { return state.filter === "ALL" || catalystKey(row) === state.filter; }
 function pricedCounts(rows, field) {
@@ -55,7 +72,7 @@ function shadowForFilter(shadow) {
   const detail = shadow.by_catalyst_detail?.[state.filter];
   if (detail) return { ...shadow, ...detail, _basis: "backend catalyst aggregate", _visible_n: (detail.recent_priced || shadow.recent_priced || []).length };
   const allRows = shadow.recent_priced || [];
-  const rows = allRows.filter(rowMatchesFilter);
+  const rows = dedupeRows(allRows.filter(rowMatchesFilter));
   const priced = rows.filter(_isPricedLocal);
   const pending = rows.filter((row) => !_isPricedLocal(row));
   return {
@@ -174,8 +191,7 @@ function renderLadder(shadow) {
     const avg = Number(r.avg_direction_adjusted_return_pct || 0);
     const hit = Number(r.hit_rate || 0);
     const n = Number(r.priced_n || 0);
-    const horizonName = String(r.horizon || "").toLowerCase();
-    const valueText = n ? pct3(avg) : (horizonName === "30m" ? "not captured" : "—");
+    const valueText = n ? pct3(avg) : "—";
     const hitText = n ? pct(hit) : "—";
     return `<div class="ladder-card">
       <div class="ladder-top"><strong>${safe(r.horizon)}</strong><span class="mono ${n ? cls(avg) : "muted"}">${valueText}</span></div>
@@ -189,15 +205,14 @@ function horizonCaptureStatus(rows, horizon) {
   return (rows || []).some((row) => Object.prototype.hasOwnProperty.call(row, `direction_adjusted_return_${horizon}_pct`) || Object.prototype.hasOwnProperty.call(row, `return_${horizon}_pct`) || Object.prototype.hasOwnProperty.call(row, `price_${horizon}`));
 }
 function forwardRows(shadow) {
-  const rows = (shadow.recent_priced || []).filter((row) => {
+  const rows = visibleRows(shadow).filter((row) => {
     if (state.filter === "ALL") return catalystKey(row) === "filing";
     return rowMatchesFilter(row);
   });
   return rows
+    .filter(isCompleteObservation)
     .filter((row) => hasValue(row.entry_reference_price) || FORWARD_HORIZONS.some((h) => hasValue(returnValue(row, h))))
     .sort((a, b) => {
-      const completeDelta = Number(isCompleteObservation(b)) - Number(isCompleteObservation(a));
-      if (completeDelta) return completeDelta;
       return new Date(b.decision_ts || 0) - new Date(a.decision_ts || 0);
     });
 }
@@ -215,18 +230,18 @@ function renderForwardReturns(shadow) {
   const filteredName = state.filter === "ALL" ? "Filing" : catalystDisplay(state.filter);
   $("forward-title").textContent = `${filteredName} forward returns`;
   $("forward-note").textContent = state.filter === "ALL"
-    ? `Defaulting this section to filing observations from the visible recent feed (${visibleSliceLabel(shadow)}) so SEC filing move data is not buried by newer mixed catalysts. Use the chips above to switch the whole cockpit to crypto news or trading halts.`
-    : `${filteredName} observations only from the visible recent feed (${visibleSliceLabel(shadow)}). Returns are direction-adjusted percentage moves from the entry reference; pending horizons stay blank instead of being guessed.`;
+    ? `Defaulting this section to COMPLETE filing observations from the deduped visible feed (${visibleSliceLabel(shadow)}) so SEC filing move data is not buried by newer mixed catalysts. Pending rows stay in the Pending marks panel.`
+    : `${filteredName} COMPLETE observations only from the deduped visible feed (${visibleSliceLabel(shadow)}). Returns are direction-adjusted percentage moves from the entry reference; pending rows stay in the Pending marks panel.`;
 
   const summary = horizonSummary(rows);
   $("forward-summary").innerHTML = summary.map((s) => {
     const value = s.captured ? (s.n ? `<span class="${cls(s.avg)}">${pct3(s.avg)}</span>` : "—") : `<span class="pending-capture">not captured</span>`;
-    const sub = s.captured ? `priced n=${num(s.n)} · hit ${s.hitRate === null ? "—" : pct(s.hitRate)}` : "backend/API has no 30m field yet";
+    const sub = s.captured ? `priced n=${num(s.n)} · hit ${s.hitRate === null ? "—" : pct(s.hitRate)}` : "no rows with this real horizon in the visible feed";
     return metric(`${horizonLabel(s.horizon)} avg move`, value, s.n, sub);
   }).join("");
 
   $("forward-table").innerHTML = table(
-    ["Time", "Symbol", "Catalyst", "Dir", "Test size", "Implied qty", "Entry", "Latest P/L", "5m", "15m", "30m", "1h", "EOD", "Status"],
+    ["Time", "Symbol", "Catalyst", "Dir", "Test size", "Implied qty", "Entry", "Latest P/L", "5m", "15m", "1h", "EOD", "1d", "3d", "5d", "Status"],
     rows.slice(0, 24),
     (r) => {
       const latest = latestReturn(r);
@@ -243,7 +258,7 @@ function renderForwardReturns(shadow) {
       ${FORWARD_HORIZONS.map((horizon) => {
         const v = returnValue(r, horizon);
         const captured = horizonCaptureStatus(rows, horizon);
-        return `<td class="mono ${hasValue(v) ? cls(v) : "muted"}">${hasValue(v) ? pct3(v) : (captured ? "pending" : "not captured")}</td>`;
+        return `<td class="mono ${hasValue(v) ? cls(v) : "muted"}">${hasValue(v) ? pct3(v) : (captured ? "pending" : "—")}</td>`;
       }).join("")}
       <td>${safe(r.status)}</td>
     </tr>`;
@@ -304,13 +319,13 @@ function renderPending(shadow) {
 function returnGrid(r) {
   return FORWARD_HORIZONS.map((h) => {
     const v = returnValue(r, h);
-    return `<span class="chip ${hasValue(v) ? cls(v) : "muted"}">${horizonLabel(h)} ${hasValue(v) ? pct3(v) : (h === "30m" ? "not captured" : "—")}</span>`;
+    return `<span class="chip ${hasValue(v) ? cls(v) : "muted"}">${horizonLabel(h)} ${hasValue(v) ? pct3(v) : "—"}</span>`;
   }).join("");
 }
 function renderDecisionFeed(shadow) {
   const rows = completeRows(shadow).slice().sort((a, b) => new Date(b.decision_ts || 0) - new Date(a.decision_ts || 0));
   if (!rows.length) { $("decision-feed").innerHTML = `<div class="empty">No complete SHADOW observations to show yet.</div>`; return; }
-  $("decision-feed").innerHTML = `<div class="small section-note">Showing complete observations from the visible recent feed only (${visibleSliceLabel(shadow)}). Aggregate priced totals above may be larger than this feed.</div>` + rows.slice(0, 14).map((r) => {
+  $("decision-feed").innerHTML = `<div class="small section-note">Showing deduped COMPLETE observations from the visible recent feed only (${visibleSliceLabel(shadow)}). Pending rows are hidden here and shown in Pending marks.</div>` + rows.slice(0, 14).map((r) => {
     const pnl = rowPnl(r);
     const latest = latestReturn(r);
     const qty = impliedQuantity(r);
@@ -326,7 +341,8 @@ function renderDecisionFeed(shadow) {
   }).join("");
 }
 function renderShadowStatus(shadow) {
-  const rows = shadow.recent_priced || [];
+  const rawRows = shadow.recent_priced || [];
+  const rows = visibleRows(shadow);
   const complete = completeRows(shadow).length;
   const pending = pendingRows(shadow).length;
   const hasCatalystDetail = Boolean(state.raw?.by_catalyst_detail);
@@ -340,9 +356,9 @@ function renderShadowStatus(shadow) {
     <div class="small section-note">
       Accuracy note: backend aggregate priced evidence is n=${num(aggregatePriced)}${state.filter === "ALL" ? "" : `; selected ${catalystDisplay(state.filter)} aggregate is n=${num(selectedAggregate)}`}, but this static page currently receives ${num(rows.length)} recent rows for tables, curves, and the observation feed.
       ${hasCatalystDetail ? "Catalyst filters use backend aggregate detail." : "Catalyst filters use the visible recent slice until the backend exposes per-catalyst aggregate detail."}
-      30m is labeled not captured because the live API does not send a 30m mark.
+      Dedupe is by observation_id; hidden duplicate render rows in visible feed: ${num(rawRows.length - rows.length)}.
     </div>
-    ${table(["Bucket", "Rows"], [["complete visible feed", complete], ["later-horizon pending visible feed", pending], ["priced visible feed", visiblePriced], ["selected catalyst aggregate priced", selectedAggregate], ["global priced aggregate total", aggregatePriced], ["diagnostic aggregate total", state.raw?.total_rows_diagnostic || shadow.total_rows_diagnostic || 0]], ([k, v]) => `<tr><td>${esc(k)}</td><td class="mono">${num(v)}</td></tr>`, "No shadow status.")}`;
+    ${table(["Bucket", "Rows"], [["complete visible feed", complete], ["pending visible feed", pending], ["priced visible feed", visiblePriced], ["selected catalyst aggregate priced", selectedAggregate], ["global priced aggregate total", aggregatePriced], ["diagnostic aggregate total", state.raw?.total_rows_diagnostic || shadow.total_rows_diagnostic || 0], ["duplicate render rows hidden", rawRows.length - rows.length]], ([k, v]) => `<tr><td>${esc(k)}</td><td class="mono">${num(v)}</td></tr>`, "No shadow status.")}`;
 }
 function renderAll() {
   const shadow = shadowForFilter(state.raw || {});
