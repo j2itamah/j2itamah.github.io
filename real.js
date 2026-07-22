@@ -12,6 +12,29 @@ function commissionValue(row) {
   const value = row?._commissions ?? row?.commissions_cad ?? row?.commissions;
   return typeof value === "number" ? Number(value) : Number(value?.total ?? value?.cad ?? 0);
 }
+function quantityValue(row) { return Number(row?.quantity ?? row?.qty ?? 0); }
+function deployedValue(row) {
+  const qty = Math.abs(quantityValue(row));
+  const entry = Number(row?.entry_price ?? 0);
+  return qty && entry ? qty * entry : 0;
+}
+function realRowKey(row) {
+  return row?.event_id || `${row?.symbol || ""}|${row?.entry_fill_ts || ""}|${row?.entry_price || ""}`;
+}
+function enrichRealDecisionRows(real, rows) {
+  const lookup = new Map();
+  for (const row of [].concat(real.recent_closed || [], real.recent_costed_closed || [], real.open_positions || [])) {
+    lookup.set(realRowKey(row), row);
+  }
+  return (rows || []).map((row) => {
+    const source = lookup.get(realRowKey(row)) || {};
+    const merged = { ...row };
+    for (const [key, value] of Object.entries(source)) {
+      if (merged[key] === null || merged[key] === undefined || merged[key] === "") merged[key] = value;
+    }
+    return merged;
+  });
+}
 function rowMatchesFilter(row) {
   return state.filter === "ALL" || catalystKey(row) === state.filter;
 }
@@ -45,7 +68,7 @@ function filteredEquityCurve(rows) {
   });
 }
 function realForFilter(real) {
-  if (state.filter === "ALL") return real;
+  if (state.filter === "ALL") return { ...real, decision_feed: enrichRealDecisionRows(real, real.decision_feed || []) };
   const detail = real.by_catalyst_detail?.[state.filter];
   if (detail) return { ...real, ...detail, stale_open_n: 0, uncosted_closed_n: 0 };
   const closedAll = (real.recent_closed || []).filter(rowMatchesFilter);
@@ -75,7 +98,7 @@ function realForFilter(real) {
     recent_closed: closedAll.slice(0, 100),
     recent_costed_closed: costed.slice(0, 100),
     open_positions: open.slice(0, 100),
-    decision_feed: (real.decision_feed || []).filter(rowMatchesFilter),
+    decision_feed: enrichRealDecisionRows(real, real.decision_feed || []).filter(rowMatchesFilter),
   };
 }
 function setupFilter(real) {
@@ -113,14 +136,16 @@ function renderHero(real) {
 }
 
 function renderMetrics(real) {
+  const costed = (real.recent_costed_closed && real.recent_costed_closed.length ? real.recent_costed_closed : real.recent_closed) || [];
+  const deployed = costed.reduce((sum, row) => sum + deployedValue(row), 0);
+  const avgDeployed = real.n ? deployed / real.n : 0;
   $("real-metrics").innerHTML = [
     metric("Costed net P&L", `<span class="${cls(real.net_pnl)}">${money(real.net_pnl)}</span>`, real.n,
       `${money(real.gross_pnl)} gross − ${money(real.commissions)} commissions`),
     metric("Gross P&L", money(real.gross_pnl), real.n, "Before commissions", cls(real.gross_pnl)),
     metric("Commissions", money(real.commissions), real.n, "IBKR reported"),
     metric("Win rate", pct(real.win_rate), real.n, `${num(real.wins)} wins / ${num(real.losses)} losses`),
-    metric("Verified closed", num(real.n), real.closed_n,
-      `${num(real.uncosted_closed_n)} closed missing costs (fail-closed, excluded)`),
+    metric("Avg capital used", money(avgDeployed), real.n, `${money(deployed)} total entry notional in visible costed rows`),
     metric("Open positions", num(real.open_n), real.open_n, `${num(real.stale_open_n)} stale-open flags`),
   ].join("");
 }
@@ -191,13 +216,14 @@ function renderGroups(real) {
 
 function renderOpenPositions(real) {
   $("open-positions").innerHTML = table(
-    ["Symbol", "Venue", "Dir", "Rule", "Entry", "Entry time"],
+    ["Symbol", "Venue", "Dir", "Qty", "Capital used", "Entry", "Entry time"],
     real.open_positions || [],
     (r) => `<tr>
         <td><strong>${safe(r.symbol)}</strong></td>
         <td>${populationLabel(r)}</td>
         <td>${safe(r.direction)}</td>
-        <td>${safe(r.rule_id)}</td>
+        <td class="mono">${num(quantityValue(r))}</td>
+        <td class="mono">${deployedValue(r) ? money(deployedValue(r)) : "—"}</td>
         <td class="mono">${maybeMoney(r.entry_price)}</td>
         <td>${when(r.entry_fill_ts)}</td>
       </tr>`,
@@ -241,6 +267,8 @@ function renderDecisionFeed(real) {
     const isClosed = r.exit_ts && r.exit_price !== null && r.exit_price !== undefined;
     const isCosted = r.net_pnl !== null && r.net_pnl !== undefined;
     const net = Number(r.net_pnl || 0);
+    const deployed = deployedValue(r);
+    const returnOnCapital = isClosed && isCosted && deployed ? net / deployed * 100 : null;
     return `<article class="decision-card">
         <div class="decision-top">
           <div>
@@ -253,6 +281,9 @@ function renderDecisionFeed(real) {
         <div class="decision-meta">
           <span class="chip">rule ${safe(r.rule_id)}</span>
           <span class="chip">basis ${safe(r.direction_basis)}</span>
+          <span class="chip">qty ${num(quantityValue(r))}</span>
+          <span class="chip">capital used ${deployed ? money(deployed) : "—"}</span>
+          <span class="chip">return on capital ${returnOnCapital == null ? "—" : pct3(returnOnCapital)}</span>
           <span class="chip">entry ${maybeMoney(r.entry_price)} · ${when(r.entry_fill_ts)}</span>
           <span class="chip">${isClosed ? `exit ${maybeMoney(r.exit_price)} · ${safe(r.exit_reason)}` : "exit pending"}</span>
           <span class="chip">MFE ${r.mfe_pct == null ? "—" : pct(r.mfe_pct)}</span>

@@ -16,6 +16,10 @@ function latestReturn(r) {
   return null;
 }
 function hypotheticalPnl(returnPct, notional = RESEARCH_NOTIONAL) { return Number(returnPct || 0) * notional / 100; }
+function impliedQuantity(row, notional = RESEARCH_NOTIONAL) {
+  const entry = Number(row?.entry_reference_price || 0);
+  return entry ? notional / entry : null;
+}
 function completeRows(shadow) { return (shadow.recent_priced || []).filter(isCompleteObservation); }
 function pendingRows(shadow) { return (shadow.recent_priced || []).filter((r) => !isCompleteObservation(r)); }
 function horizonByName(shadow, name) { return (shadow.horizon_ladder || []).find((r) => String(r.horizon || "").toLowerCase() === name); }
@@ -116,7 +120,7 @@ function renderMetrics(shadow) {
   $("real-metrics").innerHTML = [
     metric("Research P/L", eod ? `<span class="${cls(eod.totalPnl)}">${money(eod.totalPnl)}</span>` : "—", eod?.n || 0, `${money(RESEARCH_NOTIONAL)} test size · not real cash`),
     metric("Avg per trade", eod ? `<span class="${cls(eod.avgPnl)}">${money(eod.avgPnl)}</span>` : "—", eod?.n || 0, eod ? `${pct3(eod.avgReturn)} avg direction-adjusted return` : "no EOD average yet"),
-    metric("Real cash / equity", "$0", 0, "Shadow is research only; use IBKR / REAL for actual cash", "muted"),
+    metric("Hypothetical size", money(RESEARCH_NOTIONAL), shadow.priced_n, "Every SHADOW idea is modeled as the same test size", "muted"),
     metric("Hit rate", eod ? pct(eod.hitRate) : "—", eod?.n || 0, eod ? `${num(eod.winners)} wins / ${num(eod.losses)} losses` : "no EOD hit rate yet"),
     metric("Priced observations", num(shadow.priced_n), shadow.priced_n, `${num(shadow.pending_or_unpriced_n)} unpriced / pending excluded`),
     metric("Best horizon", best ? `${safe(best.horizon)} ${pct3(best.avg_direction_adjusted_return_pct)}` : "—", best?.priced_n || 0, "best average observed return"),
@@ -204,21 +208,28 @@ function renderForwardReturns(shadow) {
   }).join("");
 
   $("forward-table").innerHTML = table(
-    ["Time", "Symbol", "Catalyst", "Dir", "Entry", "5m", "15m", "30m", "1h", "EOD", "Status"],
+    ["Time", "Symbol", "Catalyst", "Dir", "Test size", "Implied qty", "Entry", "Latest P/L", "5m", "15m", "30m", "1h", "EOD", "Status"],
     rows.slice(0, 24),
-    (r) => `<tr>
+    (r) => {
+      const latest = latestReturn(r);
+      const pnl = latest ? hypotheticalPnl(latest.value) : null;
+      return `<tr>
       <td>${shortTime(r.decision_ts)}</td>
       <td><strong>${safe(r.symbol)}</strong><div class="small">${safe(r.headline)}</div></td>
       <td>${catalystLabel(r)}</td>
       <td>${safe(r.direction)}</td>
+      <td class="mono">${money(RESEARCH_NOTIONAL)}</td>
+      <td class="mono">${impliedQuantity(r) == null ? "—" : Number(impliedQuantity(r)).toFixed(2)}</td>
       <td class="mono">${safe(r.entry_reference_price)}</td>
+      <td class="mono ${pnl == null ? "muted" : cls(pnl)}">${pnl == null ? "pending" : money(pnl)}</td>
       ${FORWARD_HORIZONS.map((horizon) => {
         const v = returnValue(r, horizon);
         const captured = horizonCaptureStatus(rows, horizon);
         return `<td class="mono ${hasValue(v) ? cls(v) : "muted"}">${hasValue(v) ? pct3(v) : (captured ? "pending" : "not captured")}</td>`;
       }).join("")}
       <td>${safe(r.status)}</td>
-    </tr>`,
+    </tr>`;
+    },
     `No ${filteredName.toLowerCase()} forward-return observations in the current live slice.`
   );
 }
@@ -284,13 +295,15 @@ function renderDecisionFeed(shadow) {
   $("decision-feed").innerHTML = rows.slice(0, 14).map((r) => {
     const pnl = rowPnl(r);
     const latest = latestReturn(r);
+    const qty = impliedQuantity(r);
+    const returnOnTest = pnl == null ? null : pnl / RESEARCH_NOTIONAL * 100;
     return `<article class="decision-card">
       <div class="decision-top">
         <div><div class="decision-title">${safe(r.symbol)} · ${safe(r.direction)} · ${catalystLabel(r)}</div><div class="small">${safe(r.headline)} · ${populationLabel(r)}</div></div>
         <div class="mono ${cls(pnl)}">${money(pnl)}</div>
       </div>
-      <div class="small section-gap">${money(RESEARCH_NOTIONAL)} hypothetical · ${safe(latest?.horizon || "mark")} return ${latest ? pct3(latest.value) : "—"}. Research only — no broker fill.</div>
-      <div class="decision-meta"><span class="chip">rule ${safe(r.rule_id)}</span>${returnGrid(r)}<span class="chip">entry ${safe(r.entry_reference_price)}</span><span class="chip">${safe(r.status || "COMPLETE")}</span></div>
+      <div class="small section-gap">${money(RESEARCH_NOTIONAL)} hypothetical test size · implied qty ${qty == null ? "—" : qty.toFixed(2)} · ${safe(latest?.horizon || "mark")} return ${latest ? pct3(latest.value) : "—"}. Research only — no broker fill.</div>
+      <div class="decision-meta"><span class="chip">rule ${safe(r.rule_id)}</span><span class="chip">test size ${money(RESEARCH_NOTIONAL)}</span><span class="chip">return on test ${returnOnTest == null ? "—" : pct3(returnOnTest)}</span>${returnGrid(r)}<span class="chip">entry ${safe(r.entry_reference_price)}</span><span class="chip">${safe(r.status || "COMPLETE")}</span></div>
     </article>`;
   }).join("");
 }
