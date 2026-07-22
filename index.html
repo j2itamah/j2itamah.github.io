@@ -62,6 +62,7 @@
     .card:hover{transform:translateY(-5px);border-color:#c7d6ee;box-shadow:0 2px 4px rgba(15,23,42,.05),0 16px 40px rgba(37,99,235,.14)}
     .card.dark:hover{border-color:rgba(96,165,250,.55);box-shadow:0 2px 4px rgba(0,0,0,.3),0 18px 44px rgba(37,99,235,.32)}
     .card:focus-visible{outline:3px solid rgba(37,99,235,.35);outline-offset:4px}
+    .card[aria-disabled="true"]{cursor:wait;opacity:.88}
     .card.active{border-color:rgba(224,101,47,.75);box-shadow:0 2px 4px rgba(15,23,42,.05),0 16px 40px rgba(224,101,47,.16)}
     .card.dark.active{border-color:rgba(96,165,250,.80);box-shadow:0 2px 4px rgba(0,0,0,.3),0 18px 44px rgba(37,99,235,.36)}
     .pill{display:inline-block;font-size:.7rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:5px 11px;border-radius:999px;margin-bottom:18px;background:rgba(224,101,47,.10);color:var(--coral)}
@@ -244,14 +245,18 @@ function shadowTable(rows){
       <td class="mono">5m ${esc(r.price_5m)} · 15m ${esc(r.price_15m)} · 1h ${esc(r.price_1h)} · EOD ${esc(r.price_eod)}</td>
     </tr>`).join("")}</tbody></table>`;
 }
+function hashForPane(which){
+  return which === "shadow" ? "#shadow" : "#ibkr";
+}
 function setHashForPane(which){
-  const targetHash = which === "real" ? "#ibkr" : "#shadow";
+  const targetHash = hashForPane(which);
   if(location.hash !== targetHash) history.pushState(null, "", targetHash);
 }
 function paneFromHash(){
   return location.hash === "#shadow" ? "shadow" : "real";
 }
 function showPane(which, shouldScroll=false, shouldPushHash=false){
+  which = which === "shadow" ? "shadow" : "real";
   ACTIVE = which;
   $("realCard").classList.toggle("active", which === "real");
   $("shadowCard").classList.toggle("active", which === "shadow");
@@ -291,20 +296,23 @@ async function load(){
     $("detailBody").innerHTML = `<div class="empty">${esc(e.message)}</div>`;
   }
 }
-window.addEventListener("hashchange", () => showPane(paneFromHash()));
-function activateCard(card, event){
+window.addEventListener("hashchange", () => showPane(paneFromHash(), true, false));
+function activateCard(cardOrPane, event){
   if(event) event.preventDefault();
-  if(!card || !card.dataset.pane) return;
-  showPane(card.dataset.pane, true, true);
+  const pane = typeof cardOrPane === "string" ? cardOrPane : cardOrPane?.dataset?.pane;
+  if(!pane) return false;
+  showPane(pane, true, true);
   return false;
 }
 document.addEventListener("click", (event) => {
   const card = event.target.closest?.("[data-pane][data-target-hash]");
   if(!card || !document.querySelector(".cards")?.contains(card)) return;
+  if(event.defaultPrevented) return;
   activateCard(card, event);
 });
 ["realCard","shadowCard"].forEach((id) => {
   const card = $(id);
+  card.addEventListener("click", (event) => activateCard(event.currentTarget, event));
   card.addEventListener("keydown", (event) => {
     if(event.key !== "Enter" && event.key !== " ") return;
     activateCard(event.currentTarget, event);
