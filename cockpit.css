@@ -121,6 +121,10 @@ h1 { margin: 6px 0 8px; font-size: clamp(26px, 4vw, 46px); line-height: 1.02; }
 .decision-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
 .decision-title { font-weight: 800; }
 .decision-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; color: var(--muted); font-size: 12px; }
+.journal-entry { border: 1px solid var(--border); border-radius: 18px; padding: 18px; background: rgba(7, 17, 31, 0.50); margin-bottom: 14px; box-shadow: 0 12px 26px rgba(0,0,0,.12); }
+.journal-row { border-top: 1px solid rgba(148,163,184,.14); padding: 10px 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; align-items: start; }
+.journal-row .small { grid-column: 1 / -1; }
+.mini-title { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
 .chip { border: 1px solid var(--border); border-radius: 999px; padding: 3px 8px; }
 .chip.warn { border-color: rgba(251,191,36,.35); color: #fde68a; background: rgba(251,191,36,.08); }
 .return-grid { display: grid; grid-template-columns: repeat(4, minmax(58px, 1fr)); gap: 6px; min-width: 280px; }

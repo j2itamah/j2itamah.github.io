@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Daily Trading Journal · Live Agent</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./cockpit.css" />
+</head>
+<body class="real-theme">
+  <main class="shell">
+    <a class="backlink" href="./index.html">← Launcher · IBKR vs SHADOW</a>
+    <section class="topbar">
+      <div>
+        <div class="eyebrow">DAILY JOURNAL · REAL + SHADOW</div>
+        <h1>Trading Journal</h1>
+        <p class="subtitle">
+          A day-by-day readout of what the live agent actually did and what the shadow research observed.
+          REAL is broker-backed P&L; SHADOW is research-only evidence. Same Rule 21 boundary, easier learning.
+        </p>
+      </div>
+      <div class="status-pill" id="refresh-status">Loading…</div>
+    </section>
+
+    <section class="panel filter-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Journal filter</h2>
+          <div class="filter-copy" id="filter-copy">Showing all catalyst types.</div>
+        </div>
+        <span class="badge real">daily evidence</span>
+      </div>
+      <div class="filter-pills" id="catalyst-filter"></div>
+    </section>
+
+    <section class="hero-strip">
+      <div class="hero-card primary">
+        <div class="metric-label">REAL net P&L</div>
+        <div class="metric-value" id="hero-real-net">—</div>
+        <div class="metric-sub" id="hero-real-sub">verified closed trades</div>
+      </div>
+      <div class="hero-card">
+        <div class="metric-label">REAL win rate</div>
+        <div class="metric-value" id="hero-real-win">—</div>
+        <div class="metric-sub" id="hero-real-win-sub">n shown</div>
+      </div>
+      <div class="hero-card">
+        <div class="metric-label">SHADOW priced</div>
+        <div class="metric-value" id="hero-shadow-n">—</div>
+        <div class="metric-sub">research observations</div>
+      </div>
+      <div class="hero-card">
+        <div class="metric-label">Best SHADOW read</div>
+        <div class="metric-value" id="hero-shadow-best">—</div>
+        <div class="metric-sub" id="hero-shadow-sub">filtered horizon</div>
+      </div>
+    </section>
+
+    <section class="grid two section-gap">
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">Daily REAL net curve</h2><span class="badge real">closed trades</span></div>
+        <div class="chart-wrap" id="daily-real-curve"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">Daily evidence mix</h2><span class="badge shadow">real vs shadow</span></div>
+        <div id="daily-mix"></div>
+      </div>
+    </section>
+
+    <section class="panel section-gap">
+      <div class="panel-header">
+        <h2 class="panel-title">Journal entries</h2>
+        <span class="badge warn">newest first</span>
+      </div>
+      <div id="journal-entries"><div class="loading">Loading daily journal…</div></div>
+    </section>
+
+    <div class="footer">
+      Journal reads <code>agent_trades</code> and <code>agent_shadow_trades</code> through the verified backend.
+      It is a measurement surface, not trading advice.
+    </div>
+  </main>
+  <script>window.API_BASE = "https://news-trading-system-production-b13f.up.railway.app";</script>
+  <script src="./cockpit-common.js"></script>
+  <script src="./journal.js"></script>
+</body>
+</html>
