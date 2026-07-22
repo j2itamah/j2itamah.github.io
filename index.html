@@ -3,350 +3,278 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QuantPulse · Verified Live Agent</title>
+  <title>QuantPulse · Live Agent A/B</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <style>
     :root{
-      --bg:#07111f; --panel:#0c1a2b; --panel2:#101f33; --border:rgba(148,163,184,.18);
-      --text:#e5eefb; --muted:#93a4ba; --green:#35d399; --red:#fb7185; --amber:#fbbf24;
-      --blue:#60a5fa; --shadow:rgba(0,0,0,.35);
+      --bg0:#ffffff; --bg1:#f1f5f9; --bg2:#e9eef5; --line:#e2e8f0;
+      --txt:#0f172a; --muted:#64748b; --blue:#2563eb; --blue2:#3b82f6;
+      --coral:#e0652f; --coral2:#ea7a48; --dark:#0b0f1a; --ok:#16a34a; --down:#dc2626;
     }
-    *{box-sizing:border-box}
+    *{box-sizing:border-box;margin:0;padding:0}
     body{
-      margin:0; min-height:100vh; font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
-      color:var(--text);
+      font-family:Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+      color:var(--txt);
       background:
-        radial-gradient(circle at top left, rgba(96,165,250,.18), transparent 35%),
-        radial-gradient(circle at top right, rgba(53,211,153,.10), transparent 30%),
-        var(--bg);
+        radial-gradient(1100px 560px at 18% -10%, rgba(37,99,235,.08), transparent 60%),
+        radial-gradient(900px 480px at 92% 112%, rgba(224,101,47,.07), transparent 55%),
+        linear-gradient(160deg,var(--bg0),var(--bg1) 60%,var(--bg2));
+      min-height:100vh; padding:40px 24px;
     }
-    .shell{width:min(1320px,calc(100vw - 32px));margin:0 auto;padding:28px 0 48px}
-    .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:22px}
-    .eyebrow{color:var(--green);font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
-    h1{margin:6px 0 8px;font-size:clamp(30px,4vw,52px);line-height:1}
-    .subtitle{color:var(--muted);max-width:820px;line-height:1.55;margin:0}
-    .status-pill{border:1px solid var(--border);background:rgba(12,26,43,.78);border-radius:999px;padding:10px 14px;color:var(--muted);white-space:nowrap;box-shadow:0 12px 30px var(--shadow)}
-    .status-pill strong{color:var(--text)}
-    .notice{border:1px solid rgba(251,191,36,.28);background:rgba(251,191,36,.08);color:#fde68a;border-radius:16px;padding:14px 16px;margin:18px 0;display:none}
-    .notice.show{display:block}
-    .champ{position:relative;overflow:hidden;background:#0b0f1a;border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:22px;margin-bottom:16px;box-shadow:0 20px 60px var(--shadow)}
-    .champ::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--amber),var(--green),var(--blue))}
-    .champ-label{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#fcd34d;margin-bottom:8px}
-    .champ-name{font-size:clamp(22px,3vw,34px);font-weight:800;margin-bottom:8px}
-    .champ-sub{color:var(--muted);line-height:1.45}
-    .ab-nav{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-    @media(max-width:780px){.ab-nav{grid-template-columns:1fr}}
-    .ab-card{display:block;text-decoration:none;color:inherit;background:rgba(12,26,43,.78);border:1px solid var(--border);border-radius:22px;padding:18px;box-shadow:0 16px 50px var(--shadow);transition:transform .16s ease,border-color .16s ease}
-    .ab-card:hover{transform:translateY(-3px);border-color:rgba(96,165,250,.55)}
-    .ab-card.real{background:linear-gradient(135deg,rgba(53,211,153,.14),rgba(12,26,43,.84))}
-    .ab-card.shadow{background:linear-gradient(135deg,rgba(96,165,250,.14),rgba(12,26,43,.84))}
-    .ab-title{font-size:20px;font-weight:800;margin:8px 0}
-    .ab-kicker{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.10em;color:var(--muted)}
-    .ab-metric{font-size:30px;font-weight:900;margin-top:10px}
-    .ab-note{color:var(--muted);font-size:13px;line-height:1.45;margin-top:6px}
-    .grid{display:grid;gap:16px}
-    .grid.two{grid-template-columns:1.15fr .85fr}
-    .grid.three{grid-template-columns:repeat(3,1fr)}
-    @media(max-width:980px){.grid.two,.grid.three{grid-template-columns:1fr}.topbar{flex-direction:column}}
-    .panel{background:linear-gradient(180deg,rgba(16,31,51,.96),rgba(12,26,43,.96));border:1px solid var(--border);border-radius:22px;padding:18px;box-shadow:0 20px 60px var(--shadow)}
-    .panel-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-    .panel-title{margin:0;font-size:18px}
-    .badge{border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
-    .badge.real{background:rgba(53,211,153,.14);color:var(--green)}
-    .badge.shadow{background:rgba(96,165,250,.13);color:#bfdbfe}
-    .badge.warn{background:rgba(251,191,36,.14);color:#fde68a}
-    .metric{background:rgba(7,17,31,.72);border:1px solid var(--border);border-radius:16px;padding:16px}
-    .metric-label{color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
-    .metric-value{font-size:28px;font-weight:800;margin-top:8px}
-    .metric-sub{color:var(--muted);font-size:12px;margin-top:6px}
-    .positive{color:var(--green)} .negative{color:var(--red)} .muted{color:var(--muted)}
-    .hero-strip{display:grid;grid-template-columns:1.3fr repeat(3,1fr);gap:14px;margin-bottom:16px}
-    @media(max-width:980px){.hero-strip{grid-template-columns:1fr}}
-    .hero-card{background:rgba(12,26,43,.78);border:1px solid var(--border);border-radius:22px;padding:18px;box-shadow:0 16px 50px var(--shadow)}
-    .hero-card.primary{background:linear-gradient(135deg,rgba(53,211,153,.16),rgba(96,165,250,.10) 45%,rgba(12,26,43,.9))}
-    .chart-wrap{min-height:230px}
-    .line-chart{width:100%;height:230px;display:block;overflow:visible}
-    .bar-row{display:grid;grid-template-columns:minmax(100px,160px) 1fr minmax(54px,84px);gap:10px;align-items:center;margin:10px 0}
-    .bar-label{color:var(--text);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .bar-track{height:12px;border-radius:999px;background:rgba(148,163,184,.12);overflow:hidden}
-    .bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--green));min-width:3px}
-    .bar-fill.neg{background:linear-gradient(90deg,var(--red),var(--amber))}
-    .bar-value{text-align:right;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
-    .ladder{display:grid;gap:10px}
-    .ladder-card{border:1px solid var(--border);background:rgba(7,17,31,.52);border-radius:16px;padding:12px}
-    .ladder-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}
-    .decision-feed{display:grid;gap:10px}
-    .decision-card{border:1px solid var(--border);background:rgba(7,17,31,.52);border-radius:16px;padding:13px}
-    .decision-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-    .decision-title{font-weight:800}
-    .decision-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;color:var(--muted);font-size:12px}
-    .chip{border:1px solid var(--border);border-radius:999px;padding:3px 8px}
-    table{width:100%;border-collapse:collapse;font-size:13px}
-    th{text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;padding:10px 8px;border-bottom:1px solid var(--border)}
-    td{padding:10px 8px;border-bottom:1px solid rgba(148,163,184,.10);vertical-align:top}
+    .shell{width:100%;max-width:960px;margin:0 auto}
+    .brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+    .mark{width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:16px solid var(--blue);transform:translateY(-1px)}
+    h1{font-size:1.55rem;font-weight:800;letter-spacing:.2px}
+    h1 span{color:var(--blue)}
+    .sub{color:var(--muted);font-size:.95rem;text-align:center;line-height:1.45}
+    .live{display:flex;align-items:center;justify-content:center;gap:7px;color:var(--muted);font-size:.8rem;margin:12px 0 18px}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(22,163,74,.5);animation:pulse 1.8s infinite}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.4)}70%{box-shadow:0 0 0 9px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
+    .status{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;padding:7px 14px;border-radius:999px;margin:0 auto 22px;border:1px solid var(--line);background:#fff;color:var(--muted);box-shadow:0 1px 2px rgba(15,23,42,.04)}
+    .status-wrap{text-align:center}
+    .status.ok{border-color:rgba(22,163,74,.30);color:#15803d;background:rgba(22,163,74,.06)}
+    .status.warn{border-color:rgba(217,119,6,.30);color:#b45309;background:rgba(217,119,6,.06)}
+    .status.bad{border-color:rgba(220,38,38,.30);color:#b91c1c;background:rgba(220,38,38,.06)}
+    .champ{
+      width:100%;margin-bottom:22px;background:var(--dark);color:#f8fafc;border:1px solid rgba(255,255,255,.10);
+      border-radius:18px;padding:24px 28px;box-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.4);
+      position:relative;overflow:hidden;min-height:128px;
+    }
+    .champ::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,#fbbf24,#f59e0b)}
+    .champ-label{font-size:.72rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#fcd34d;margin-bottom:8px}
+    .champ-name{font-size:1.55rem;font-weight:800;margin-bottom:14px;line-height:1.25}
+    .champ-stats{display:flex;gap:32px;flex-wrap:wrap}
+    .cap{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:#8a96ad;margin-bottom:3px}
+    .val{font-size:1.45rem;font-weight:800;font-variant-numeric:tabular-nums}
+    .up{color:#34d399}.down{color:#f87171}.flat{color:#cbd5e1}
+    .cards{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
+    .card{
+      position:relative;overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:18px;padding:28px;
+      text-decoration:none;color:inherit;box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.05);
+      transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;cursor:pointer;min-height:245px;
+    }
+    .card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--coral),var(--coral2))}
+    .card.dark{background:var(--dark);border-color:rgba(255,255,255,.10);color:#f8fafc;box-shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4)}
+    .card.dark::before{background:linear-gradient(90deg,var(--blue),var(--blue2))}
+    .card:hover{transform:translateY(-5px);border-color:#c7d6ee;box-shadow:0 2px 4px rgba(15,23,42,.05),0 16px 40px rgba(37,99,235,.14)}
+    .card.dark:hover{border-color:rgba(96,165,250,.55);box-shadow:0 2px 4px rgba(0,0,0,.3),0 18px 44px rgba(37,99,235,.32)}
+    .pill{display:inline-block;font-size:.7rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:5px 11px;border-radius:999px;margin-bottom:18px;background:rgba(224,101,47,.10);color:var(--coral)}
+    .card.dark .pill{background:rgba(96,165,250,.18);color:#93c5fd}
+    .card h2{font-size:1.45rem;font-weight:800;margin-bottom:8px}
+    .card p{color:var(--muted);font-size:.9rem;line-height:1.5;margin-bottom:18px}
+    .card.dark p{color:#94a3b8}
+    .metric-line{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-top:1px solid rgba(148,163,184,.16);font-size:.88rem}
+    .metric-line strong{font-variant-numeric:tabular-nums}
+    .go{display:inline-flex;align-items:center;gap:8px;margin-top:18px;font-weight:800;color:var(--coral)}
+    .card.dark .go{color:#93c5fd}
+    .detail{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px 24px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.05)}
+    .detail-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px}
+    .detail h3{font-size:1rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .badge{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;border-radius:999px;padding:6px 10px;background:#f1f5f9;color:#475569}
+    table{width:100%;border-collapse:collapse;font-size:.86rem}
+    th{text-align:left;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;padding:10px 8px;border-bottom:1px solid var(--line)}
+    td{padding:10px 8px;border-bottom:1px solid #eef2f7;vertical-align:top}
     tr:last-child td{border-bottom:0}
     .mono{font-variant-numeric:tabular-nums}
-    .empty{color:var(--muted);padding:22px;text-align:center;border:1px dashed var(--border);border-radius:16px}
-    .section-gap{margin-top:16px}
-    .small{font-size:12px;color:var(--muted);line-height:1.45}
-    .loading{color:var(--muted);padding:36px 0}
-    .footer{color:var(--muted);font-size:12px;margin-top:18px;text-align:center}
-    a{color:#93c5fd}
+    .small{font-size:.78rem;color:var(--muted);line-height:1.4}
+    .empty{color:var(--muted);padding:20px;text-align:center;border:1px dashed var(--line);border-radius:14px}
+    footer{margin-top:24px;color:#94a3b8;font-size:.78rem;text-align:center}
+    @media(max-width:760px){
+      body{padding:22px 14px}.cards{grid-template-columns:1fr}.champ{padding:20px 18px}.champ-stats{gap:16px}.val{font-size:1.15rem}
+      .detail{padding:16px 12px;overflow-x:auto}.card{min-height:0}
+    }
   </style>
 </head>
 <body>
   <main class="shell">
-    <section class="topbar">
-      <div>
-        <div class="eyebrow">QuantPulse public front end · live agent</div>
-        <h1>Verified Trading Front End</h1>
-        <p class="subtitle">
-          This page now shows only two populations: <strong>REAL</strong> executable broker-backed trades from
-          <code>agent_trades</code>, and <strong>SHADOW</strong> research observations from
-          <code>agent_shadow_trades</code>. Legacy Build A/B leaderboards are archived and no longer shown as trusted results.
-        </p>
-      </div>
-      <div class="status-pill" id="refresh-status">Loading…</div>
-    </section>
-
-    <div class="notice" id="security-notice"></div>
+    <div class="brand"><div class="mark"></div><h1>Quant<span>Pulse</span> · Live Agent</h1></div>
+    <p class="sub">Navigate the one live build: IBKR/REAL executable trades vs SHADOW research observations.</p>
+    <div class="live"><span class="dot"></span> Verified data only for REAL · SHADOW is research-only</div>
+    <div class="status-wrap"><div class="status" id="siteStatus">Loading live agent…</div></div>
 
     <section class="champ">
-      <div class="champ-label">A/B top performer · IBKR REAL vs SHADOW research</div>
-      <div class="champ-name" id="ab-leader-name">Loading A/B evidence…</div>
-      <div class="champ-sub" id="ab-leader-sub">REAL uses broker-backed IBKR fills. SHADOW uses priced forward marks and is research only.</div>
-    </section>
-
-    <section class="ab-nav">
-      <a class="ab-card real" href="#ibkr-real">
-        <div class="ab-kicker">A · IBKR / REAL</div>
-        <div class="ab-title">Executable verified trades</div>
-        <div class="ab-metric" id="ab-real-metric">—</div>
-        <div class="ab-note" id="ab-real-note">Net P&L from agent_trades with entry and exit evidence.</div>
-      </a>
-      <a class="ab-card shadow" href="#shadow-research">
-        <div class="ab-kicker">B · SHADOW / RESEARCH</div>
-        <div class="ab-title">Priced catalyst observations</div>
-        <div class="ab-metric" id="ab-shadow-metric">—</div>
-        <div class="ab-note" id="ab-shadow-note">Forward-marked research rows only; not executable.</div>
-      </a>
-    </section>
-
-    <section class="hero-strip">
-      <div class="hero-card primary">
-        <div class="metric-label">Live agent verified net</div>
-        <div class="metric-value" id="hero-net">—</div>
-        <div class="metric-sub" id="hero-net-sub">gross − commissions = net</div>
-      </div>
-      <div class="hero-card"><div class="metric-label">Verified closed</div><div class="metric-value" id="hero-real-n">—</div><div class="metric-sub">REAL n</div></div>
-      <div class="hero-card"><div class="metric-label">Open positions</div><div class="metric-value" id="hero-open-n">—</div><div class="metric-sub">exit_ts is null</div></div>
-      <div class="hero-card"><div class="metric-label">Shadow priced</div><div class="metric-value" id="hero-shadow-n">—</div><div class="metric-sub">research n, not executable</div></div>
-    </section>
-
-    <section class="grid two" id="ibkr-real">
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">REAL · verified live agent trades</h2><span class="badge real">Rule 21</span></div>
-        <div class="grid three" id="real-metrics"><div class="loading">Loading verified trade metrics…</div></div>
-      </div>
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">Open positions</h2><span class="badge warn">exit_ts is null</span></div>
-        <div id="open-positions" class="loading">Loading open positions…</div>
+      <div class="champ-label">Top book · current A/B</div>
+      <div class="champ-name" id="topName">Loading top book…</div>
+      <div class="champ-stats">
+        <div><span class="cap">Evidence</span><span class="val" id="topEvidence">—</span></div>
+        <div><span class="cap">Primary metric</span><span class="val" id="topMetric">—</span></div>
+        <div><span class="cap">Status</span><span class="val" id="topStatus">—</span></div>
       </div>
     </section>
 
-    <section class="grid two section-gap" id="shadow-research">
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">Verified net P&L curve</h2><span class="badge real">closed n</span></div>
-        <div class="chart-wrap" id="equity-curve"></div>
+    <section class="cards">
+      <article class="card" id="realCard" onclick="showPane('real')">
+        <span class="pill">IBKR / REAL</span>
+        <h2>Executable trades</h2>
+        <p>Broker-backed fills from <code>agent_trades</code>. This is the trusted side for actual P&L.</p>
+        <div class="metric-line"><span>Verified closed</span><strong id="realN">—</strong></div>
+        <div class="metric-line"><span>Open positions</span><strong id="realOpen">—</strong></div>
+        <div class="metric-line"><span>Net P&L</span><strong id="realNet">—</strong></div>
+        <span class="go">View IBKR trades <span>→</span></span>
+      </article>
+
+      <article class="card dark" id="shadowCard" onclick="showPane('shadow')">
+        <span class="pill">SHADOW / RESEARCH</span>
+        <h2>Research observations</h2>
+        <p>Priced forward marks from <code>agent_shadow_trades</code>. Useful for edge research, not executable P&L.</p>
+        <div class="metric-line"><span>Priced n</span><strong id="shadowN">—</strong></div>
+        <div class="metric-line"><span>Best horizon</span><strong id="shadowHorizon">—</strong></div>
+        <div class="metric-line"><span>Best avg return</span><strong id="shadowReturn">—</strong></div>
+        <span class="go">View SHADOW research <span>→</span></span>
+      </article>
+    </section>
+
+    <section class="detail" id="detail">
+      <div class="detail-head">
+        <div>
+          <h3 id="detailTitle">IBKR / REAL trades</h3>
+          <p class="small" id="detailSub">Closed verified rows only.</p>
+        </div>
+        <span class="badge" id="detailBadge">REAL</span>
       </div>
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">P&L composition</h2><span class="badge real">gross / commission / net</span></div>
-        <div id="pnl-bars"></div>
-      </div>
+      <div id="detailBody"><div class="empty">Loading…</div></div>
     </section>
 
-    <section class="grid three section-gap">
-      <div class="panel"><div class="panel-header"><h2 class="panel-title">By rule_id</h2><span class="badge real">n shown</span></div><div id="real-by-rule"></div></div>
-      <div class="panel"><div class="panel-header"><h2 class="panel-title">By catalyst</h2><span class="badge real">n shown</span></div><div id="real-by-catalyst"></div></div>
-      <div class="panel"><div class="panel-header"><h2 class="panel-title">By direction</h2><span class="badge real">n shown</span></div><div id="real-by-direction"></div></div>
-    </section>
-
-    <section class="panel section-gap">
-      <div class="panel-header"><h2 class="panel-title">Decision feed</h2><span class="badge real">catalyst · reason · MFE/MAE</span></div>
-      <div id="decision-feed"></div>
-    </section>
-
-    <section class="grid two section-gap">
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">SHADOW · research only</h2><span class="badge shadow">not executable</span></div>
-        <p class="small">This block reports priced observations only. Total shadow rows are diagnostic and are not treated as executable evidence.</p>
-        <div class="grid three" id="shadow-metrics"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">Security / wiring</h2><span class="badge warn">fail closed</span></div>
-        <div id="security-state" class="small">Loading security state…</div>
-      </div>
-    </section>
-
-    <section class="grid two section-gap">
-      <div class="panel"><div class="panel-header"><h2 class="panel-title">SHADOW horizon ladder</h2><span class="badge shadow">priced forward marks</span></div><div id="shadow-horizon-ladder"></div></div>
-      <div class="panel"><div class="panel-header"><h2 class="panel-title">SHADOW net metrics by catalyst</h2><span class="badge shadow">direction-adjusted</span></div><div id="shadow-net-catalyst"></div></div>
-    </section>
-
-    <section class="grid three section-gap">
-      <div class="panel"><div class="panel-header"><h2 class="panel-title">Shadow by rule</h2><span class="badge shadow">priced n</span></div><div id="shadow-by-rule"></div></div>
-      <div class="panel"><div class="panel-header"><h2 class="panel-title">Shadow by catalyst</h2><span class="badge shadow">priced n</span></div><div id="shadow-by-catalyst"></div></div>
-      <div class="panel"><div class="panel-header"><h2 class="panel-title">Shadow by direction</h2><span class="badge shadow">priced n</span></div><div id="shadow-by-direction"></div></div>
-    </section>
-
-    <section class="panel section-gap">
-      <div class="panel-header"><h2 class="panel-title">Recent SHADOW priced observations</h2><span class="badge shadow">research — not executable</span></div>
-      <div id="recent-shadow"></div>
-    </section>
-
-    <div class="footer">
+    <footer>
       Paper trading only · not financial advice · old QuantPulse landing page archived append-only under <code>/archive/</code>.
-      Data source: <a href="https://news-trading-system-production-b13f.up.railway.app/" target="_blank" rel="noopener">Live Agent API</a>.
-    </div>
+    </footer>
   </main>
 
 <script>
 const API_BASE = "https://news-trading-system-production-b13f.up.railway.app";
-const state = { lastLoadedAt: null };
-const $ = (id) => document.getElementById(id);
+let DATA = null;
+let ACTIVE = "real";
 
-function money(value){ const n=Number(value||0); return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(n); }
-function num(value){ return new Intl.NumberFormat("en-US").format(Number(value||0)); }
-function pct(value){ return `${Number(value||0).toFixed(1)}%`; }
-function clsFor(value){ const n=Number(value||0); if(n>0)return"positive"; if(n<0)return"negative"; return"muted"; }
-function escapeHtml(value){ return String(value).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
-function safe(value,fallback="—"){ if(value===null||value===undefined||value==="")return fallback; return escapeHtml(value); }
-function time(value){ if(!value)return"—"; try{return new Date(value).toLocaleString();}catch{return String(value);} }
-async function fetchJson(path){ const res=await fetch(`${API_BASE}${path}`,{cache:"no-store"}); const data=await res.json().catch(()=>({})); if(!res.ok)throw new Error(data.detail||data.error||`HTTP ${res.status}`); return data; }
-function metric(label,value,sub="",className=""){ return `<div class="metric"><div class="metric-label">${label}</div><div class="metric-value ${className}">${value}</div>${sub?`<div class="metric-sub">${sub}</div>`:""}</div>`; }
-function table(headers,rows,renderRow,emptyText){ if(!rows||rows.length===0)return`<div class="empty">${emptyText||"No rows yet."}</div>`; return `<table><thead><tr>${headers.map((h)=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map(renderRow).join("")}</tbody></table>`; }
-function setText(id,text,className=""){ const el=$(id); if(!el)return; el.textContent=text; if(className)el.className=`metric-value ${className}`; }
-function barRow(label,value,maxAbs,valueText,className=""){ const width=maxAbs>0?Math.max(3,Math.round((Math.abs(Number(value||0))/maxAbs)*100)):0; const neg=Number(value||0)<0?" neg":""; return `<div class="bar-row"><div class="bar-label" title="${safe(label)}">${safe(label)}</div><div class="bar-track"><div class="bar-fill${neg}" style="width:${width}%"></div></div><div class="bar-value ${className||clsFor(value)}">${valueText}</div></div>`; }
-function renderLineChart(points){
-  if(!points||points.length===0)return`<div class="empty">No verified closed REAL trades yet, so the net P&L curve has not started.</div>`;
-  const width=720,height=230,pad={left:46,right:16,top:18,bottom:30};
-  const values=points.map((p)=>Number(p.cumulative_net_pnl||0)),min=Math.min(0,...values),max=Math.max(0,...values),spread=Math.max(max-min,1);
-  const x=(i)=>pad.left+(points.length===1?0:(i/(points.length-1))*(width-pad.left-pad.right));
-  const y=(v)=>pad.top+((max-v)/spread)*(height-pad.top-pad.bottom);
-  const path=points.map((p,i)=>`${i===0?"M":"L"} ${x(i).toFixed(1)} ${y(Number(p.cumulative_net_pnl||0)).toFixed(1)}`).join(" ");
-  const zeroY=y(0).toFixed(1),last=points[points.length-1],stroke=Number(last.cumulative_net_pnl||0)>=0?"#35d399":"#fb7185";
-  return `<svg class="line-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Verified net P&L curve"><line x1="${pad.left}" y1="${zeroY}" x2="${width-pad.right}" y2="${zeroY}" stroke="rgba(148,163,184,.25)" stroke-dasharray="4 5"/><line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${height-pad.bottom}" stroke="rgba(148,163,184,.18)"/><line x1="${pad.left}" y1="${height-pad.bottom}" x2="${width-pad.right}" y2="${height-pad.bottom}" stroke="rgba(148,163,184,.18)"/><path d="${path}" fill="none" stroke="${stroke}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${points.map((p,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(Number(p.cumulative_net_pnl||0)).toFixed(1)}" r="3.5" fill="${stroke}"><title>#${safe(p.n)} ${safe(p.symbol)} · ${money(p.cumulative_net_pnl)}</title></circle>`).join("")}<text x="${pad.left}" y="13" fill="#93a4ba" font-size="11">${money(max)}</text><text x="${pad.left}" y="${height-8}" fill="#93a4ba" font-size="11">${money(min)}</text><text x="${width-pad.right}" y="${height-8}" fill="#93a4ba" font-size="11" text-anchor="end">n=${points.length}</text></svg>`;
+const $ = (id) => document.getElementById(id);
+const money = (v) => new Intl.NumberFormat("en-US", { style:"currency", currency:"USD" }).format(Number(v || 0));
+const num = (v) => new Intl.NumberFormat("en-US").format(Number(v || 0));
+const pct = (v) => `${Number(v || 0).toFixed(3)}%`;
+const cls = (v) => Number(v || 0) > 0 ? "up" : Number(v || 0) < 0 ? "down" : "flat";
+function esc(v){return String(v ?? "—").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");}
+function when(v){if(!v)return"—"; try{return new Date(v).toLocaleString();}catch{return esc(v);}}
+async function getJson(path){
+  const r = await fetch(API_BASE + path, { cache:"no-store" });
+  const d = await r.json().catch(() => ({}));
+  if(!r.ok) throw new Error(d.error || d.detail || `HTTP ${r.status}`);
+  return d;
 }
-function renderMetricBlocks(data){
-  const real=data.real||{},shadow=data.shadow||{};
-  setText("hero-net",money(real.net_pnl),clsFor(real.net_pnl)); setText("hero-real-n",num(real.n)); setText("hero-open-n",num(real.open_n)); setText("hero-shadow-n",num(shadow.priced_n));
-  $("hero-net-sub").textContent=`${money(real.gross_pnl)} gross − ${money(real.commissions)} commissions`;
-  $("real-metrics").innerHTML=[
-    metric("Verified n",num(real.n),"Closed REAL rows with exit price/time"),
-    metric("Net P&L",money(real.net_pnl),`${money(real.gross_pnl)} gross − ${money(real.commissions)} commissions`,clsFor(real.net_pnl)),
-    metric("Win rate",pct(real.win_rate),`${num(real.wins)} wins / ${num(real.losses)} losses`),
-    metric("Open",num(real.open_n),"agent_trades where exit_ts is null"),
-    metric("Stale open flags",num(real.stale_open_n),"Closed status but missing exit_ts"),
-    metric("Gross P&L",money(real.gross_pnl),"Before commissions",clsFor(real.gross_pnl)),
-  ].join("");
-  $("shadow-metrics").innerHTML=[
-    metric("Priced n",num(shadow.priced_n),"Only rows with entry reference + forward mark"),
-    metric("Unpriced/pending",num(shadow.pending_or_unpriced_n),"Diagnostic only"),
-    metric("Total rows",num(shadow.total_rows_diagnostic),"Not used as evidence"),
-  ].join("");
+function setClassText(id, value, klass){
+  const el = $(id); el.textContent = value; el.className = "val " + klass;
 }
-function bestShadowHorizon(shadow){
-  const ladder=shadow?.horizon_ladder||[];
-  if(!ladder.length)return null;
+function bestShadow(){
+  const ladder = DATA?.shadow?.horizon_ladder || [];
+  if(!ladder.length) return null;
   return ladder.slice().sort((a,b)=>Number(b.avg_direction_adjusted_return_pct||0)-Number(a.avg_direction_adjusted_return_pct||0))[0];
 }
-function renderABSummary(data){
-  const real=data.real||{},shadow=data.shadow||{};
-  const realN=Number(real.n||0),realNet=Number(real.net_pnl||0),openN=Number(real.open_n||0);
-  const bestShadow=bestShadowHorizon(shadow);
-  const shadowN=Number(shadow.priced_n||0);
-  const shadowAvg=bestShadow?Number(bestShadow.avg_direction_adjusted_return_pct||0):0;
-  setText("ab-real-metric",money(realNet),clsFor(realNet));
-  $("ab-real-note").textContent=`verified n=${num(realN)} · open=${num(openN)} · broker-backed fills`;
-  setText("ab-shadow-metric",bestShadow?`${shadowAvg.toFixed(3)}%`:"—",clsFor(shadowAvg));
-  $("ab-shadow-note").textContent=bestShadow?`best horizon ${bestShadow.horizon} · priced n=${num(shadowN)} · research only`:`priced n=${num(shadowN)} · waiting for forward marks`;
-  let leader="Waiting for a clean A/B leader";
-  let sub="IBKR/REAL wins only on executable net P&L. SHADOW can lead research, but it stays non-executable until promoted by evidence.";
-  let klass="muted";
-  if(realN>0 && realNet>0){
-    leader="IBKR / REAL is leading";
-    sub=`Executable net P&L is ${money(realNet)} across verified n=${num(realN)}. SHADOW remains research-only.`;
-    klass="positive";
-  }else if(bestShadow && shadowAvg>0){
-    leader="SHADOW research is leading on forward marks";
-    sub=`Best research horizon is ${bestShadow.horizon} at ${shadowAvg.toFixed(3)}% direction-adjusted across priced n=${num(shadowN)}. Not executable yet.`;
-    klass="positive";
-  }else if(realN>0){
-    leader="IBKR / REAL has evidence, but no positive leader yet";
-    sub=`Executable verified n=${num(realN)} with net P&L ${money(realNet)}. Keep measuring; no hype card needed.`;
-    klass=clsFor(realNet);
+function renderTop(){
+  const real = DATA.real || {};
+  const shadow = DATA.shadow || {};
+  const realN = Number(real.n || 0);
+  const realNet = Number(real.net_pnl || 0);
+  const sh = bestShadow();
+  const shadowAvg = sh ? Number(sh.avg_direction_adjusted_return_pct || 0) : 0;
+
+  if(realN > 0 && realNet > 0){
+    $("topName").textContent = "IBKR / REAL is top book";
+    $("topEvidence").textContent = `verified n=${num(realN)}`;
+    setClassText("topMetric", money(realNet), cls(realNet));
+    $("topStatus").textContent = "Executable";
+    $("topStatus").className = "val up";
+  } else if(sh && shadowAvg > 0){
+    $("topName").textContent = "SHADOW is top research book";
+    $("topEvidence").textContent = `priced n=${num(shadow.priced_n)}`;
+    setClassText("topMetric", `${esc(sh.horizon)} ${pct(shadowAvg)}`, cls(shadowAvg));
+    $("topStatus").textContent = "Research only";
+    $("topStatus").className = "val flat";
+  } else if(realN > 0) {
+    $("topName").textContent = "IBKR / REAL has the cleanest evidence";
+    $("topEvidence").textContent = `verified n=${num(realN)}`;
+    setClassText("topMetric", money(realNet), cls(realNet));
+    $("topStatus").textContent = "Executable";
+    $("topStatus").className = "val flat";
+  } else {
+    $("topName").textContent = "Waiting for a top book";
+    $("topEvidence").textContent = "no winner yet";
+    $("topMetric").textContent = "—";
+    $("topStatus").textContent = "Collecting";
   }
-  $("ab-leader-name").textContent=leader;
-  $("ab-leader-name").className=`champ-name ${klass}`;
-  $("ab-leader-sub").textContent=sub;
 }
-function renderRealCharts(data){
-  const real=data.real||{}; $("equity-curve").innerHTML=renderLineChart(real.equity_curve||[]);
-  const gross=Number(real.gross_pnl||0),commissions=-Math.abs(Number(real.commissions||0)),net=Number(real.net_pnl||0),maxAbs=Math.max(Math.abs(gross),Math.abs(commissions),Math.abs(net),1);
-  $("pnl-bars").innerHTML=[barRow("Gross P&L",gross,maxAbs,money(gross),clsFor(gross)),barRow("Commissions",commissions,maxAbs,money(Math.abs(commissions)),"negative"),barRow("Net P&L",net,maxAbs,money(net),clsFor(net))].join("");
+function renderCards(){
+  const real = DATA.real || {};
+  const shadow = DATA.shadow || {};
+  const sh = bestShadow();
+  $("realN").textContent = num(real.n);
+  $("realOpen").textContent = num(real.open_n);
+  $("realNet").textContent = money(real.net_pnl);
+  $("realNet").className = cls(real.net_pnl);
+  $("shadowN").textContent = num(shadow.priced_n);
+  $("shadowHorizon").textContent = sh ? sh.horizon : "—";
+  $("shadowReturn").textContent = sh ? pct(sh.avg_direction_adjusted_return_pct) : "—";
+  $("shadowReturn").className = sh ? cls(sh.avg_direction_adjusted_return_pct) : "";
 }
-function renderRealGroups(data){
-  const headers=["Segment","n","Win","Gross","Comm.","Net"];
-  const row=(r)=>`<tr><td>${safe(r.value)}</td><td class="mono">${num(r.n)}</td><td class="mono">${pct(r.win_rate)}</td><td class="mono ${clsFor(r.gross_pnl)}">${money(r.gross_pnl)}</td><td class="mono negative">${money(r.commissions)}</td><td class="mono ${clsFor(r.net_pnl)}">${money(r.net_pnl)}</td></tr>`;
-  $("real-by-rule").innerHTML=table(headers,data.real?.by_rule||[],row,"No verified REAL trades by rule yet.");
-  $("real-by-catalyst").innerHTML=table(headers,data.real?.by_catalyst||[],row,"No verified REAL trades by catalyst yet.");
-  $("real-by-direction").innerHTML=table(headers,data.real?.by_direction||[],row,"No verified REAL trades by direction yet.");
+function tradeTable(rows){
+  if(!rows.length) return `<div class="empty">No verified REAL closed trades yet.</div>`;
+  return `<table><thead><tr><th>Symbol</th><th>Dir</th><th>Exit</th><th>Net</th><th>Catalyst</th></tr></thead><tbody>${rows.map(r=>`
+    <tr>
+      <td><strong>${esc(r.symbol)}</strong><div class="small">${esc(r.rule_id)}</div></td>
+      <td>${esc(r.direction)}</td>
+      <td>${esc(r.exit_reason)}<div class="small">${when(r.exit_ts)}</div></td>
+      <td class="mono ${cls(r._net_pnl)}">${money(r._net_pnl)}</td>
+      <td>${esc(r.catalyst_type)}<div class="small">${esc(r.headline)}</div></td>
+    </tr>`).join("")}</tbody></table>`;
 }
-function renderShadowGroups(data){
-  const headers=["Segment","priced n"],row=(r)=>`<tr><td>${safe(r.value)}</td><td class="mono">${num(r.priced_n)}</td></tr>`;
-  $("shadow-by-rule").innerHTML=table(headers,data.shadow?.by_rule||[],row,"No priced SHADOW rows by rule yet.");
-  $("shadow-by-catalyst").innerHTML=table(headers,data.shadow?.by_catalyst||[],row,"No priced SHADOW rows by catalyst yet.");
-  $("shadow-by-direction").innerHTML=table(headers,data.shadow?.by_direction||[],row,"No priced SHADOW rows by direction yet.");
+function shadowTable(rows){
+  if(!rows.length) return `<div class="empty">No priced SHADOW observations yet.</div>`;
+  return `<table><thead><tr><th>Symbol</th><th>Dir</th><th>Catalyst</th><th>Rule</th><th>Marks</th></tr></thead><tbody>${rows.map(r=>`
+    <tr>
+      <td><strong>${esc(r.symbol)}</strong><div class="small">${esc(r.source_provider)}</div></td>
+      <td>${esc(r.direction)}</td>
+      <td>${esc(r.catalyst_type)}<div class="small">${esc(r.headline)}</div></td>
+      <td>${esc(r.rule_id)}</td>
+      <td class="mono">5m ${esc(r.price_5m)} · 15m ${esc(r.price_15m)} · 1h ${esc(r.price_1h)} · EOD ${esc(r.price_eod)}</td>
+    </tr>`).join("")}</tbody></table>`;
 }
-function renderOpenPositions(data){
-  $("open-positions").innerHTML=table(["Symbol","Dir","Rule","Entry","Entry time"],data.real?.open_positions||[],(r)=>`<tr><td><strong>${safe(r.symbol)}</strong></td><td>${safe(r.direction)}</td><td>${safe(r.rule_id)}</td><td class="mono">${money(r.entry_price)}</td><td>${time(r.entry_fill_ts)}</td></tr>`,"No open REAL positions.");
+function showPane(which){
+  ACTIVE = which;
+  if(!DATA) return;
+  if(which === "real"){
+    $("detailTitle").textContent = "IBKR / REAL trades";
+    $("detailSub").textContent = "Executable broker-backed rows from agent_trades. Verified closed rows are trusted; open rows are still live.";
+    $("detailBadge").textContent = "REAL";
+    $("detailBody").innerHTML = tradeTable(DATA.real?.recent_closed || []);
+  } else {
+    $("detailTitle").textContent = "SHADOW / RESEARCH observations";
+    $("detailSub").textContent = "Priced forward marks from agent_shadow_trades. Research only — not executable P&L.";
+    $("detailBadge").textContent = "SHADOW";
+    $("detailBody").innerHTML = shadowTable(DATA.shadow?.recent_priced || []);
+  }
+  window.location.hash = which === "real" ? "ibkr" : "shadow";
 }
-function renderDecisionFeed(data){
-  const rows=data.real?.decision_feed||[]; if(!rows.length){$("decision-feed").innerHTML=`<div class="empty">No REAL decisions to show yet.</div>`;return;}
-  $("decision-feed").innerHTML=rows.map((r)=>{const isClosed=r.exit_ts&&r.exit_price!==null&&r.exit_price!==undefined,net=Number(r.net_pnl||0);return `<article class="decision-card"><div class="decision-top"><div><div class="decision-title">${safe(r.symbol)} · ${safe(r.direction)} · ${safe(r.catalyst_type)}</div><div class="small">${safe(r.headline)}</div></div><div class="mono ${isClosed?clsFor(net):"muted"}">${isClosed?money(net):"OPEN"}</div></div><div class="small section-gap">${safe(r.reason,"No reason text captured.")}</div><div class="decision-meta"><span class="chip">rule ${safe(r.rule_id)}</span><span class="chip">entry ${money(r.entry_price)} · ${time(r.entry_fill_ts)}</span><span class="chip">${isClosed?`exit ${money(r.exit_price)} · ${safe(r.exit_reason)} · ${time(r.exit_ts)}`:"exit pending"}</span><span class="chip">MFE ${pct(r.mfe_pct)}</span><span class="chip">MAE ${pct(r.mae_pct)}</span><span class="chip">hold ${safe(r.hold_duration_min)}m</span></div></article>`;}).join("");
+function setStatus(kind, text){
+  $("siteStatus").className = "status " + kind;
+  $("siteStatus").textContent = text;
 }
-function renderShadowVisuals(data){
-  const ladder=data.shadow?.horizon_ladder||[];
-  $("shadow-horizon-ladder").innerHTML=ladder.length?`<div class="ladder">${ladder.map((r)=>{const avg=Number(r.avg_direction_adjusted_return_pct||0),hit=Number(r.hit_rate||0);return `<div class="ladder-card"><div class="ladder-top"><strong>${safe(r.horizon)}</strong><span class="mono ${clsFor(avg)}">${avg.toFixed(3)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(3,Math.min(100,hit))}%"></div></div><div class="small">priced n=${num(r.priced_n)} · hit rate ${pct(hit)}</div></div>`;}).join("")}</div>`:`<div class="empty">No priced SHADOW horizons yet.</div>`;
-  const catalystRows=data.shadow?.net_by_catalyst||[];
-  if(!catalystRows.length){$("shadow-net-catalyst").innerHTML=`<div class="empty">No catalyst-level SHADOW forward marks yet.</div>`;return;}
-  const maxAbs=Math.max(...catalystRows.map((r)=>Math.abs(Number(r.avg_direction_adjusted_return_pct||0))),1);
-  $("shadow-net-catalyst").innerHTML=catalystRows.slice(0,12).map((r)=>barRow(`${safe(r.catalyst)} · priced n=${num(r.priced_n)} · marks=${num(r.mark_n)}`,Number(r.avg_direction_adjusted_return_pct||0),maxAbs,`${Number(r.avg_direction_adjusted_return_pct||0).toFixed(3)}%`,clsFor(r.avg_direction_adjusted_return_pct))).join("");
-}
-function renderRecentShadow(data){
-  $("recent-shadow").innerHTML=table(["Symbol","Dir","Catalyst","Rule","Status","Marks"],data.shadow?.recent_priced||[],(r)=>`<tr><td><strong>${safe(r.symbol)}</strong><div class="small">${safe(r.source_provider)}</div></td><td>${safe(r.direction)}</td><td>${safe(r.catalyst_type)}<div class="small">${safe(r.headline)}</div></td><td>${safe(r.rule_id)}</td><td>${safe(r.status)}</td><td class="mono">5m ${safe(r.price_5m)} · 15m ${safe(r.price_15m)} · 1h ${safe(r.price_1h)} · EOD ${safe(r.price_eod)}</td></tr>`,"No priced SHADOW observations yet.");
-}
-function renderSecurity(data,securityCheck){
-  const apiSecurity=data.security||{},ok=securityCheck?.ok!==false&&apiSecurity.key_role==="anon";
-  $("security-state").innerHTML=`<div><strong>Supabase project:</strong> ${safe(securityCheck?.supabase_project_ref||"alxtkdebryheweqbqlts")}</div><div><strong>Key role:</strong> ${safe(apiSecurity.key_role||securityCheck?.anon_key_role)} ${ok?"✅":"⚠️"}</div><div><strong>RLS verified:</strong> ${safe(apiSecurity.rls_verified_at||securityCheck?.rls_verified_at)}</div><div><strong>agent_trades RLS:</strong> ${apiSecurity.rls_verified_tables?.agent_trades?"enabled ✅":"unknown ⚠️"}</div><div><strong>agent_shadow_trades RLS:</strong> ${apiSecurity.rls_verified_tables?.agent_shadow_trades?"enabled ✅":"unknown ⚠️"}</div><div><strong>Telegram token env:</strong> ${securityCheck?.telegram_token_set?"set":"not set"}</div><div><strong>Telegram chat env:</strong> ${securityCheck?.telegram_chat_id_set?"set":"not set"}</div>`;
-}
-function showError(error){
-  const msg=`Live-agent dashboard is fail-closed: ${error.message}. If this is a CORS error, deploy the NEWSALPHA API route change first so GitHub Pages can read /api/live-agent/*.`;
-  $("security-notice").textContent=msg; $("security-notice").classList.add("show"); $("refresh-status").innerHTML=`<strong>Blocked</strong> · ${new Date().toLocaleTimeString()}`;
-  ["real-metrics","shadow-metrics","equity-curve","pnl-bars","decision-feed","open-positions","shadow-horizon-ladder","shadow-net-catalyst","recent-shadow"].forEach((id)=>{$(id).innerHTML=`<div class="empty">${safe(msg)}</div>`;});
-}
-async function loadDashboard(){
+async function load(){
   try{
-    const security=await fetchJson("/api/live-agent/security").catch((err)=>({ok:false,error:err.message}));
-    const data=await fetchJson("/api/live-agent/dashboard");
-    $("security-notice").classList.remove("show");
-    renderMetricBlocks(data); renderABSummary(data); renderRealCharts(data); renderRealGroups(data); renderShadowGroups(data); renderOpenPositions(data); renderDecisionFeed(data); renderShadowVisuals(data); renderRecentShadow(data); renderSecurity(data,security);
-    state.lastLoadedAt=new Date(); $("refresh-status").innerHTML=`<strong>Live</strong> · updated ${state.lastLoadedAt.toLocaleTimeString()}`;
-  }catch(error){ showError(error); }
+    DATA = await getJson("/api/live-agent/dashboard");
+    renderTop();
+    renderCards();
+    showPane(location.hash === "#shadow" ? "shadow" : ACTIVE);
+    setStatus("ok", `Live · REAL n=${num(DATA.real?.n)} · SHADOW priced n=${num(DATA.shadow?.priced_n)}`);
+  }catch(e){
+    setStatus("bad", "Live agent failed closed");
+    $("topName").textContent = "Data unavailable";
+    $("topEvidence").textContent = "blocked";
+    $("topMetric").textContent = "—";
+    $("topStatus").textContent = "Fail closed";
+    $("detailBody").innerHTML = `<div class="empty">${esc(e.message)}</div>`;
+  }
 }
-document.addEventListener("DOMContentLoaded",()=>{loadDashboard();setInterval(loadDashboard,30000);});
+window.addEventListener("hashchange", () => showPane(location.hash === "#shadow" ? "shadow" : "real"));
+load();
+setInterval(load, 30000);
 </script>
 </body>
 </html>
