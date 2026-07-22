@@ -56,6 +56,7 @@
       transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;cursor:pointer;min-height:245px;
       touch-action:manipulation;user-select:none;
     }
+    .card > *{pointer-events:none}
     .card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--coral),var(--coral2))}
     .card.dark{background:var(--dark);border-color:rgba(255,255,255,.10);color:#f8fafc;box-shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4)}
     .card.dark::before{background:linear-gradient(90deg,var(--blue),var(--blue2))}
