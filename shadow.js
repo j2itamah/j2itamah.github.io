@@ -158,7 +158,7 @@ function _isPricedLocal(row) {
 }
 function setupFilter(shadow) {
   const types = catalystTypesFrom(shadow.by_catalyst, shadow.recent_priced);
-  const counts = Object.fromEntries((shadow.by_catalyst || []).map((r) => [String(r.value || "UNKNOWN"), Number(r.priced_n || 0)]));
+  const counts = Object.fromEntries((shadow.by_catalyst || []).map((r) => [catalystKey(r), Number(r.priced_n || 0)]));
   renderCatalystFilter("catalyst-filter", state.filter, types, counts, "shadow");
   $("filter-copy").textContent = state.filter === "ALL"
     ? "Showing all SHADOW research observations."

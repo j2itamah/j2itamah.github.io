@@ -276,7 +276,7 @@ function renderTpContradictionGuard(real) {
 }
 function setupFilter(real) {
   const types = catalystTypesFrom(real.by_catalyst, real.decision_feed, real.recent_closed, real.open_positions);
-  const counts = Object.fromEntries((real.by_catalyst || []).map((r) => [String(r.value || "UNKNOWN"), Number(r.n || 0)]));
+  const counts = Object.fromEntries((real.by_catalyst || []).map((r) => [catalystKey(r), Number(r.n || 0)]));
   renderCatalystFilter("catalyst-filter", state.filter, types, counts, "real");
   $("filter-copy").textContent = state.filter === "ALL"
     ? "Showing all verified REAL trades."
