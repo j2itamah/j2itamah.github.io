@@ -435,6 +435,8 @@ function renderDecisionFeed(real) {
           ${evidencePanel("Money + venue", [
             evidenceItem("Venue", safe(r.venue)),
             evidenceItem("Money status", safe(r.money_status)),
+            evidenceItem("Symbol", safe(r.symbol)),
+            evidenceItem("Direction", safe(r.direction)),
             evidenceItem("Validation", safe(r.validation_state)),
             evidenceItem("Local trading date", localTradingDate(r)),
             evidenceItem("Quantity", quantityText(r), hasQuantity(r) ? "" : "warn"),
