@@ -1,0 +1,378 @@
+/*
+  Lovable source port — static GitHub Pages adapter.
+  Source references:
+  - trading-beacon: calm cream overview / app cockpit
+  - trade-compass: dark glass analytical detail pages
+
+  This is display-only. Live IDs, API wiring, and Rule 21 filters remain owned by
+  the existing page scripts.
+*/
+
+:root {
+  --lv-radius: 0.875rem;
+  --lv-cream: oklch(0.965 0.012 92);
+  --lv-cream-card: oklch(0.995 0.003 90);
+  --lv-cream-muted: oklch(0.5 0.02 270);
+  --lv-ink: oklch(0.22 0.02 270);
+  --lv-border: oklch(0.88 0.012 95);
+  --lv-ok: oklch(0.58 0.13 150);
+  --lv-ok-soft: oklch(0.92 0.06 150);
+  --lv-bad: oklch(0.58 0.18 25);
+  --lv-bad-soft: oklch(0.93 0.06 25);
+  --lv-warn: oklch(0.72 0.14 75);
+  --lv-warn-soft: oklch(0.94 0.07 80);
+  --lv-info: oklch(0.6 0.07 250);
+  --lv-info-soft: oklch(0.93 0.03 250);
+  --lv-shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -12px rgb(40 30 20 / 0.08);
+
+  --tc-bg: oklch(0.18 0.05 270);
+  --tc-card: oklch(0.24 0.05 268 / 55%);
+  --tc-text: oklch(0.97 0.01 250);
+  --tc-muted: oklch(0.72 0.03 255);
+  --tc-border: oklch(0.95 0.05 250 / 12%);
+  --tc-bull: oklch(0.74 0.17 160);
+  --tc-bear: oklch(0.66 0.24 14);
+  --tc-gold: oklch(0.84 0.16 85);
+  --tc-cyan: oklch(0.82 0.13 210);
+  --tc-violet: oklch(0.7 0.2 295);
+}
+
+body.overview-page {
+  min-height: 100vh;
+  background-color: var(--lv-cream);
+  background-image:
+    radial-gradient(oklch(0.55 0.02 270 / 0.08) 1px, transparent 1px),
+    radial-gradient(820px 420px at 8% -8%, oklch(0.93 0.03 250 / .95), transparent 66%),
+    radial-gradient(680px 380px at 94% 0%, oklch(0.94 0.07 80 / .62), transparent 60%);
+  background-size: 22px 22px, auto, auto;
+  color: var(--lv-ink);
+  font-family: "Spline Sans", Inter, system-ui, sans-serif;
+}
+
+body.overview-page .overview-shell {
+  width: min(1120px, calc(100vw - 32px));
+  padding: 24px 0 56px;
+}
+
+body.overview-page .overview-hero {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  overflow: visible;
+}
+
+body.overview-page .overview-hero::after { display: none; }
+
+body.overview-page .lovable-logo {
+  width: 42px;
+  height: 42px;
+  margin: 0;
+  border-radius: 16px;
+  background: var(--lv-cream-card);
+  box-shadow: var(--lv-shadow-card);
+}
+
+body.overview-page .overview-hero > .eyebrow {
+  margin-top: 18px;
+  color: var(--lv-cream-muted);
+  font-family: "Spline Sans Mono", "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-align: left;
+}
+
+body.overview-page .overview-hero h1 {
+  margin-top: 8px;
+  max-width: 720px;
+  color: var(--lv-ink);
+  font-family: Fraunces, Georgia, serif;
+  font-size: clamp(42px, 7vw, 86px);
+  line-height: .9;
+  letter-spacing: -.065em;
+  text-align: left;
+}
+
+body.overview-page .overview-hero h1 .accent { color: oklch(0.52 0.17 250); }
+
+body.overview-page .overview-hero .subtitle {
+  margin: 16px 0 0;
+  max-width: 690px;
+  color: var(--lv-cream-muted);
+  text-align: left;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+body.overview-page .hero-top {
+  display: block;
+  margin-top: 18px;
+}
+
+body.overview-page .status-stack {
+  justify-content: flex-start;
+}
+
+body.overview-page .soft-pill,
+body.overview-page .tab-link,
+body.overview-page .headline-card,
+body.overview-page .operating-card,
+body.overview-page .overview-panel.light,
+body.overview-page .guide-card,
+body.overview-page .action-card,
+body.overview-page .source-snapshot-card {
+  background: var(--lv-cream-card);
+  border: 1px solid var(--lv-border);
+  box-shadow: var(--lv-shadow-card);
+}
+
+body.overview-page .soft-pill {
+  color: var(--lv-cream-muted);
+  padding: 8px 12px;
+  font-family: "Spline Sans Mono", "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+body.overview-page .soft-pill.good { background: var(--lv-ok-soft); color: oklch(0.38 0.12 150); }
+body.overview-page .soft-pill.warn { background: var(--lv-warn-soft); color: oklch(0.42 0.13 75); }
+body.overview-page .soft-pill.bad { background: var(--lv-bad-soft); color: oklch(0.42 0.18 25); }
+
+body.overview-page .tabs {
+  position: sticky;
+  top: 10px;
+  z-index: 50;
+  display: flex;
+  gap: 6px;
+  margin-top: 24px;
+  padding: 7px;
+  border: 1px solid var(--lv-border);
+  border-radius: 24px;
+  background: var(--lv-cream-card);
+  box-shadow: var(--lv-shadow-card);
+}
+
+body.overview-page .tab-link {
+  flex: 1 1 auto;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: var(--lv-cream-muted);
+  font-family: "Spline Sans Mono", "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  box-shadow: none;
+}
+
+body.overview-page .tab-link:hover,
+body.overview-page .tab-link:focus-visible {
+  background: var(--lv-ink);
+  color: var(--lv-cream-card);
+  transform: none;
+}
+
+body.overview-page .lovable-topbook {
+  margin-top: 24px;
+  border-radius: 28px;
+  border: 1px solid var(--lv-border);
+  background: var(--lv-cream-card);
+  color: var(--lv-ink);
+  box-shadow: var(--lv-shadow-card);
+}
+
+body.overview-page .lovable-topbook .gold-strip {
+  background: linear-gradient(90deg, var(--lv-ok), var(--lv-info), var(--lv-warn));
+}
+
+body.overview-page .lovable-topbook-head h2,
+body.overview-page .launch-card h2,
+body.overview-page .panel-title.serif {
+  color: var(--lv-ink);
+  font-family: Fraunces, Georgia, serif;
+  letter-spacing: -.04em;
+}
+
+body.overview-page .lovable-topbook-head p,
+body.overview-page .headline-sub,
+body.overview-page .operating-sub,
+body.overview-page .metric-line span,
+body.overview-page .small {
+  color: var(--lv-cream-muted);
+}
+
+body.overview-page .lovable-topbook .tab-link {
+  flex: 0 0 auto;
+  border-color: var(--lv-border);
+  background: var(--lv-ink);
+  color: var(--lv-cream-card);
+}
+
+body.overview-page .headline-grid {
+  grid-template-columns: 1.25fr repeat(3, 1fr);
+  padding: 0 24px 24px;
+}
+
+body.overview-page .headline-card {
+  border-radius: 22px;
+  min-height: 144px;
+}
+
+body.overview-page .headline-card.primary {
+  background: linear-gradient(135deg, var(--lv-ok-soft), var(--lv-info-soft));
+}
+
+body.overview-page .headline-label,
+body.overview-page .operating-label,
+body.overview-page .account-truth-title {
+  color: var(--lv-cream-muted);
+  font-family: "Spline Sans Mono", "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: .12em;
+}
+
+body.overview-page .headline-value {
+  color: var(--lv-ink);
+  font-family: "Spline Sans", Inter, system-ui, sans-serif;
+  letter-spacing: -.055em;
+}
+
+body.overview-page .launch-cards {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body.overview-page .launch-card {
+  border-radius: 24px;
+  background: var(--lv-cream-card);
+  color: var(--lv-ink);
+  border: 1px solid var(--lv-border);
+  box-shadow: var(--lv-shadow-card);
+}
+
+body.overview-page .launch-card:first-child {
+  background: var(--lv-ink);
+  color: var(--lv-cream-card);
+}
+
+body.overview-page .launch-card:first-child h2,
+body.overview-page .launch-card:first-child .metric-line strong,
+body.overview-page .launch-card:first-child .go {
+  color: var(--lv-cream-card);
+}
+
+body.overview-page .launch-card.real {
+  background: linear-gradient(180deg, var(--lv-cream-card), var(--lv-ok-soft));
+}
+
+body.overview-page .launch-card.shadow {
+  background: linear-gradient(180deg, var(--lv-cream-card), oklch(0.93 0.05 305));
+}
+
+body.overview-page .overview-panel {
+  border-radius: 24px;
+  border: 1px solid var(--tc-border);
+  background: linear-gradient(135deg, oklch(0.24 0.05 268 / 78%), oklch(0.18 0.05 270 / 94%));
+  box-shadow: 0 8px 32px oklch(0.05 0.02 270 / 42%), inset 0 1px 0 oklch(1 0 0 / 8%);
+}
+
+body.overview-page .overview-panel.light {
+  background: var(--lv-cream-card);
+  border-color: var(--lv-border);
+}
+
+/* Trade Compass detail polish */
+body.real-theme .shell,
+body.shadow-theme .shell,
+body[data-page="sources"] .shell,
+body[data-page="execution"] .shell {
+  width: min(1240px, calc(100vw - 32px));
+}
+
+body.real-theme .topbar,
+body[data-page="sources"] .topbar,
+body[data-page="execution"] .topbar {
+  background: linear-gradient(135deg, oklch(1 0 0 / 10%), oklch(1 0 0 / 3%));
+  border: 1px solid oklch(1 0 0 / 14%);
+  box-shadow: 0 8px 32px oklch(0.05 0.02 270 / 50%), inset 0 1px 0 oklch(1 0 0 / 8%);
+}
+
+body.real-theme .topbar h1,
+body[data-page="sources"] .topbar h1,
+body[data-page="execution"] .topbar h1 {
+  max-width: 920px;
+  font-family: Outfit, Inter, system-ui, sans-serif;
+  font-size: clamp(42px, 7vw, 76px);
+  letter-spacing: -.07em;
+}
+
+body.real-theme .hero-strip,
+body.shadow-theme .hero-strip {
+  align-items: stretch;
+}
+
+body.real-theme .panel,
+body.real-theme .hero-card,
+body.shadow-theme .panel,
+body.shadow-theme .hero-card {
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+body.real-theme .panel:hover,
+body.real-theme .hero-card:hover,
+body.shadow-theme .panel:hover,
+body.shadow-theme .hero-card:hover {
+  transform: translateY(-1px);
+}
+
+body.real-theme .chart-wrap,
+body.real-theme .table-scroll {
+  background: radial-gradient(420px 160px at 50% 0%, oklch(0.82 0.13 210 / .11), transparent 70%), oklch(1 0 0 / 5%);
+}
+
+body.real-theme .decision-card {
+  border-radius: 20px;
+}
+
+body.shadow-theme .topbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: end;
+}
+
+body.shadow-theme .topbar h1 {
+  max-width: 920px;
+}
+
+body.shadow-theme .app-nav {
+  margin: 20px 0;
+}
+
+body.shadow-theme .chart-wrap {
+  background:
+    radial-gradient(520px 170px at 50% 0%, oklch(0.55 0.18 305 / .08), transparent 72%),
+    var(--sr-card-2, #f8f6ef);
+}
+
+/* Remove the now-redundant injected secondary nav on insight pages. */
+#insight-nav { display: none !important; }
+
+@media (max-width: 900px) {
+  body.overview-page .headline-grid,
+  body.overview-page .launch-cards,
+  body.overview-page .operating-strip,
+  body.overview-page .account-truth-strip,
+  body.overview-page .below {
+    grid-template-columns: 1fr;
+  }
+  body.overview-page .tabs { position: static; }
+  body.overview-page .tab-link { flex: 1 1 160px; }
+  body.real-theme .topbar,
+  body.shadow-theme .topbar {
+    grid-template-columns: 1fr;
+  }
+}
