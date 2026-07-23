@@ -106,30 +106,33 @@ body.real-theme .positive { color: var(--green); }
 body.real-theme .negative { color: oklch(0.74 0.16 14); }
 body.shadow-theme {
   background:
-    radial-gradient(oklch(0.55 0.02 270 / 0.08) 1px, transparent 1px),
-    linear-gradient(180deg, oklch(0.985 0.006 92), oklch(0.952 0.014 92));
-  background-size: 22px 22px, auto;
-  --panel: oklch(0.995 0.003 90);
-  --panel-2: oklch(0.965 0.012 92);
-  --border: oklch(0.88 0.012 95);
-  --border-strong: oklch(0.78 0.018 95);
-  --text: oklch(0.22 0.02 270);
-  --muted: oklch(0.5 0.02 270);
-  --green: oklch(0.48 0.13 150);
-  --red: oklch(0.52 0.18 25);
-  --amber: oklch(0.56 0.13 75);
-  --blue: oklch(0.46 0.08 250);
-  --violet: oklch(0.47 0.14 305);
-  --shadow: rgba(40, 30, 20, 0.08);
-  font-family: "Spline Sans", system-ui, sans-serif;
+    radial-gradient(820px 460px at 12% -8%, rgba(196,181,253,.22), transparent 60%),
+    radial-gradient(760px 420px at 92% 2%, rgba(251,191,36,.15), transparent 58%),
+    radial-gradient(680px 520px at 50% 116%, rgba(96,165,250,.12), transparent 60%),
+    linear-gradient(135deg, #090b18 0%, #11162a 50%, #17112b 100%);
+  background-attachment: fixed;
+  background-size: auto;
+  --panel: rgba(14, 21, 38, 0.86);
+  --panel-2: rgba(22, 31, 54, 0.74);
+  --border: rgba(226, 232, 240, 0.13);
+  --border-strong: rgba(226, 232, 240, 0.22);
+  --text: #f4f0ff;
+  --muted: #a9a6bf;
+  --green: #61dba1;
+  --red: #ff7a91;
+  --amber: #f7c948;
+  --blue: #85b9ff;
+  --violet: #c4b5fd;
+  --shadow: rgba(0,0,0,0.42);
+  font-family: "Spline Sans", "Inter", system-ui, sans-serif;
   color: var(--text);
 }
 body.shadow-theme::before {
   background:
-    radial-gradient(700px 280px at 18% 0%, oklch(0.74 0.13 80 / 0.12), transparent 60%),
-    radial-gradient(620px 300px at 88% 6%, oklch(0.55 0.18 305 / 0.09), transparent 62%);
-  background-size: auto;
-  mask-image: none;
+    linear-gradient(rgba(255,255,255,.032) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.024) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.72), transparent 76%);
 }
 .shadow-theme h1,
 .shadow-theme h2,
@@ -139,9 +142,16 @@ body.shadow-theme::before {
   font-family: "Fraunces", Georgia, serif;
   letter-spacing: -0.03em;
 }
-.shadow-theme .backlink { color: oklch(0.42 0.02 270); }
-.shadow-theme .backlink:hover { color: oklch(0.22 0.02 270); }
-.shadow-theme .eyebrow { color: oklch(0.42 0.13 75); }
+.shadow-theme .backlink {
+  color: #cbc4f6;
+  border: 1px solid rgba(255,255,255,.09);
+  background: rgba(255,255,255,.055);
+  border-radius: 999px;
+  padding: 9px 12px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.22);
+}
+.shadow-theme .backlink:hover { color: #ffffff; }
+.shadow-theme .eyebrow { color: #f7d06f; }
 .shadow-theme .subtitle,
 .shadow-theme .small,
 .shadow-theme .footer,
@@ -151,14 +161,15 @@ body.shadow-theme::before {
 .shadow-theme .bar-value,
 .shadow-theme .bar-label { color: var(--muted); }
 .shadow-theme .status-pill {
-  background: oklch(0.995 0.003 90 / 0.88);
-  border-color: var(--border);
+  background: rgba(255,255,255,.07);
+  border-color: rgba(255,255,255,.12);
   color: var(--muted);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -12px rgb(40 30 20 / 0.14);
+  box-shadow: 0 14px 32px rgba(0,0,0,.24);
+  backdrop-filter: blur(16px);
 }
 .shadow-theme .status-pill strong { color: var(--text); }
-.shadow-theme .status-pill.ok { border-color: oklch(0.58 0.13 150 / 0.32); color: oklch(0.38 0.12 150); }
-.shadow-theme .status-pill.bad { border-color: oklch(0.58 0.18 25 / 0.36); color: oklch(0.42 0.18 25); }
+.shadow-theme .status-pill.ok { border-color: rgba(97,219,161,.34); color: #b8f7d8; }
+.shadow-theme .status-pill.bad { border-color: rgba(255,122,145,.40); color: #ffd0d9; }
 .shadow-theme .panel,
 .shadow-theme .hero-card,
 .shadow-theme .metric,
@@ -168,21 +179,25 @@ body.shadow-theme::before {
 .shadow-theme .gauge,
 .shadow-theme .custom-scenario,
 .shadow-theme .filter-pill {
-  background: oklch(0.995 0.003 90 / 0.88);
-  border-color: var(--border);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -12px rgb(40 30 20 / 0.12);
-  backdrop-filter: blur(14px);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.074), rgba(255,255,255,.028)),
+    rgba(13,20,37,.84);
+  border-color: rgba(255,255,255,.11);
+  box-shadow: 0 22px 70px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(18px) saturate(130%);
 }
-.shadow-theme .panel::before { background: linear-gradient(90deg, transparent, oklch(1 0 0 / .8), transparent); }
+.shadow-theme .panel::before { background: linear-gradient(90deg, transparent, rgba(255,255,255,.28), transparent); }
 .shadow-theme .hero-card.primary {
-  background: linear-gradient(135deg, oklch(0.94 0.07 80), oklch(0.93 0.03 250) 48%, oklch(0.995 0.003 90));
-  border-color: oklch(0.74 0.13 80 / 0.36);
+  background:
+    linear-gradient(135deg, rgba(196,181,253,.22), rgba(247,201,72,.13) 48%, rgba(13,20,37,.92));
+  border-color: rgba(196,181,253,.30);
+  box-shadow: 0 0 24px rgba(196,181,253,.18), 0 22px 70px rgba(0,0,0,.34);
 }
 .shadow-theme .metric-label,
 .shadow-theme .cap,
 .shadow-theme th,
 .shadow-theme .n-tag {
-  color: oklch(0.5 0.02 270);
+  color: #a9a6bf;
 }
 .shadow-theme .metric-value,
 .shadow-theme .decision-title,
@@ -191,53 +206,54 @@ body.shadow-theme::before {
 .shadow-theme .gauge-center { color: var(--text); fill: var(--text); }
 .shadow-theme .badge.shadow,
 .shadow-theme .filter-pill.active {
-  background: oklch(0.93 0.05 305);
-  color: oklch(0.42 0.15 305);
-  border-color: oklch(0.55 0.18 305 / 0.28);
+  background: rgba(196,181,253,.17);
+  color: #e7ddff;
+  border-color: rgba(196,181,253,.34);
 }
 .shadow-theme .badge.warn,
 .shadow-theme .chip.warn {
-  background: oklch(0.94 0.07 80);
-  color: oklch(0.42 0.13 75);
-  border-color: oklch(0.74 0.13 80 / 0.28);
+  background: rgba(247,201,72,.15);
+  color: #ffe9a8;
+  border-color: rgba(247,201,72,.28);
 }
 .shadow-theme .filter-pill:hover {
-  background: oklch(0.965 0.012 92);
-  border-color: oklch(0.55 0.18 305 / 0.28);
+  background: rgba(255,255,255,.095);
+  border-color: rgba(196,181,253,.36);
   color: var(--text);
 }
 .shadow-theme .filter-pill .pill-count,
 .shadow-theme .chip,
 .shadow-theme .n-tag {
-  background: oklch(0.93 0.012 95);
-  border-color: var(--border);
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.12);
 }
 .shadow-theme .custom-scenario input {
-  background: oklch(0.965 0.012 92);
+  background: rgba(255,255,255,.08);
   color: var(--text);
-  border-color: var(--border);
+  border-color: rgba(255,255,255,.14);
 }
 .shadow-theme .chart-wrap,
 .shadow-theme .table-scroll,
 .shadow-theme .empty {
-  background: oklch(0.985 0.006 92 / 0.72);
-  border-color: var(--border);
+  background: rgba(4,10,22,.42);
+  border-color: rgba(255,255,255,.09);
   color: var(--muted);
 }
-.shadow-theme th { background: oklch(0.965 0.012 92); }
-.shadow-theme td { background: oklch(0.995 0.003 90 / 0.54); }
-.shadow-theme tbody tr:hover td { background: oklch(0.93 0.03 250 / 0.45); }
-.shadow-theme .bar-track { background: oklch(0.90 0.012 95); }
-.shadow-theme .bar-fill.shadow { background: linear-gradient(90deg, oklch(0.86 0.08 305), oklch(0.55 0.18 305)); }
-.shadow-theme .bar-fill.neg { background: linear-gradient(90deg, oklch(0.58 0.18 25), oklch(0.88 0.08 25)); }
-.shadow-theme .positive { color: oklch(0.42 0.13 150); }
-.shadow-theme .negative { color: oklch(0.45 0.18 25); }
+.shadow-theme th { background: rgba(255,255,255,.045); color: #c6c1da; }
+.shadow-theme td { background: rgba(255,255,255,.038); }
+.shadow-theme tbody tr:hover td { background: rgba(196,181,253,.075); }
+.shadow-theme .bar-track { background: rgba(255,255,255,.11); }
+.shadow-theme .bar-fill.shadow { background: linear-gradient(90deg, #c4b5fd, #8b5cf6); }
+.shadow-theme .bar-fill.neg { background: linear-gradient(90deg, #ff7a91, #f7c948); }
+.shadow-theme .positive { color: #b8f7d8; }
+.shadow-theme .negative { color: #ffbdc8; }
 .shadow-theme .muted { color: var(--muted); }
 .shadow-theme code {
-  background: oklch(0.93 0.012 95);
-  border: 1px solid var(--border);
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
   border-radius: 7px;
   padding: 1px 5px;
+  color: #ede9fe;
 }
 body::before {
   content: "";
