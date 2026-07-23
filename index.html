@@ -470,17 +470,49 @@ function renderCurve(data){
     button.classList.toggle("active", button.getAttribute("data-range") === CURVE_RANGE);
   });
 }
+const EXPECTED_CATALYST_LANES = [
+  { key:"sec_filings", label:"SEC filings", match:["SEC_FILING","filing"] },
+  { key:"eight_k_202", label:"8-K item 2.02", match:["ITEM_2_02","2.02","8-K"] },
+  { key:"company_news", label:"Company news", match:["COMPANY_NEWS","company_news","press_release","company article"] },
+  { key:"crypto_news", label:"Crypto news", match:["CRYPTO_NEWS","crypto_news"] },
+  { key:"x", label:"X", match:["X","cryptolab_x","x_sentiment","x_bearer"] },
+  { key:"macro", label:"Macro", match:["MACRO","macro","economic","FOMC","CPI"] },
+  { key:"movers", label:"Movers", match:["MOVER","mover","fmp_crypto_mover","momentum"] },
+];
+function laneMatches(row, lane){
+  const haystack = [
+    row?.value, row?.catalyst_type, row?.catalyst_subtype, row?.source, row?.source_provider, row?.rule_id
+  ].filter(Boolean).join(" ").toLowerCase();
+  return lane.match.some((term) => haystack.includes(String(term).toLowerCase()));
+}
 function renderCatalysts(data){
-  const rows = [];
-  for(const row of data?.real?.by_catalyst || []) rows.push({label:`REAL ${row.value}`, n:Number(row.n||0), metric:Number(row.net_pnl||0), text:`${money(row.net_pnl)} · win ${Number(row.win_rate||0).toFixed(1)}% · n=${num(row.n)}`});
-  for(const row of data?.shadow?.by_catalyst || []) rows.push({label:`SHADOW ${row.value}`, n:Number(row.priced_n||row.n||0), metric:Number(row.priced_n||row.n||0), text:`priced n=${num(row.priced_n||row.n||0)} · research only`});
-  if(!rows.length){ $("catalystBars").innerHTML = `<div class="warning">ℹ️ DATA UNAVAILABLE: no catalyst breakdown received from backend.</div>`; return; }
-  const max = Math.max(...rows.map(r=>Math.abs(r.metric)||r.n),1);
-  $("catalystBars").innerHTML = rows.slice(0,8).map((r)=>{
-    const value = Math.abs(r.metric)||r.n;
-    const width = Math.max(3, Math.round(value/max*100));
-    const neg = r.metric < 0 ? " neg" : "";
-    return `<div class="bar"><div class="bar-label" title="${esc(r.label)}">${esc(r.label)}</div><div class="bar-track"><div class="bar-fill${neg}" style="width:${width}%"></div></div><div class="bar-value">${esc(r.text)}</div></div>`;
+  const realRows = data?.real?.by_catalyst || [];
+  const shadowRows = data?.shadow?.by_catalyst || [];
+  const laneRows = EXPECTED_CATALYST_LANES.map((lane) => {
+    const realMatches = realRows.filter((row) => laneMatches(row, lane));
+    const shadowMatches = shadowRows.filter((row) => laneMatches(row, lane));
+    const realN = realMatches.reduce((sum,row)=>sum+Number(row.n||0),0);
+    const realNet = realMatches.reduce((sum,row)=>sum+Number(row.net_pnl||0),0);
+    const weightedWins = realMatches.reduce((sum,row)=>sum+Number(row.win_rate||0)*Number(row.n||0),0);
+    const winRate = realN ? weightedWins / realN : null;
+    const shadowN = shadowMatches.reduce((sum,row)=>sum+Number(row.priced_n||row.n||0),0);
+    const expectancy = realN ? realNet / realN : null;
+    const status = realN || shadowN ? "observed" : "DATA UNAVAILABLE";
+    return { ...lane, realN, realNet, winRate, shadowN, expectancy, status };
+  });
+  const max = Math.max(...laneRows.map((r)=>Math.abs(r.expectancy ?? r.realNet) || r.realN || r.shadowN),1);
+  $("catalystBars").innerHTML = laneRows.map((r)=>{
+    const metric = r.expectancy ?? r.realNet;
+    const value = Math.abs(metric) || r.realN || r.shadowN;
+    const width = r.status === "DATA UNAVAILABLE" ? 5 : Math.max(5, Math.round(value/max*100));
+    const neg = Number(metric || 0) < 0 ? " neg" : "";
+    const statusIcon = r.status === "observed" ? "✅" : "⚠️";
+    const text = r.realN
+      ? `REAL n=${num(r.realN)} · win ${Number(r.winRate||0).toFixed(1)}% · expectancy ${money(r.expectancy)} · SHADOW priced n=${num(r.shadowN)}`
+      : r.shadowN
+        ? `REAL n=0 · SHADOW priced n=${num(r.shadowN)} · expectancy DATA UNAVAILABLE`
+        : `REAL n=0 · SHADOW priced n=0 · DATA UNAVAILABLE`;
+    return `<div class="bar"><div class="bar-label" title="${esc(r.label)}">${statusIcon} ${esc(r.label)}</div><div class="bar-track"><div class="bar-fill${neg}" style="width:${width}%"></div></div><div class="bar-value">${esc(text)}</div></div>`;
   }).join("");
 }
 function renderTop(){
