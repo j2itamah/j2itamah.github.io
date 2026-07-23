@@ -232,6 +232,48 @@ function realForFilter(real) {
     decision_feed: enrichRealDecisionRows(real, real.decision_feed || []).filter(rowMatchesFilter),
   };
 }
+function contradictionGuardRows(real) {
+  const seen = new Set();
+  const rows = [];
+  for (const row of [].concat(real.recent_closed || [], real.recent_costed_closed || [], real.decision_feed || [])) {
+    if (!row) continue;
+    const key = realRowKey(row);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    rows.push(row);
+  }
+  return rows;
+}
+function renderTpContradictionGuard(real) {
+  const target = $("tp-contradiction-state");
+  if (!target) return;
+  const rows = contradictionGuardRows(real);
+  const tpRows = rows.filter((row) => String(row?.exit_reason || "").toUpperCase() === "TP");
+  const pricedTpRows = tpRows.filter((row) => Number.isFinite(Number(row?.entry_price)) && Number.isFinite(Number(row?.exit_price)));
+  const contradictions = pricedTpRows
+    .map((row) => ({ row, warning: tpContradiction(row) }))
+    .filter((item) => item.warning);
+  const missingPriceRows = tpRows.length - pricedTpRows.length;
+  const summary = `<div class="grid three">
+    ${metric("TP rows checked", num(pricedTpRows.length), pricedTpRows.length, `${num(missingPriceRows)} TP row(s) missing entry/exit price evidence`)}
+    ${metric("Contradictions", `<span class="${contradictions.length ? "negative" : "positive"}">${num(contradictions.length)}</span>`, contradictions.length, contradictions.length ? "requires bracket/fill review" : "no TP-below-entry / TP-above-entry contradictions found")}
+    ${metric("Guard behavior", "visible", tpRows.length, "Any contradiction is shown here and repeated inside the trade card.")}
+  </div>`;
+  if (!tpRows.length) {
+    target.innerHTML = `${summary}<div class="empty section-gap">No take-profit exits are present in the current REAL filter. This guard stays visible so TP contradictions cannot be silently hidden.</div>`;
+    return;
+  }
+  if (!contradictions.length) {
+    target.innerHTML = `${summary}${missingPriceRows ? `<div class="warning-row section-gap">⚠️ ${num(missingPriceRows)} TP row(s) could not be checked because entry or exit price is unavailable. They are not treated as clean contradiction evidence.</div>` : `<div class="warning-row ok section-gap">✅ No TP contradiction found across ${num(pricedTpRows.length)} priced TP exit(s).</div>`}`;
+    return;
+  }
+  target.innerHTML = `${summary}<div class="section-gap">${contradictions.map(({ row, warning }) => `
+    <div class="warning-row boundary-error">
+      🚨 ${esc(warning)}
+      <div class="small">trade ${safe(row.trade_id || row.id || realRowKey(row))} · ${safe(row.symbol)} ${safe(row.direction)} · entry ${moneyOrUnavailable(row.entry_price)} · exit ${moneyOrUnavailable(row.exit_price)} · exited ${timestampOrUnavailable(row.exit_ts)}</div>
+    </div>
+  `).join("")}</div>`;
+}
 function setupFilter(real) {
   const types = catalystTypesFrom(real.by_catalyst, real.decision_feed, real.recent_closed, real.open_positions);
   const counts = Object.fromEntries((real.by_catalyst || []).map((r) => [String(r.value || "UNKNOWN"), Number(r.n || 0)]));
@@ -252,6 +294,7 @@ function renderAll() {
   renderDataContractPanel("data-contract-state", state.raw || {}, state.topData || {}, { population: "REAL", venue: "IBKR/PAPER", table: "public.agent_trades" });
   renderHero(real); renderMetrics(real); renderPnlBars(real); renderGauges(real);
   renderEquity(real); renderGroups(real); renderOpenPositions(real);
+  renderTpContradictionGuard(real);
   renderCryptoStatus(real); renderDecisionFeed(real); renderReconciliation(real);
   $("refresh-status").className = "status-pill ok";
   const filterText = state.filter === "ALL" ? "" : ` · ${catalystDisplay(state.filter)}`;
@@ -516,7 +559,7 @@ function showError(error) {
   $("refresh-status").className = "status-pill bad";
   $("refresh-status").innerHTML = `<strong>Blocked</strong> · ${new Date().toLocaleTimeString()}`;
   ["data-contract-state", "real-metrics", "pnl-bars", "win-gauges", "equity-curve", "real-by-rule", "real-by-catalyst",
-    "real-by-direction", "open-positions", "decision-feed", "crypto-status"].forEach((id) => {
+    "real-by-direction", "open-positions", "decision-feed", "crypto-status", "tp-contradiction-state"].forEach((id) => {
     if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`;
   });
 }

@@ -85,6 +85,11 @@
       <div class="grid three" id="real-metrics"><div class="loading">Loading verified metrics…</div></div>
     </section>
 
+    <section class="panel section-gap" id="tp-contradiction-panel">
+      <div class="panel-header"><h2 class="panel-title">TP contradiction guard</h2><span class="badge warn">take-profit sanity</span></div>
+      <div id="tp-contradiction-state" class="small">Checking take-profit exits against entry prices…</div>
+    </section>
+
     <section class="grid two section-gap">
       <div class="panel">
         <div class="panel-header"><h2 class="panel-title">Verified net P&L curve</h2><span class="badge real">closed n</span></div>
@@ -146,6 +151,6 @@
   </main>
   <script>window.API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";</script>
   <script src="./cockpit-common.js?v=20260723-readable-contract"></script>
-  <script src="./real.js?v=20260723-symbol-direction-receipt"></script>
+  <script src="./real.js?v=20260723-tp-contradiction-guard"></script>
 </body>
 </html>
