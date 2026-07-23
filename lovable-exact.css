@@ -284,6 +284,39 @@ body.overview-page .overview-panel.light {
   border-color: var(--lv-border);
 }
 
+body.overview-page .overview-panel:not(.light) {
+  color: var(--tc-text);
+}
+
+body.overview-page .overview-panel:not(.light) .panel-title,
+body.overview-page .overview-panel:not(.light) .panel-title.serif,
+body.overview-page .overview-panel:not(.light) .metric-value,
+body.overview-page .overview-panel:not(.light) .bar-label,
+body.overview-page .overview-panel:not(.light) .catalyst-name,
+body.overview-page .overview-panel:not(.light) .legend-key {
+  color: var(--tc-text);
+}
+
+body.overview-page .overview-panel:not(.light) .small,
+body.overview-page .overview-panel:not(.light) .metric-label,
+body.overview-page .overview-panel:not(.light) .metric-sub,
+body.overview-page .overview-panel:not(.light) .bar-value,
+body.overview-page .overview-panel:not(.light) .catalyst-stat,
+body.overview-page .overview-panel:not(.light) .catalyst-sub,
+body.overview-page .overview-panel:not(.light) .curve-legend {
+  color: var(--tc-muted);
+}
+
+body.overview-page .overview-panel:not(.light) code {
+  color: oklch(0.82 0.13 210);
+  background: oklch(1 0 0 / 7%);
+  border-color: oklch(1 0 0 / 10%);
+}
+
+body.overview-page .curve-panel {
+  margin-top: 16px;
+}
+
 /* Trade Compass detail polish */
 body.real-theme .shell,
 body.shadow-theme .shell,

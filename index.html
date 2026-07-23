@@ -769,7 +769,7 @@
       .lovable-landing .overview-hero h1 { font-size: clamp(38px, 15vw, 58px); }
     }
   </style>
-  <link rel="stylesheet" href="./lovable-exact.css?v=20260723-exact-port-1" />
+  <link rel="stylesheet" href="./lovable-exact.css?v=20260723-exact-port-2" />
 </head>
 <body class="overview-page">
   <main class="overview-shell lovable-landing">
@@ -839,84 +839,6 @@
       </div>
       </section>
 
-      <section class="launch-cards" aria-label="Primary dashboard cards">
-        <a class="launch-card" href="#top-book" aria-label="Jump to the top book daily snapshot">
-          <span class="badge warn">TOP BOOK</span>
-          <h2>Daily snapshot</h2>
-          <p>One card for the current best answer: account status, net P&amp;L, trade spend, open risk, and Jon/Codex ownership.</p>
-          <div class="metric-line"><span>Primary source</span><strong>verified rows</strong></div>
-          <div class="metric-line"><span>Style</span><strong>10-sec read</strong></div>
-          <span class="go">Jump to top book ↑</span>
-        </a>
-        <a class="launch-card real" id="realCard" href="./real.html" aria-label="Open the IBKR REAL verified cockpit">
-          <span class="badge real">IBKR / NDAX</span>
-          <h2>Executable trades</h2>
-          <p>Verified, costed, broker-backed fills from <code>agent_trades</code>. IBKR is live/paper; NDAX stays gated until enabled.</p>
-          <div class="metric-line"><span>Verified closed</span><strong id="cardRealN">—</strong></div>
-          <div class="metric-line"><span>Open positions</span><strong id="cardRealOpen">—</strong></div>
-          <div class="metric-line"><span>Net P&L</span><strong id="cardRealNet">—</strong></div>
-          <span class="go">Open IBKR cockpit →</span>
-        </a>
-        <a class="launch-card shadow" id="shadowCard" href="./shadow.html" aria-label="Open the SHADOW research cockpit">
-          <span class="badge shadow">SHADOW / RESEARCH</span>
-          <h2>Research observations</h2>
-          <p>Forward marks and modeled scenarios from <code>agent_shadow_trades</code>. Research only — not broker P&L.</p>
-          <div class="metric-line"><span>Complete evidence n</span><strong id="cardShadowN">—</strong></div>
-          <div class="metric-line"><span>Modeled rows</span><strong id="cardShadowModeled">—</strong></div>
-          <div class="metric-line"><span>Best horizon</span><strong id="cardShadowHorizon">—</strong></div>
-          <span class="go">Open SHADOW cockpit →</span>
-        </a>
-      </section>
-
-      <div class="operating-strip" id="operatingStrip" aria-label="Operating picture">
-        <div class="operating-card"><div class="operating-label">Safety</div><div class="operating-value">Checking…</div><div class="operating-sub">verified-only public accounting</div></div>
-        <div class="operating-card"><div class="operating-label">Broker</div><div class="operating-value">Checking…</div><div class="operating-sub">IBKR / NDAX state</div></div>
-        <div class="operating-card"><div class="operating-label">Sources</div><div class="operating-value">Checking…</div><div class="operating-sub">coverage and freshness</div></div>
-        <div class="operating-card"><div class="operating-label">Owner</div><div class="operating-value">Checking…</div><div class="operating-sub">who needs to act</div></div>
-      </div>
-      <div id="capitalAlert" class="capital-alert" role="status" aria-live="polite">
-        <div class="capital-alert-icon">💵</div>
-        <div>
-          <div class="capital-alert-title">Checking broker cash/equity snapshot…</div>
-          <div class="capital-alert-copy">If live broker balances are missing, the dashboard uses trade-level notional only and says so.</div>
-        </div>
-        <a href="./real.html">Open REAL cockpit →</a>
-      </div>
-
-      <div class="account-truth-title">Account capital truth <span>— live broker balances fail closed; trade-level sizing proof stays separate</span></div>
-      <div class="account-truth-strip" id="accountTruthStrip" aria-label="Account capital truth">
-        <div class="operating-card warn"><div class="operating-label">Cash</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
-        <div class="operating-card warn"><div class="operating-label">Equity</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
-        <div class="operating-card warn"><div class="operating-label">Buying power</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
-        <div class="operating-card info"><div class="operating-label">Sizing evidence</div><div class="operating-value">Checking…</div><div class="operating-sub">entry-time proof from trade rows</div></div>
-      </div>
-
-      <div class="reader-guide" aria-label="Plain English metric guide">
-        <div class="guide-card">
-          <strong>Net P&amp;L</strong>
-          <span>What is left after broker commissions. If commission proof is missing, the trade is excluded fail-closed.</span>
-        </div>
-        <div class="guide-card">
-          <strong>Commission drag</strong>
-          <span>How much fees ate from gross P&amp;L. High drag means the strategy must win by more just to break even.</span>
-        </div>
-        <div class="guide-card">
-          <strong>Capital deployed</strong>
-          <span>Dollars actually committed by verified rows. Broker cash/equity only appears when a trusted snapshot exists.</span>
-        </div>
-        <div class="guide-card">
-          <strong>Clean n</strong>
-          <span>The sample size that is allowed to count. Pending, stale, quarantined, or unpriced rows stay diagnostic.</span>
-        </div>
-      </div>
-
-      <div class="next-actions" id="nextActions" aria-label="Today next actions">
-        <div class="action-card info">
-          <div class="action-kicker">Next click <span class="action-state">Checking…</span></div>
-          <div class="action-title">Loading daily action cards…</div>
-          <div class="action-copy">These cards will point to the page that best explains today’s evidence.</div>
-        </div>
-      </div>
     </section>
 
     <section class="overview-panel curve-panel" aria-label="REAL gross versus net P&L curve">
@@ -955,9 +877,88 @@
           <h2 class="panel-title serif">Needs Jon’s attention <span class="info-tip" tabindex="0" role="button" aria-label="Help: attention panel" data-help="These are visible safety/data warnings: stale sources, gateway issues, missing brackets, database mismatch, or other conditions that should not be silent.">?</span></h2>
           <span class="badge warn">visible warnings</span>
         </div>
-        <div id="warnings" class="warning-list"><div class="loading">Checking warnings…</div></div>
+      <div id="warnings" class="warning-list"><div class="loading">Checking warnings…</div></div>
       </div>
     </section>
+
+    <section class="launch-cards" aria-label="Primary dashboard cards">
+      <a class="launch-card" href="#top-book" aria-label="Jump to the top book daily snapshot">
+        <span class="badge warn">TOP BOOK</span>
+        <h2>Daily snapshot</h2>
+        <p>One card for the current best answer: account status, net P&amp;L, trade spend, open risk, and Jon/Codex ownership.</p>
+        <div class="metric-line"><span>Primary source</span><strong>verified rows</strong></div>
+        <div class="metric-line"><span>Style</span><strong>10-sec read</strong></div>
+        <span class="go">Jump to top book ↑</span>
+      </a>
+      <a class="launch-card real" id="realCard" href="./real.html" aria-label="Open the IBKR REAL verified cockpit">
+        <span class="badge real">IBKR / NDAX</span>
+        <h2>Executable trades</h2>
+        <p>Verified, costed, broker-backed fills from <code>agent_trades</code>. IBKR is live/paper; NDAX stays gated until enabled.</p>
+        <div class="metric-line"><span>Verified closed</span><strong id="cardRealN">—</strong></div>
+        <div class="metric-line"><span>Open positions</span><strong id="cardRealOpen">—</strong></div>
+        <div class="metric-line"><span>Net P&L</span><strong id="cardRealNet">—</strong></div>
+        <span class="go">Open IBKR cockpit →</span>
+      </a>
+      <a class="launch-card shadow" id="shadowCard" href="./shadow.html" aria-label="Open the SHADOW research cockpit">
+        <span class="badge shadow">SHADOW / RESEARCH</span>
+        <h2>Research observations</h2>
+        <p>Forward marks and modeled scenarios from <code>agent_shadow_trades</code>. Research only — not broker P&L.</p>
+        <div class="metric-line"><span>Complete evidence n</span><strong id="cardShadowN">—</strong></div>
+        <div class="metric-line"><span>Modeled rows</span><strong id="cardShadowModeled">—</strong></div>
+        <div class="metric-line"><span>Best horizon</span><strong id="cardShadowHorizon">—</strong></div>
+        <span class="go">Open SHADOW cockpit →</span>
+      </a>
+    </section>
+
+    <div class="operating-strip" id="operatingStrip" aria-label="Operating picture">
+      <div class="operating-card"><div class="operating-label">Safety</div><div class="operating-value">Checking…</div><div class="operating-sub">verified-only public accounting</div></div>
+      <div class="operating-card"><div class="operating-label">Broker</div><div class="operating-value">Checking…</div><div class="operating-sub">IBKR / NDAX state</div></div>
+      <div class="operating-card"><div class="operating-label">Sources</div><div class="operating-value">Checking…</div><div class="operating-sub">coverage and freshness</div></div>
+      <div class="operating-card"><div class="operating-label">Owner</div><div class="operating-value">Checking…</div><div class="operating-sub">who needs to act</div></div>
+    </div>
+    <div id="capitalAlert" class="capital-alert" role="status" aria-live="polite">
+      <div class="capital-alert-icon">💵</div>
+      <div>
+        <div class="capital-alert-title">Checking broker cash/equity snapshot…</div>
+        <div class="capital-alert-copy">If live broker balances are missing, the dashboard uses trade-level notional only and says so.</div>
+      </div>
+      <a href="./real.html">Open REAL cockpit →</a>
+    </div>
+
+    <div class="account-truth-title">Account capital truth <span>— live broker balances fail closed; trade-level sizing proof stays separate</span></div>
+    <div class="account-truth-strip" id="accountTruthStrip" aria-label="Account capital truth">
+      <div class="operating-card warn"><div class="operating-label">Cash</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
+      <div class="operating-card warn"><div class="operating-label">Equity</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
+      <div class="operating-card warn"><div class="operating-label">Buying power</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
+      <div class="operating-card info"><div class="operating-label">Sizing evidence</div><div class="operating-value">Checking…</div><div class="operating-sub">entry-time proof from trade rows</div></div>
+    </div>
+
+    <div class="reader-guide" aria-label="Plain English metric guide">
+      <div class="guide-card">
+        <strong>Net P&amp;L</strong>
+        <span>What is left after broker commissions. If commission proof is missing, the trade is excluded fail-closed.</span>
+      </div>
+      <div class="guide-card">
+        <strong>Commission drag</strong>
+        <span>How much fees ate from gross P&amp;L. High drag means the strategy must win by more just to break even.</span>
+      </div>
+      <div class="guide-card">
+        <strong>Capital deployed</strong>
+        <span>Dollars actually committed by verified rows. Broker cash/equity only appears when a trusted snapshot exists.</span>
+      </div>
+      <div class="guide-card">
+        <strong>Clean n</strong>
+        <span>The sample size that is allowed to count. Pending, stale, quarantined, or unpriced rows stay diagnostic.</span>
+      </div>
+    </div>
+
+    <div class="next-actions" id="nextActions" aria-label="Today next actions">
+      <div class="action-card info">
+        <div class="action-kicker">Next click <span class="action-state">Checking…</span></div>
+        <div class="action-title">Loading daily action cards…</div>
+        <div class="action-copy">These cards will point to the page that best explains today’s evidence.</div>
+      </div>
+    </div>
 
     <section class="overview-panel section-gap" aria-label="Source coverage snapshot">
       <div class="panel-header">
