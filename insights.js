@@ -201,17 +201,29 @@
       const row = map[keyOf(name)];
       const observedN = sourceObservationCount(row);
       const hasRows = observedN > 0;
-      const stateText = hasRows ? "HEALTHY" : (row ? "DOWN / ZERO COVERAGE" : "DATA UNAVAILABLE");
-      const stateCls = hasRows ? "healthy" : (row ? "down" : "degraded");
+      const rawStatus = String(row?.status || row?.data_freshness || row?.last_failure_reason || row?.last_failure || "").toUpperCase();
+      const failureLike = /\\b(DOWN|ERROR|FAIL|FAILED|UNAUTHORIZED|FORBIDDEN|TIMEOUT|EXCEPTION)\\b/.test(rawStatus);
+      const stateText = hasRows
+        ? "HEALTHY"
+        : row
+          ? (failureLike ? "DOWN / FAILING" : "ZERO COVERAGE")
+          : "DATA UNAVAILABLE";
+      const stateCls = hasRows ? "healthy" : (failureLike ? "down" : "degraded");
+      const zeroCopy = row
+        ? (failureLike
+          ? "Provider/status evidence indicates failure; rows remain excluded until recovered."
+          : "No observed rows in this dashboard window. This may mean disabled, not triggered, or not yet covered — not necessarily provider down.")
+        : "Expected source is missing from the live source-observability rows.";
       const providers = (row?.observed_providers || []).slice(0, 4).map((provider) => `<span class="provider-chip">${htmlSafe(provider.value)} · n=${number(provider.n)}</span>`).join("");
       return `<div class="metric source-card ${stateCls}">
         <div class="metric-label">${htmlSafe(name)}</div>
         <div class="metric-value" style="font-size:22px">${htmlSafe(stateText)}</div>
         <div class="source-health-line">
-          <span class="badge ${hasRows ? "real" : "warn"}">${hasRows ? "✅ rows observed" : "⚠ zero rows"}</span>
+          <span class="badge ${hasRows ? "real" : "warn"}">${hasRows ? "✅ rows observed" : "⚠ no trusted rows"}</span>
           <span class="badge info">today n=${number(row?.events_today)}</span>
           <span class="badge info">window n=${number(observedN)}</span>
         </div>
+        <div class="metric-sub">${htmlSafe(zeroCopy)}</div>
         <div class="metric-sub">REAL eligible ${number(row?.real_eligible_n)} · SHADOW eligible ${number(row?.shadow_eligible_n)}</div>
         <div class="metric-sub">last success ${row?.last_successful_fetch ? whenLocal(row.last_successful_fetch) : "DATA UNAVAILABLE"} · freshness ${htmlSafe(readableCode(row?.data_freshness || "DATA_UNAVAILABLE"))}</div>
         <div class="metric-sub">rate limit ${htmlSafe(readableCode(row?.rate_limit_usage || "NOT_EXPOSED"))} · status ${htmlSafe(readableCode(row?.status || "DATA_UNAVAILABLE"))}</div>
