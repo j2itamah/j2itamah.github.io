@@ -1216,6 +1216,8 @@
         "/sources": "./sources.html",
         "/execution": "./execution.html",
       };
+      if (href && href.startsWith("/real?")) return `./real.html?${href.split("?")[1]}`;
+      if (href && href.startsWith("/shadow?")) return `./shadow.html?${href.split("?")[1]}`;
       return routes[href] || href || "./index.html";
     }
     function operatingCard(label, value, sub, level = "warn") {
@@ -1796,8 +1798,8 @@
       return buckets;
     }
     function journalRow(date, realDay, shadowDay) {
-      const realHref = `/real?date=${encodeURIComponent(date)}`;
-      const shadowHref = `/shadow?date=${encodeURIComponent(date)}`;
+      const realHref = dashboardHref(`/real?date=${encodeURIComponent(date)}`);
+      const shadowHref = dashboardHref(`/shadow?date=${encodeURIComponent(date)}`);
       const realEmpty = !realDay || !realDay.n;
       const shadowEmpty = !shadowDay || (!shadowDay.priced && !Number.isFinite(shadowDay.fixedNet) && !Number.isFinite(shadowDay.compoundNet));
       const shadowModeled = Number.isFinite(shadowDay?.fixedNet) || Number.isFinite(shadowDay?.compoundNet);
