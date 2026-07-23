@@ -1004,7 +1004,7 @@
     </div>
   </main>
   <script>window.API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";</script>
-  <script src="./cockpit-common.js?v=20260723-readable-contract"></script>
+  <script src="./cockpit-common.js?v=20260723-catalyst-source-trust"></script>
   <script>
     const REAL_TZ = "America/New_York";
     const LOCAL_TZ = "America/Edmonton";
@@ -1541,7 +1541,7 @@
             REAL eligible ${num(row?.real_eligible_n)} · SHADOW eligible ${num(row?.shadow_eligible_n)}<br>
             Last success ${row?.last_successful_fetch ? when(row.last_successful_fetch) : "DATA UNAVAILABLE"}
           </div>
-          <div class="source-snapshot-footer">${esc(state.reason)}${state.raw ? `<span class="raw-code">raw: ${esc(state.raw)}</span>` : ""}</div>
+          <div class="source-snapshot-footer">${esc(state.reason)}${state.raw ? `<span class="raw-code">${esc(state.raw)}</span>` : ""}</div>
         </div>`;
     }
     function renderSourceSnapshot(data) {

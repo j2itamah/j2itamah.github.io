@@ -24,14 +24,36 @@ function safe(v, fallback = "—") {
 function when(v) { if (!v) return "—"; try { return new Date(v).toLocaleString(); } catch { return esc(v); } }
 function shortTime(v) { if (!v) return "—"; try { return new Date(v).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); } catch { return esc(v); } }
 function shortSource(v) { if (!v) return "no source"; const r = String(v); return r.includes(":") ? r.split(":").slice(0, 2).join(":") : r; }
-function catalystKey(row) { return String(row?.catalyst_type || row?.value || "UNKNOWN"); }
+function normalizeCatalystKey(value) {
+  const raw = String(value || "UNKNOWN").trim().toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  if (!raw || raw === "unknown") return "UNKNOWN";
+  if (["sec", "sec_filing", "sec_filings", "filings", "8_k", "8k", "edgar", "edgar_filing"].includes(raw)) return "filing";
+  if (["crypto", "crypto_catalyst", "crypto_news", "crypto_rss", "tokenpost", "coindesk", "decrypt", "the_block"].includes(raw)) return "crypto_news";
+  if (["company", "company_news", "press_release", "business_wire", "pr_newswire", "globenewswire", "company_ir"].includes(raw)) return "company_news";
+  if (["halt", "trading_halt", "halts"].includes(raw)) return "trading_halt";
+  if (["listing", "exchange_listing", "exchange_listings", "coinbase_listing", "binance_listing"].includes(raw)) return "exchange_listing";
+  if (["x", "twitter", "x_sentiment", "cryptolab_x"].includes(raw)) return "cryptolab_x";
+  if (["mover", "movers", "crypto_mover", "fmp_crypto_mover"].includes(raw)) return "movers";
+  if (["macro", "economic", "economic_calendar", "fomc", "cpi", "fed", "federal_reserve", "bls"].includes(raw)) return "macro";
+  if (["article", "articles", "headline", "headlines"].includes(raw)) return "news";
+  return raw;
+}
+function catalystKey(row) { return normalizeCatalystKey(row?.catalyst_type || row?.value || row?.catalyst || row?.source_type || "UNKNOWN"); }
 function catalystDisplay(value) {
-  const raw = String(value || "UNKNOWN");
+  const raw = value === "ALL" ? "ALL" : normalizeCatalystKey(value);
   const labels = {
     ALL: "All",
     filing: "Filing",
+    company_news: "Company news",
     crypto_news: "Crypto news",
     trading_halt: "Trading halt",
+    exchange_listing: "Exchange listing",
+    cryptolab_x: "X / CryptoLab",
+    x_sentiment: "X / CryptoLab",
+    movers: "Movers",
+    fmp_crypto_mover: "Movers",
     news: "News",
     macro: "Macro",
     UNKNOWN: "Unknown",
@@ -64,7 +86,7 @@ function rawCodeDetail(value) {
   return readable === raw ? "" : `raw: ${esc(raw)}`;
 }
 function catalystTypesFrom(...lists) {
-  const preferred = ["filing", "crypto_news", "trading_halt", "news", "macro"];
+  const preferred = ["filing", "company_news", "crypto_news", "trading_halt", "exchange_listing", "macro", "movers", "cryptolab_x", "news"];
   const found = new Set();
   for (const list of lists) {
     for (const row of list || []) {
