@@ -77,6 +77,27 @@ function realCatalysts(data) {
     expectancy: edgeNum(row.n) ? edgeNum(row.net_pnl) / edgeNum(row.n) : 0,
   })).sort((a, b) => b.expectancy - a.expectancy);
 }
+function shadowHorizonSlices(data) {
+  return shadowDetails(data).flatMap((row) => (row.ladder || []).map((horizon) => ({
+    catalyst: row.label,
+    catalystKey: row.key,
+    horizon: horizon.horizon || "UNKNOWN",
+    n: edgeNum(horizon.priced_n),
+    avg_return: avgReturn(horizon),
+    hit_rate: edgeNum(horizon.hit_rate),
+  }))).filter((row) => row.n > 0);
+}
+function eligibleShadowHorizonSlices(data) {
+  return shadowHorizonSlices(data).filter((row) => row.n >= EDGE_MIN_N);
+}
+function sliceLabel(row) {
+  return `${row.catalyst} ${row.horizon}: n=${num(row.n)}`;
+}
+function listWithOverflow(items, max = 8) {
+  if (!items.length) return "";
+  const visible = items.slice(0, max).map(esc).join("<br>");
+  return items.length > max ? `${visible}<br>+${num(items.length - max)} more shown in the heatmap` : visible;
+}
 function maxAbs(values) {
   return Math.max(1, ...values.map((value) => Math.abs(edgeNum(value))));
 }
@@ -124,11 +145,11 @@ function renderHero(data) {
   const shadow = data.shadow || {};
   const realN = edgeNum(real.closed_n || real.n);
   const shadowN = edgeNum(shadow.priced_n);
-  const eligibleShadow = shadowDetails(data).filter((row) => row.priced_n >= EDGE_MIN_N).length;
+  const eligibleShadow = eligibleShadowHorizonSlices(data).length;
   const hasRealEdge = realCatalysts(data).some((row) => row.n >= EDGE_MIN_N);
   const hasShadowEligible = eligibleShadow > 0;
   $("edge-verdict").innerHTML = hasRealEdge || hasShadowEligible ? `<span class="positive">Measure, don’t declare yet</span>` : `<span class="negative">No proven edge</span>`;
-  $("edge-verdict-sub").textContent = `Rule: do not call an edge below n≥${EDGE_MIN_N}. SHADOW eligible lanes=${eligibleShadow}; REAL eligible lanes=${hasRealEdge ? "yes" : "no"}.`;
+  $("edge-verdict-sub").textContent = `Rule: do not call an edge below n≥${EDGE_MIN_N}. SHADOW rule-eligible horizon slices=${eligibleShadow}; REAL eligible catalyst lanes=${hasRealEdge ? "yes" : "no"}.`;
   $("real-edge-n").textContent = num(realN);
   $("shadow-edge-n").textContent = num(shadowN);
   const pending = edgeNum(shadow.pending_or_unpriced_n);
@@ -180,15 +201,17 @@ function renderHeatmap(data) {
 }
 function renderFunnel(data) {
   const shadowRows = shadowDetails(data);
+  const horizonSlices = shadowHorizonSlices(data);
+  const eligibleSlices = eligibleShadowHorizonSlices(data);
   const seen = shadowRows.reduce((sum, row) => sum + row.total_n, 0);
   const priced = shadowRows.reduce((sum, row) => sum + row.priced_n, 0);
-  const eligible = shadowRows.filter((row) => row.priced_n >= EDGE_MIN_N).reduce((sum, row) => sum + row.priced_n, 0);
   const realClosed = edgeNum((data.real || {}).closed_n || (data.real || {}).n);
-  const max = Math.max(seen, priced, eligible, realClosed, 1);
+  const max = Math.max(seen, priced, horizonSlices.length, eligibleSlices.length, realClosed, 1);
   $("edge-funnel").innerHTML = [
     barBlock("Seen / diagnostic SHADOW rows", seen, max, num(seen), "all exposed research rows, including pending"),
     barBlock("Priced SHADOW rows", priced, max, num(priced), "entry + at least one forward mark"),
-    barBlock("Rule-eligible SHADOW lane rows", eligible, max, num(eligible), `only catalyst lanes with n≥${EDGE_MIN_N}`, "positive"),
+    barBlock("Priced SHADOW horizon slices", horizonSlices.length, max, num(horizonSlices.length), "catalyst × horizon slices with at least one priced mark", "muted"),
+    barBlock("Rule-eligible SHADOW horizon slices", eligibleSlices.length, max, num(eligibleSlices.length), `slice count with n≥${EDGE_MIN_N}; not unique observations`, eligibleSlices.length ? "positive" : "negative"),
     barBlock("REAL costed closed rows", realClosed, max, num(realClosed), "broker-backed executions", "positive"),
   ].join("");
 }
@@ -303,19 +326,19 @@ function renderSourceQuality(data) {
 }
 function renderGuardrails(data) {
   const realRows = realCatalysts(data);
-  const shadowRows = shadowDetails(data);
+  const shadowSlices = shadowHorizonSlices(data);
   const below = [
     ...realRows.filter((row) => row.n < EDGE_MIN_N).map((row) => `REAL ${row.label}: n=${num(row.n)}`),
-    ...shadowRows.filter((row) => row.priced_n < EDGE_MIN_N).map((row) => `SHADOW ${row.label}: priced n=${num(row.priced_n)}`),
+    ...shadowSlices.filter((row) => row.n < EDGE_MIN_N).map((row) => `SHADOW ${sliceLabel(row)}`),
   ];
   const eligible = [
     ...realRows.filter((row) => row.n >= EDGE_MIN_N).map((row) => `REAL ${row.label}: n=${num(row.n)}`),
-    ...shadowRows.filter((row) => row.priced_n >= EDGE_MIN_N).map((row) => `SHADOW ${row.label}: priced n=${num(row.priced_n)}`),
+    ...shadowSlices.filter((row) => row.n >= EDGE_MIN_N).map((row) => `SHADOW ${sliceLabel(row)}`),
   ];
   $("edge-guardrails").innerHTML = [
     `<div class="decision-card"><div class="decision-title">No proven edge below n≥${EDGE_MIN_N}</div><div class="decision-meta"><span class="chip warn">INSUFFICIENT EVIDENCE stays visible</span><span class="chip">No silent promotion</span></div></div>`,
-    `<div class="decision-card"><div class="decision-title">Eligible lanes</div><div class="small">${eligible.length ? eligible.map(esc).join("<br>") : "No lane has reached the rule-eligible sample yet."}</div></div>`,
-    `<div class="decision-card"><div class="decision-title">Still early</div><div class="small">${below.length ? below.map(esc).join("<br>") : "No early-sample lanes currently exposed."}</div></div>`,
+    `<div class="decision-card"><div class="decision-title">Rule-eligible horizon slices</div><div class="small">${eligible.length ? listWithOverflow(eligible, 10) : "No catalyst × horizon slice has reached the rule-eligible sample yet."}</div></div>`,
+    `<div class="decision-card"><div class="decision-title">Still early by horizon</div><div class="small">${below.length ? listWithOverflow(below, 10) : "No early-sample slices currently exposed."}</div></div>`,
     `<div class="decision-card"><div class="decision-title">Populations remain separate</div><div class="small">REAL = broker-backed, costed executions. SHADOW = research marks. This page compares evidence quality but does not merge their P&L.</div></div>`,
   ].join("");
 }
