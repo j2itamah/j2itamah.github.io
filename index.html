@@ -54,6 +54,15 @@
     .warning{border:1px solid rgba(245,158,11,.30);background:rgba(245,158,11,.08);color:#92400e;border-radius:12px;padding:10px 12px;font-size:.86rem;line-height:1.35}
     .warning.bad{border-color:rgba(220,38,38,.30);background:rgba(220,38,38,.07);color:#991b1b}
     .warning.ok{border-color:rgba(22,163,74,.25);background:rgba(22,163,74,.06);color:#166534}
+    .guard-grid{order:8;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:4px 0 18px}
+    .guard-card{background:rgba(255,255,255,.82);border:1px solid rgba(20,24,39,.10);border-radius:18px;padding:16px;box-shadow:0 14px 38px rgba(34,29,19,.08)}
+    .guard-label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.72rem;font-weight:850;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px}
+    .guard-value{font-size:1.2rem;font-weight:900;font-variant-numeric:tabular-nums}
+    .guard-copy{font-size:.78rem;color:var(--muted);line-height:1.45;margin-top:5px}
+    .guard-badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 8px;font-size:.66rem;font-weight:850;border:1px solid var(--line);background:#fff;color:var(--muted)}
+    .guard-badge.ok{border-color:rgba(22,163,74,.25);background:rgba(22,163,74,.06);color:#166534}
+    .guard-badge.warn{border-color:rgba(245,158,11,.30);background:rgba(245,158,11,.08);color:#92400e}
+    .guard-badge.bad{border-color:rgba(220,38,38,.30);background:rgba(220,38,38,.07);color:#991b1b}
     .headline-grid{order:9;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:26px 0 22px}
     .headline{background:rgba(255,255,255,.82);border:1px solid rgba(20,24,39,.10);border-radius:18px;padding:16px;box-shadow:0 14px 38px rgba(34,29,19,.08)}
     .headline-label{font-size:.72rem;font-weight:850;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
@@ -322,6 +331,19 @@
     }
     .warning.bad{border-color:#ddb1a7;background:#f7e3dd;color:#8d392e}
     .warning.ok{border-color:#b8d6ba;background:#e8f4e7;color:#2f7148}
+    .guard-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .guard-card{
+      background:var(--cream-card);
+      border-color:var(--cream-border);
+      border-radius:22px;
+      box-shadow:var(--cream-shadow);
+    }
+    .guard-label,.guard-copy{color:var(--cream-muted);font-family:"Spline Sans Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;font-size:.62rem}
+    .guard-value{font-family:"Fraunces",Georgia,serif;color:var(--cream-ink);font-weight:600;font-size:1.8rem;letter-spacing:-.035em}
+    .guard-badge{background:var(--cream-card-2);border-color:var(--cream-border);color:var(--cream-muted)}
+    .guard-badge.ok{background:#e8f4e7;border-color:#b8d6ba;color:#2f7148}
+    .guard-badge.warn{background:var(--cream-warn-soft);border-color:#e8c879;color:#765719}
+    .guard-badge.bad{background:#f7e3dd;border-color:#ddb1a7;color:#8d392e}
     .headline-grid{
       order:9;
       grid-template-columns:repeat(4,minmax(0,1fr));
@@ -448,7 +470,7 @@
     footer{color:var(--cream-muted);font-family:"Spline Sans Mono",ui-monospace,monospace}
     @media(max-width:980px){
       .live{align-self:flex-start;margin:8px 0 12px}
-      .status-grid,.headline-grid,.charts,.book-grid{grid-template-columns:1fr}
+      .status-grid,.headline-grid,.charts,.book-grid,.guard-grid{grid-template-columns:1fr}
       .selector{position:static;border-radius:22px}
       .selector a{flex:1 1 180px}
     }
@@ -481,6 +503,24 @@
       <div class="panel">
         <h2>Jon attention</h2>
         <div class="warning-list" id="warningList"><div class="warning">Checking for stale data, missing sources, and reconciliation warnings…</div></div>
+      </div>
+    </section>
+
+    <section class="guard-grid" aria-label="Data and execution guardrails">
+      <div class="guard-card">
+        <div class="guard-label">Source coverage <span class="guard-badge warn" id="sourceGuardBadge">Checking</span></div>
+        <div class="guard-value" id="sourceGuardValue">—</div>
+        <div class="guard-copy" id="sourceGuardCopy">Expected sources, zero-coverage lanes, and source freshness.</div>
+      </div>
+      <div class="guard-card">
+        <div class="guard-label">Execution quality <span class="guard-badge warn" id="executionGuardBadge">Checking</span></div>
+        <div class="guard-value" id="executionGuardValue">—</div>
+        <div class="guard-copy" id="executionGuardCopy">Fees, brackets, slippage, latency, stale positions.</div>
+      </div>
+      <div class="guard-card">
+        <div class="guard-label">Data contract <span class="guard-badge warn" id="contractGuardBadge">Checking</span></div>
+        <div class="guard-value" id="contractGuardValue">—</div>
+        <div class="guard-copy" id="contractGuardCopy">Generated/source timestamps, schema, population, venue.</div>
       </div>
     </section>
 
@@ -618,6 +658,34 @@ function statusLabel(kind, text){
   const icons = { ok:"✅", warn:"⚠️", bad:"🛑", info:"ℹ️" };
   return `${icons[kind] || "ℹ️"} ${text}`;
 }
+function readableCode(value){
+  const raw = String(value || "DATA_UNAVAILABLE").trim();
+  const labels = {
+    VERIFIED: "Verified",
+    VERIFIED_PARTIAL: "Verified partial",
+    DERIVED_FROM_DASHBOARD_ROWS: "Derived from live dashboard rows",
+    SOURCE_OBSERVABILITY_SCHEMA_PENDING_DERIVED_FROM_DASHBOARD_ROWS: "Source monitor pending; derived from live rows",
+    NO_ROWS_IN_DASHBOARD_WINDOW: "Zero rows in dashboard window",
+    DATA_UNAVAILABLE: "Data unavailable",
+    ROW_DERIVED: "Row-derived",
+    NOT_EXPOSED: "Not exposed",
+    NOT_EXPOSED_BY_ROW_DERIVED_FALLBACK: "Not exposed by row-derived fallback",
+  };
+  const key = raw.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  return labels[key] || raw.replaceAll("_", " ").replaceAll("-", " ").toLowerCase().replace(/\b\w/g, (c)=>c.toUpperCase());
+}
+function warningText(value){
+  const raw = String(value || "").trim();
+  const match = raw.match(/^([^:]+):\s*(.+)$/);
+  return match ? `${match[1]}: ${readableCode(match[2])}` : readableCode(raw);
+}
+function setGuard(id, badgeId, value, copy, kind){
+  $(id).textContent = value;
+  $(badgeId).textContent = kind === "ok" ? "OK" : kind === "bad" ? "Blocked" : "Watch";
+  $(badgeId).className = `guard-badge ${kind}`;
+  const copyId = id.replace("Value","Copy");
+  if($(copyId)) $(copyId).textContent = copy;
+}
 function marketSessionLabel(now = new Date()){
   const parts = new Intl.DateTimeFormat("en-US", { timeZone:"America/New_York", hour:"numeric", minute:"numeric", hour12:false, weekday:"short" }).formatToParts(now);
   const get = (type) => parts.find((p) => p.type === type)?.value;
@@ -657,9 +725,61 @@ function renderWarnings(data, security, freshnessKind){
   for(const warning of rec?.warnings || []) warnings.push({kind:"warn", text: warning});
   if(data?.real?.capture_status?.closed_net_missing_unflagged) warnings.push({kind:"bad", text:"Some closed REAL rows are missing net-after-fees evidence without a flag."});
   if(data?.real?.capture_status?.closed_commissions_missing_unflagged) warnings.push({kind:"bad", text:"Some closed REAL rows are missing commission evidence without a flag."});
+  const srcWarnings = data?.source_observability?.coverage?.warnings || data?.source_observability?.warnings || [];
+  for(const warning of srcWarnings) warnings.push({kind:String(warning).includes("NO_ROWS") ? "warn" : "warn", text: warningText(warning)});
+  for(const warning of data?.execution_quality?.warnings || []) warnings.push({kind:"warn", text: warningText(warning)});
+  if(data?.execution_quality?.commission_drag_pct_of_gross > 100) warnings.push({kind:"warn", text:`Commission drag is ${Number(data.execution_quality.commission_drag_pct_of_gross).toFixed(1)}% of gross P&L. Fees are dominating the current REAL sample.`});
+  if(data?.execution_quality?.rejections_and_skips?.stale_open_n > 0) warnings.push({kind:"bad", text:`${data.execution_quality.rejections_and_skips.stale_open_n} stale open REAL position(s) need reconciliation.`});
   if(security && security.ok === false) warnings.push({kind:"warn", text:"Security/status endpoint is not green or unavailable."});
   if(!warnings.length) warnings.push({kind:"ok", text:"No dashboard warnings from live data. Keep monitoring source freshness and open positions."});
   $("warningList").innerHTML = warnings.slice(0, 6).map((w) => `<div class="warning ${w.kind === "bad" ? "bad" : w.kind === "ok" ? "ok" : ""}">${statusLabel(w.kind, esc(w.text))}</div>`).join("");
+}
+function renderGuardrails(data){
+  if(!data){
+    setGuard("sourceGuardValue","sourceGuardBadge","DATA UNAVAILABLE","Backend did not return source coverage.", "bad");
+    setGuard("executionGuardValue","executionGuardBadge","DATA UNAVAILABLE","Backend did not return execution quality.", "bad");
+    setGuard("contractGuardValue","contractGuardBadge","DATA UNAVAILABLE","No generated_at/schema evidence.", "bad");
+    return;
+  }
+  const source = data.source_observability || {};
+  const counts = source.coverage?.counts || {};
+  const expected = Number(counts.expected_sources || 0);
+  const observed = Number(counts.observed_expected_sources || 0);
+  const sourcePct = expected ? observed / expected * 100 : null;
+  const sourceWarnings = source.coverage?.warnings || source.warnings || [];
+  const sourceKind = source.coverage?.visible_warning || sourceWarnings.length ? "warn" : "ok";
+  setGuard(
+    "sourceGuardValue",
+    "sourceGuardBadge",
+    sourcePct == null ? "DATA UNAVAILABLE" : `${observed}/${expected}`,
+    sourceWarnings.length ? `${sourceWarnings.slice(0,2).map(warningText).join(" · ")}${sourceWarnings.length > 2 ? " · more on Sources" : ""}` : `${num(source.event_n)} events from observed sources · ${readableCode(source.data_quality_status)}`,
+    sourceKind
+  );
+
+  const exec = data.execution_quality || {};
+  const bracketPct = exec.bracket?.bracket_complete_pct;
+  const drag = Number(exec.commission_drag_pct_of_gross);
+  const stale = Number(exec.rejections_and_skips?.stale_open_n || 0);
+  const execKind = stale > 0 ? "bad" : (drag > 100 || (exec.warnings || []).length ? "warn" : "ok");
+  setGuard(
+    "executionGuardValue",
+    "executionGuardBadge",
+    bracketPct == null ? "DATA UNAVAILABLE" : `${Number(bracketPct).toFixed(0)}% brackets`,
+    `${money(exec.net_pnl)} net · ${Number.isFinite(drag) ? `${drag.toFixed(1)}% fee drag` : "fee drag unavailable"} · stale open ${num(stale)}`,
+    execKind
+  );
+
+  const missingContract = ["generated_at","schema_version"].filter((key)=>!data?.[key]);
+  const realMissing = ["generated_at","source_updated_at","schema_version","population","venue","local_trading_date","data_quality_status"].filter((key)=>!data?.real?.[key]);
+  const shadowMissing = ["generated_at","source_updated_at","schema_version","population","venue","local_trading_date","data_quality_status"].filter((key)=>!data?.shadow?.[key]);
+  const contractKind = missingContract.length || realMissing.length || shadowMissing.length ? "warn" : "ok";
+  setGuard(
+    "contractGuardValue",
+    "contractGuardBadge",
+    contractKind === "ok" ? "LIVE CONTRACT" : "PARTIAL",
+    contractKind === "ok" ? `schema ${data.schema_version} · REAL ${data.real.population}/${data.real.venue} · SHADOW ${data.shadow.population}/${data.shadow.venue}` : `missing top ${missingContract.join(",") || "none"} · REAL missing ${realMissing.length} · SHADOW missing ${shadowMissing.length}`,
+    contractKind
+  );
 }
 function renderSystem(data, security){
   const generated = data?.generated_at;
@@ -675,6 +795,7 @@ function renderSystem(data, security){
   $("ownerState").textContent = freshnessKind === "live" ? statusLabel("ok","Codex handling") : statusLabel("warn","Jon/Codex attention needed");
   $("liveDot").style.background = freshnessKind === "live" ? "var(--ok)" : freshnessKind === "stale" ? "#f59e0b" : "var(--down)";
   renderWarnings(data, security, freshnessKind);
+  renderGuardrails(data);
   return freshnessKind;
 }
 function renderHeadlines(data){
@@ -847,6 +968,7 @@ async function load(){
     $("marketState").textContent = marketSessionLabel();
     $("ownerState").textContent = statusLabel("warn","Jon/Codex attention needed");
     $("liveDot").style.background = "var(--down)";
+    renderGuardrails(null);
     renderWarnings(null, {ok:false}, "missing");
     renderHeadlines(null); renderCurve(null); renderCatalysts(null);
     $("topName").textContent = "Data unavailable";
