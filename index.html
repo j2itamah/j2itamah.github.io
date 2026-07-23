@@ -22,7 +22,7 @@
         linear-gradient(160deg,var(--bg0),var(--bg1) 60%,var(--bg2));
       min-height:100vh; padding:40px 24px;
     }
-    .shell{width:100%;max-width:960px;margin:0 auto}
+    .shell{width:100%;max-width:1120px;margin:0 auto}
     .brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
     .mark{width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:16px solid var(--blue);transform:translateY(-1px)}
     h1{font-size:1.55rem;font-weight:800;letter-spacing:.2px}
@@ -35,6 +35,34 @@
     .status{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;padding:7px 14px;border-radius:999px;margin:0 auto 22px;border:1px solid var(--line);background:#fff;color:var(--muted)}
     .status.ok{border-color:rgba(22,163,74,.30);color:#15803d;background:rgba(22,163,74,.06)}
     .status.bad{border-color:rgba(220,38,38,.30);color:#b91c1c;background:rgba(220,38,38,.06)}
+    .status.warn{border-color:rgba(245,158,11,.35);color:#b45309;background:rgba(245,158,11,.08)}
+    .overview{display:grid;grid-template-columns:1.25fr .75fr;gap:18px;margin-bottom:22px}
+    .panel{background:rgba(255,255,255,.86);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.05)}
+    .panel h2{font-size:1rem;margin:0 0 12px;font-weight:850}
+    .status-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .status-item{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
+    .status-item strong{display:block;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px}
+    .status-value{font-size:1rem;font-weight:850}
+    .warning-list{display:grid;gap:8px}
+    .warning{border:1px solid rgba(245,158,11,.30);background:rgba(245,158,11,.08);color:#92400e;border-radius:12px;padding:10px 12px;font-size:.86rem;line-height:1.35}
+    .warning.bad{border-color:rgba(220,38,38,.30);background:rgba(220,38,38,.07);color:#991b1b}
+    .warning.ok{border-color:rgba(22,163,74,.25);background:rgba(22,163,74,.06);color:#166534}
+    .headline-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+    .headline{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(15,23,42,.05)}
+    .headline-label{font-size:.72rem;font-weight:850;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+    .headline-value{font-size:1.45rem;font-weight:900;margin-top:7px;font-variant-numeric:tabular-nums}
+    .headline-sub{font-size:.78rem;color:var(--muted);margin-top:5px;line-height:1.35}
+    .selector{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px;justify-content:center}
+    .selector a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;color:var(--txt);font-size:.84rem;font-weight:850;box-shadow:0 6px 18px rgba(15,23,42,.05)}
+    .selector a:focus-visible{outline:3px solid rgba(37,99,235,.35);outline-offset:3px}
+    .charts{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
+    .spark{height:190px;width:100%;display:block}
+    .bar{display:grid;grid-template-columns:126px 1fr 96px;gap:10px;align-items:center;margin:10px 0;font-size:.84rem}
+    .bar-track{height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#60a5fa,#22c55e);min-width:3px}
+    .bar-fill.neg{background:linear-gradient(90deg,#fb7185,#f59e0b)}
+    .bar-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#334155}
+    .bar-value{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.78rem}
     .champ{display:block;text-decoration:none;color:#f8fafc;width:100%;margin-bottom:22px;background:var(--dark);
       border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:24px 28px;box-shadow:0 12px 34px rgba(0,0,0,.4);position:relative;overflow:hidden;min-height:120px}
     .champ::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,#fbbf24,#f59e0b)}
@@ -62,15 +90,59 @@
     .go{display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-weight:800;color:#15803d}
     .card.dark .go{color:#c4b5fd}
     footer{margin-top:20px;color:#94a3b8;font-size:.78rem;text-align:center;line-height:1.5}
-    @media(max-width:760px){body{padding:22px 14px}.cards{grid-template-columns:1fr}.champ{padding:20px 18px}.champ-stats{gap:16px}.val{font-size:1.1rem}.card{min-height:0}}
+    @media(max-width:900px){.overview,.charts{grid-template-columns:1fr}.headline-grid{grid-template-columns:1fr 1fr}.status-grid{grid-template-columns:1fr}}
+    @media(max-width:760px){body{padding:22px 14px}.cards{grid-template-columns:1fr}.champ{padding:20px 18px}.champ-stats{gap:16px}.val{font-size:1.1rem}.card{min-height:0}.headline-grid{grid-template-columns:1fr}.bar{grid-template-columns:1fr}.bar-value{text-align:left}}
   </style>
 </head>
 <body>
   <main class="shell">
     <div class="brand"><div class="mark"></div><h1>Quant<span>Pulse</span> · Live Agent</h1></div>
     <p class="sub">One live build, two navigable cockpits: IBKR / REAL executable trades vs SHADOW research observations.</p>
-    <div class="live"><span class="dot"></span> Verified data only for REAL · SHADOW is research-only, not executable</div>
+    <div class="live"><span class="dot" id="liveDot"></span> Verified data only for REAL · SHADOW is research-only, not executable</div>
     <div class="status-wrap"><div class="status" id="siteStatus">Loading live agent…</div></div>
+
+    <section class="overview" aria-label="System safety overview">
+      <div class="panel">
+        <h2>System status</h2>
+        <div class="status-grid">
+          <div class="status-item"><strong>Agent data API</strong><div class="status-value" id="agentState">Checking…</div></div>
+          <div class="status-item"><strong>IBKR Gateway</strong><div class="status-value" id="ibkrState">Unknown until backend reports</div></div>
+          <div class="status-item"><strong>NDAX</strong><div class="status-value" id="ndaxState">Unknown until backend reports</div></div>
+          <div class="status-item"><strong>Last refresh</strong><div class="status-value" id="refreshState">—</div></div>
+          <div class="status-item"><strong>Market session</strong><div class="status-value" id="marketState">Checking local clock…</div></div>
+          <div class="status-item"><strong>Owner / action</strong><div class="status-value" id="ownerState">Codex checking</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Jon attention</h2>
+        <div class="warning-list" id="warningList"><div class="warning">Checking for stale data, missing sources, and reconciliation warnings…</div></div>
+      </div>
+    </section>
+
+    <section class="headline-grid" aria-label="Today headline metrics">
+      <div class="headline"><div class="headline-label">REAL net today</div><div class="headline-value" id="todayNet">—</div><div class="headline-sub" id="todayNetSub">live verified closed only</div></div>
+      <div class="headline"><div class="headline-label">Capital deployed today</div><div class="headline-value" id="todayCapital">—</div><div class="headline-sub" id="todayCapitalSub">entry notional in visible REAL rows</div></div>
+      <div class="headline"><div class="headline-label">Open REAL positions</div><div class="headline-value" id="todayOpen">—</div><div class="headline-sub" id="todayOpenSub">IBKR/PAPER, separate from SHADOW</div></div>
+      <div class="headline"><div class="headline-label">Commission drag</div><div class="headline-value" id="todayDrag">—</div><div class="headline-sub" id="todayDragSub">fees vs gross P&L</div></div>
+    </section>
+
+    <nav class="selector" aria-label="Population selector">
+      <a href="./real.html">✅ IBKR PAPER</a>
+      <a href="./real.html#ndax">🛑 NDAX REAL</a>
+      <a href="./shadow.html">🔬 SHADOW RESEARCH</a>
+      <a href="./journal.html">📓 Daily journal</a>
+    </nav>
+
+    <section class="charts" aria-label="Overview charts">
+      <div class="panel">
+        <h2>Today’s REAL P&L curve</h2>
+        <div id="todayCurve"></div>
+      </div>
+      <div class="panel">
+        <h2>Catalyst lanes</h2>
+        <div id="catalystBars"></div>
+      </div>
+    </section>
 
     <a class="champ" id="topCard" href="./real.html" aria-label="Open the top book cockpit">
       <div class="champ-label">Top book · live agent</div>
@@ -127,6 +199,46 @@ const num = (v) => new Intl.NumberFormat("en-US").format(Number(v || 0));
 const pct = (v) => `${Number(v || 0).toFixed(3)}%`;
 const cls = (v) => Number(v || 0) > 0 ? "up" : Number(v || 0) < 0 ? "down" : "flat";
 function esc(v){return String(v ?? "—").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
+function localDate(v){
+  if(!v) return "unknown";
+  const d = new Date(v);
+  if(Number.isNaN(d.getTime())) return "unknown";
+  return d.toLocaleDateString("en-CA");
+}
+function todayKey(){ return new Date().toLocaleDateString("en-CA"); }
+function ageMinutes(v){ if(!v) return null; const d=new Date(v); if(Number.isNaN(d.getTime())) return null; return (Date.now()-d.getTime())/60000; }
+function realNetValue(row){ return Number(row?._net_pnl ?? row?.net_pnl_after_commissions_cad ?? row?.net_pnl_after_commissions ?? row?.net_pnl ?? 0); }
+function grossValue(row){ return Number(row?._gross_pnl ?? row?.gross_pnl_cad ?? row?.gross_pnl ?? 0); }
+function commissionValue(row){
+  const value = row?._commissions ?? row?.commissions_cad ?? row?.commissions;
+  return typeof value === "number" ? Number(value) : Number(value?.total ?? value?.cad ?? 0);
+}
+function capitalValue(row){
+  const qty = Math.abs(Number(row?.quantity ?? row?.qty ?? 0));
+  const entry = Number(row?.entry_price ?? 0);
+  return qty && entry ? qty * entry : Number(row?.spent || 0);
+}
+function rowsToday(rows, timeField){
+  const key = todayKey();
+  return (rows || []).filter((row) => localDate(row?.[timeField] || row?.exit_ts || row?.entry_fill_ts || row?.decision_ts) === key);
+}
+function statusLabel(kind, text){
+  const icons = { ok:"✅", warn:"⚠️", bad:"🛑", info:"ℹ️" };
+  return `${icons[kind] || "ℹ️"} ${text}`;
+}
+function marketSessionLabel(now = new Date()){
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone:"America/New_York", hour:"numeric", minute:"numeric", hour12:false, weekday:"short" }).formatToParts(now);
+  const get = (type) => parts.find((p) => p.type === type)?.value;
+  const day = get("weekday");
+  const hour = Number(get("hour"));
+  const minute = Number(get("minute"));
+  const mins = hour * 60 + minute;
+  const weekday = !["Sat","Sun"].includes(day);
+  if(!weekday) return statusLabel("info", "Equity market closed · crypto open");
+  if(mins >= 570 && mins < 960) return statusLabel("ok", "US regular hours · crypto open");
+  if((mins >= 240 && mins < 570) || (mins >= 960 && mins < 1200)) return statusLabel("warn", "US extended hours · crypto open");
+  return statusLabel("info", "Equity market closed · crypto open");
+}
 function routeHash(){
   const hash = String(window.location.hash || "").toLowerCase();
   if(hash === "#shadow") window.location.replace("./shadow.html");
@@ -143,6 +255,101 @@ function bestShadow(){
   const ladder = DATA?.shadow?.horizon_ladder || [];
   if(!ladder.length) return null;
   return ladder.slice().sort((a,b)=>Number(b.avg_direction_adjusted_return_pct||0)-Number(a.avg_direction_adjusted_return_pct||0))[0];
+}
+function renderWarnings(data, security, freshnessKind){
+  const warnings = [];
+  if(!data) warnings.push({kind:"bad", text:"Live dashboard data is unavailable. No trusted values should be acted on."});
+  if(freshnessKind === "stale") warnings.push({kind:"warn", text:"Dashboard data is stale. Treat counts as last-known, not live."});
+  if(freshnessKind === "missing") warnings.push({kind:"bad", text:"Backend did not provide generated_at. Freshness is unknown."});
+  const rec = data?.real?.reconciliation;
+  for(const warning of rec?.warnings || []) warnings.push({kind:"warn", text: warning});
+  if(data?.real?.capture_status?.closed_net_missing_unflagged) warnings.push({kind:"bad", text:"Some closed REAL rows are missing net-after-fees evidence without a flag."});
+  if(data?.real?.capture_status?.closed_commissions_missing_unflagged) warnings.push({kind:"bad", text:"Some closed REAL rows are missing commission evidence without a flag."});
+  if(security && security.ok === false) warnings.push({kind:"warn", text:"Security/status endpoint is not green or unavailable."});
+  if(!warnings.length) warnings.push({kind:"ok", text:"No dashboard warnings from live data. Keep monitoring source freshness and open positions."});
+  $("warningList").innerHTML = warnings.slice(0, 6).map((w) => `<div class="warning ${w.kind === "bad" ? "bad" : w.kind === "ok" ? "ok" : ""}">${statusLabel(w.kind, esc(w.text))}</div>`).join("");
+}
+function renderSystem(data, security){
+  const generated = data?.generated_at;
+  const age = ageMinutes(generated);
+  const freshnessKind = age == null ? "missing" : age > 5 ? "stale" : "live";
+  $("agentState").textContent = freshnessKind === "live" ? statusLabel("ok","LIVE") : freshnessKind === "stale" ? statusLabel("warn","STALE") : statusLabel("bad","DATA UNAVAILABLE");
+  const ibkr = data?.sources?.ibkr || data?.real?.ibkr_status || security?.ibkr;
+  const ndax = data?.sources?.ndax || data?.real?.ndax_status || security?.ndax;
+  $("ibkrState").textContent = ibkr?.status ? statusLabel(ibkr.status === "ok" || ibkr.status === "connected" ? "ok" : "warn", ibkr.status) : statusLabel(data?.real ? "info" : "bad", data?.real ? "not reported by backend" : "unavailable");
+  $("ndaxState").textContent = ndax?.status ? statusLabel(ndax.status === "ok" || ndax.status === "enabled" ? "ok" : "info", ndax.status) : (data?.real?.excluded_population_n ? statusLabel("info", "isolated from IBKR book") : statusLabel("info","gated/none reported"));
+  $("refreshState").textContent = generated ? `${new Date(generated).toLocaleTimeString()} · ${age == null ? "age unknown" : `${Math.max(0, age).toFixed(1)}m old`}` : "missing generated_at";
+  $("marketState").textContent = data?.market_session || marketSessionLabel();
+  $("ownerState").textContent = freshnessKind === "live" ? statusLabel("ok","Codex handling") : statusLabel("warn","Jon/Codex attention needed");
+  $("liveDot").style.background = freshnessKind === "live" ? "var(--ok)" : freshnessKind === "stale" ? "#f59e0b" : "var(--down)";
+  renderWarnings(data, security, freshnessKind);
+  return freshnessKind;
+}
+function renderHeadlines(data){
+  if(!data){
+    $("todayNet").textContent = "DATA UNAVAILABLE"; $("todayNet").className = "headline-value flat";
+    $("todayNetSub").textContent = "backend unavailable · no trusted value";
+    $("todayCapital").textContent = "DATA UNAVAILABLE";
+    $("todayCapitalSub").textContent = "backend unavailable · no trusted value";
+    $("todayOpen").textContent = "DATA UNAVAILABLE";
+    $("todayOpenSub").textContent = "backend unavailable · no trusted value";
+    $("todayDrag").textContent = "DATA UNAVAILABLE"; $("todayDrag").className = "headline-value flat";
+    $("todayDragSub").textContent = "backend unavailable · no trusted value";
+    return;
+  }
+  const real = data?.real || {};
+  const closedToday = rowsToday(real.recent_costed_closed || real.recent_closed || [], "exit_ts");
+  const openToday = rowsToday(real.open_positions || [], "entry_fill_ts");
+  const net = closedToday.reduce((sum,row)=>sum+realNetValue(row),0);
+  const gross = closedToday.reduce((sum,row)=>sum+grossValue(row),0);
+  const commissions = closedToday.reduce((sum,row)=>sum+commissionValue(row),0);
+  const capital = closedToday.concat(openToday).reduce((sum,row)=>sum+capitalValue(row),0);
+  const dragPct = Math.abs(gross) > 0 ? Math.abs(commissions)/Math.abs(gross)*100 : null;
+  $("todayNet").textContent = money(net); $("todayNet").className = "headline-value " + cls(net);
+  $("todayNetSub").textContent = `today closed n=${num(closedToday.length)} · source generated ${data?.generated_at ? "present" : "missing"}`;
+  $("todayCapital").textContent = money(capital);
+  $("todayCapitalSub").textContent = `entry notional in today rows n=${num(closedToday.length + openToday.length)}`;
+  $("todayOpen").textContent = num(openToday.length);
+  $("todayOpenSub").textContent = `all open visible n=${num(real.open_n)} · stale hidden n=${num(real.stale_open_n || 0)}`;
+  $("todayDrag").textContent = dragPct == null ? "DATA UNAVAILABLE" : pct(dragPct);
+  $("todayDrag").className = "headline-value " + (dragPct == null ? "flat" : dragPct > 30 ? "down" : "flat");
+  $("todayDragSub").textContent = `${money(commissions)} commissions · ${money(gross)} gross`;
+}
+function lineSvg(points){
+  if(!points.length) return `<div class="warning">ℹ️ DATA UNAVAILABLE: no closed REAL trades today for a curve.</div>`;
+  const w=620,h=190,p=24;
+  const vals=points.map(p=>p.v), min=Math.min(0,...vals), max=Math.max(0,...vals), span=Math.max(1,max-min);
+  const x=i=>p+(points.length===1?0:i/(points.length-1)*(w-p*2));
+  const y=v=>p+(max-v)/span*(h-p*2);
+  const path=points.map((pt,i)=>`${i?"L":"M"} ${x(i).toFixed(1)} ${y(pt.v).toFixed(1)}`).join(" ");
+  const stroke=points[points.length-1].v>=0?"#16a34a":"#dc2626";
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" role="img" aria-label="Today REAL net P&L curve">
+    <line x1="${p}" x2="${w-p}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" stroke="#cbd5e1" stroke-dasharray="4 5"/>
+    <path d="${path}" fill="none" stroke="${stroke}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="${p}" y="16" fill="#64748b" font-size="12">${money(max)}</text>
+    <text x="${p}" y="${h-6}" fill="#64748b" font-size="12">${money(min)}</text>
+    <text x="${w-p}" y="${h-6}" text-anchor="end" fill="#64748b" font-size="12">n=${points.length}</text>
+  </svg>`;
+}
+function renderCurve(data){
+  const rows = rowsToday((data?.real?.recent_costed_closed || data?.real?.recent_closed || []), "exit_ts")
+    .slice().sort((a,b)=>new Date(a.exit_ts||0)-new Date(b.exit_ts||0));
+  let total = 0;
+  const points = rows.map((row) => ({ label: row.symbol, v: (total += realNetValue(row)) }));
+  $("todayCurve").innerHTML = lineSvg(points);
+}
+function renderCatalysts(data){
+  const rows = [];
+  for(const row of data?.real?.by_catalyst || []) rows.push({label:`REAL ${row.value}`, n:Number(row.n||0), metric:Number(row.net_pnl||0), text:`${money(row.net_pnl)} · win ${Number(row.win_rate||0).toFixed(1)}% · n=${num(row.n)}`});
+  for(const row of data?.shadow?.by_catalyst || []) rows.push({label:`SHADOW ${row.value}`, n:Number(row.priced_n||row.n||0), metric:Number(row.priced_n||row.n||0), text:`priced n=${num(row.priced_n||row.n||0)} · research only`});
+  if(!rows.length){ $("catalystBars").innerHTML = `<div class="warning">ℹ️ DATA UNAVAILABLE: no catalyst breakdown received from backend.</div>`; return; }
+  const max = Math.max(...rows.map(r=>Math.abs(r.metric)||r.n),1);
+  $("catalystBars").innerHTML = rows.slice(0,8).map((r)=>{
+    const value = Math.abs(r.metric)||r.n;
+    const width = Math.max(3, Math.round(value/max*100));
+    const neg = r.metric < 0 ? " neg" : "";
+    return `<div class="bar"><div class="bar-label" title="${esc(r.label)}">${esc(r.label)}</div><div class="bar-track"><div class="bar-fill${neg}" style="width:${width}%"></div></div><div class="bar-value">${esc(r.text)}</div></div>`;
+  }).join("");
 }
 function renderTop(){
   const real = DATA.real || {}, shadow = DATA.shadow || {};
@@ -182,12 +389,25 @@ function renderCards(){
 async function load(){
   try{
     DATA = await getJson("/api/live-agent/dashboard");
+    const security = await getJson("/api/live-agent/security").catch(() => ({ok:false}));
+    const freshnessKind = renderSystem(DATA, security);
+    renderHeadlines(DATA); renderCurve(DATA); renderCatalysts(DATA);
     renderTop(); renderCards();
-    $("siteStatus").className = "status ok";
-    $("siteStatus").textContent = `Live · REAL n=${num(DATA.real?.n)} · SHADOW priced n=${num(DATA.shadow?.priced_n)}`;
+    $("siteStatus").className = "status " + (freshnessKind === "live" ? "ok" : "warn");
+    $("siteStatus").textContent = `${freshnessKind === "live" ? "Live" : "Stale/Warning"} · REAL n=${num(DATA.real?.n)} · SHADOW priced n=${num(DATA.shadow?.priced_n)} · ${DATA.generated_at ? new Date(DATA.generated_at).toLocaleTimeString() : "missing timestamp"}`;
   }catch(e){
+    DATA = null;
     $("siteStatus").className = "status bad";
-    $("siteStatus").textContent = "Live agent failed closed";
+    $("siteStatus").textContent = `Live agent failed closed · ${e.message}`;
+    $("agentState").textContent = statusLabel("bad","DATA UNAVAILABLE");
+    $("ibkrState").textContent = statusLabel("bad","unavailable");
+    $("ndaxState").textContent = statusLabel("bad","unavailable");
+    $("refreshState").textContent = "no trusted refresh";
+    $("marketState").textContent = marketSessionLabel();
+    $("ownerState").textContent = statusLabel("warn","Jon/Codex attention needed");
+    $("liveDot").style.background = "var(--down)";
+    renderWarnings(null, {ok:false}, "missing");
+    renderHeadlines(null); renderCurve(null); renderCatalysts(null);
     $("topName").textContent = "Data unavailable";
     $("topEvidence").textContent = "blocked"; $("topMetric").textContent = "—"; $("topStatus").textContent = "Fail closed";
   }
