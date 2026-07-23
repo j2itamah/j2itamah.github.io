@@ -3,1020 +3,2035 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QuantPulse · Live Agent · IBKR vs SHADOW</title>
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Spline+Sans:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <title>Trading Analyst · Trading Lab</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./cockpit.css?v=20260723-cockpit" />
   <style>
-    :root{
-      --bg0:#ffffff; --bg1:#f1f5f9; --bg2:#e9eef5; --line:#e2e8f0;
-      --txt:#0f172a; --muted:#64748b; --blue:#2563eb; --blue2:#3b82f6;
-      --coral:#e0652f; --violet:#7c3aed; --dark:#0b0f1a; --ok:#16a34a; --down:#dc2626;
-    }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{
-      font-family:Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;color:var(--txt);
+    body {
       background:
-        radial-gradient(680px 360px at 20% 6%, rgba(37,99,235,.08), transparent 62%),
-        radial-gradient(620px 340px at 82% 14%, rgba(251,191,36,.10), transparent 60%),
-        linear-gradient(180deg,#fffdf8 0%,#f7f3ea 58%,#efe9dc 100%);
-      min-height:100vh; padding:clamp(38px,7vw,86px) 24px 56px;
+        radial-gradient(circle at 18% 12%, rgba(51,102,255,.10), transparent 28%),
+        radial-gradient(circle at 82% 16%, rgba(245,181,63,.13), transparent 26%),
+        linear-gradient(180deg, #fbfaf6 0%, #f5f1e7 52%, #efe9dc 100%);
+      color: #141827;
     }
-    .shell{width:100%;max-width:960px;margin:0 auto;display:flex;flex-direction:column}
-    .brand{order:1;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px;text-align:center}
-    .mark{
-      width:54px;height:54px;border:0;border-radius:18px;background:#fff;display:grid;place-items:center;
-      box-shadow:0 18px 42px rgba(34,29,19,.10);border:1px solid rgba(20,24,39,.08);transform:none;flex:0 0 auto;
+    .overview-shell { width: min(1360px, calc(100vw - 28px)); margin: 0 auto; padding: 24px 0 54px; }
+    .overview-hero {
+      color: #182033;
+      background: rgba(255,255,255,.74);
+      border: 1px solid rgba(80,70,50,.12);
+      box-shadow: 0 24px 80px rgba(40,30,20,.12);
+      border-radius: 30px;
+      padding: clamp(22px, 4vw, 42px);
+      position: relative;
+      overflow: hidden;
     }
-    .mark::before{content:"";width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;border-bottom:27px solid var(--blue);transform:translateY(-2px)}
-    h1{font-size:clamp(2.65rem,8vw,5.15rem);line-height:.92;font-weight:900;letter-spacing:-.07em}
-    h1 span{color:var(--blue)}
-    .sub{order:2;color:var(--muted);font-size:1rem;text-align:center;line-height:1.7;max-width:660px;margin:16px auto 0}
-    .live{order:3;display:flex;align-items:center;justify-content:center;gap:7px;color:var(--muted);font-size:.8rem;margin:18px 0 10px}
-    .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(22,163,74,.5);animation:pulse 1.8s infinite}
-    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.4)}70%{box-shadow:0 0 0 9px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
-    .status-wrap{order:4;text-align:center}
-    .status{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:800;padding:8px 15px;border-radius:999px;margin:0 auto 20px;border:1px solid var(--line);background:rgba(255,255,255,.82);color:var(--muted);box-shadow:0 10px 28px rgba(34,29,19,.07)}
-    .status.ok{border-color:rgba(22,163,74,.30);color:#15803d;background:rgba(22,163,74,.06)}
-    .status.bad{border-color:rgba(220,38,38,.30);color:#b91c1c;background:rgba(220,38,38,.06)}
-    .status.warn{border-color:rgba(245,158,11,.35);color:#b45309;background:rgba(245,158,11,.08)}
-    .overview{order:11;display:grid;grid-template-columns:1.25fr .75fr;gap:18px;margin:28px 0 22px}
-    .panel{background:rgba(255,255,255,.82);border:1px solid rgba(20,24,39,.10);border-radius:22px;padding:20px;box-shadow:0 20px 58px rgba(34,29,19,.10)}
-    .panel h2{font-size:1rem;margin:0 0 12px;font-weight:850}
-    .status-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-    .status-item{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
-    .status-item strong{display:block;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px}
-    .status-value{font-size:1rem;font-weight:850}
-    .warning-list{display:grid;gap:8px}
-    .warning{border:1px solid rgba(245,158,11,.30);background:rgba(245,158,11,.08);color:#92400e;border-radius:12px;padding:10px 12px;font-size:.86rem;line-height:1.35}
-    .warning.bad{border-color:rgba(220,38,38,.30);background:rgba(220,38,38,.07);color:#991b1b}
-    .warning.ok{border-color:rgba(22,163,74,.25);background:rgba(22,163,74,.06);color:#166534}
-    .guard-grid{order:8;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:4px 0 18px}
-    .guard-card{background:rgba(255,255,255,.82);border:1px solid rgba(20,24,39,.10);border-radius:18px;padding:16px;box-shadow:0 14px 38px rgba(34,29,19,.08)}
-    .guard-label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.72rem;font-weight:850;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px}
-    .guard-value{font-size:1.2rem;font-weight:900;font-variant-numeric:tabular-nums}
-    .guard-copy{font-size:.78rem;color:var(--muted);line-height:1.45;margin-top:5px}
-    .guard-badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 8px;font-size:.66rem;font-weight:850;border:1px solid var(--line);background:#fff;color:var(--muted)}
-    .guard-badge.ok{border-color:rgba(22,163,74,.25);background:rgba(22,163,74,.06);color:#166534}
-    .guard-badge.warn{border-color:rgba(245,158,11,.30);background:rgba(245,158,11,.08);color:#92400e}
-    .guard-badge.bad{border-color:rgba(220,38,38,.30);background:rgba(220,38,38,.07);color:#991b1b}
-    .headline-grid{order:9;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:26px 0 22px}
-    .headline{background:rgba(255,255,255,.82);border:1px solid rgba(20,24,39,.10);border-radius:18px;padding:16px;box-shadow:0 14px 38px rgba(34,29,19,.08)}
-    .headline-label{font-size:.72rem;font-weight:850;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-    .headline-value{font-size:1.45rem;font-weight:900;margin-top:7px;font-variant-numeric:tabular-nums}
-    .headline-sub{font-size:.78rem;color:var(--muted);margin-top:5px;line-height:1.35}
-    .selector{order:5;display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 24px;justify-content:center}
-    .selector a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;border:1px solid rgba(20,24,39,.10);background:rgba(255,255,255,.82);border-radius:999px;padding:10px 14px;color:var(--txt);font-size:.84rem;font-weight:850;box-shadow:0 12px 30px rgba(34,29,19,.08)}
-    .selector a:focus-visible{outline:3px solid rgba(37,99,235,.35);outline-offset:3px}
-    .charts{order:10;display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
-    .spark{height:190px;width:100%;display:block}
-    .chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:10px}
-    .chart-head h2{margin-bottom:2px}
-    .range-tabs{display:inline-flex;gap:6px;padding:5px;border:1px solid rgba(226,232,240,.12);border-radius:999px;background:rgba(7,17,31,.36)}
-    .range-button{appearance:none;border:0;border-radius:999px;padding:7px 10px;background:transparent;color:#aab8cf;font:inherit;font-size:.75rem;font-weight:850;cursor:pointer}
-    .range-button.active{color:#e0f2fe;background:rgba(96,165,250,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
-    .range-button:focus-visible{outline:3px solid rgba(96,165,250,.35);outline-offset:2px}
-    .chart-legend{display:flex;gap:12px;flex-wrap:wrap;color:#aab8cf;font-size:.78rem;margin-top:8px}
-    .legend-dot{display:inline-block;width:9px;height:9px;border-radius:999px;margin-right:5px}
-    .legend-dot.gross{background:#60a5fa}.legend-dot.net{background:#34d399}
-    .bar{display:grid;grid-template-columns:126px 1fr 96px;gap:10px;align-items:center;margin:10px 0;font-size:.84rem}
-    .bar-track{height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden}
-    .bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#60a5fa,#22c55e);min-width:3px}
-    .bar-fill.neg{background:linear-gradient(90deg,#fb7185,#f59e0b)}
-    .bar-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#334155}
-    .bar-value{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.78rem}
-    .book-grid{order:6;display:grid;grid-template-columns:1.08fr .96fr .96fr;gap:22px;margin:0 0 22px}
-    .champ{display:block;text-decoration:none;color:#f8fafc;width:100%;margin:0;background:linear-gradient(145deg,#151723 0%,#070913 100%);
-      border:1px solid rgba(255,255,255,.10);border-radius:28px;padding:28px 32px;box-shadow:0 34px 80px rgba(10,12,21,.28);position:relative;overflow:hidden;min-height:150px}
-    .champ::before{content:"";position:absolute;inset:0 0 auto 0;height:7px;background:linear-gradient(90deg,#f7c948,#ff8a3d)}
-    .champ-label{font-size:.72rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#fcd34d;margin-bottom:8px}
-    .champ-name{font-size:clamp(1.65rem,4vw,2.8rem);font-weight:900;margin-bottom:16px;line-height:1.08;letter-spacing:-.045em}
-    .champ-stats{display:flex;gap:32px;flex-wrap:wrap}
-    .cap{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:#8a96ad;margin-bottom:3px}
-    .val{font-size:1.35rem;font-weight:800;font-variant-numeric:tabular-nums}
-    .up{color:#34d399}.down{color:#f87171}.flat{color:#cbd5e1}
-    .cards{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
-    .card{display:block;position:relative;overflow:hidden;background:rgba(255,255,255,.86);border:1px solid rgba(20,24,39,.10);border-radius:24px;padding:28px;
-      text-decoration:none;color:inherit;box-shadow:0 20px 58px rgba(34,29,19,.12);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;min-height:230px}
-    .card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--ok),#4ade80)}
-    .card.dark{background:linear-gradient(145deg,#151723 0%,#070913 100%);border-color:rgba(255,255,255,.10);color:#f8fafc}
-    .card.dark::before{background:linear-gradient(90deg,var(--violet),var(--blue2))}
-    .card:hover{transform:translateY(-5px);border-color:#c7d6ee;box-shadow:0 24px 62px rgba(37,99,235,.16)}
-    .card:focus-visible{outline:3px solid rgba(37,99,235,.35);outline-offset:4px}
-    .pill{display:inline-block;font-size:.7rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:5px 11px;border-radius:999px;margin-bottom:16px;background:rgba(22,163,74,.10);color:#15803d}
-    .card.dark .pill{background:rgba(124,58,237,.18);color:#c4b5fd}
-    .card h2{font-size:1.35rem;font-weight:800;margin-bottom:8px}
-    .card p{color:var(--muted);font-size:.9rem;line-height:1.5;margin-bottom:16px}
-    .card.dark p{color:#94a3b8}
-    .metric-line{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-top:1px solid rgba(148,163,184,.16);font-size:.88rem}
-    .metric-line strong{font-variant-numeric:tabular-nums}
-    .go{display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-weight:800;color:#15803d}
-    .card.dark .go{color:#c4b5fd}
-    .book-grid .card,.book-grid .champ{min-height:300px}
-    .book-grid .champ{display:flex;flex-direction:column;justify-content:space-between}
-    #journalCard{order:8}
-    footer{order:12;margin-top:20px;color:#94a3b8;font-size:.78rem;text-align:center;line-height:1.5}
-    @media(max-width:900px){.overview,.charts{grid-template-columns:1fr}.headline-grid{grid-template-columns:1fr 1fr}.status-grid{grid-template-columns:1fr}}
-    @media(max-width:1020px){.book-grid{grid-template-columns:1fr}.book-grid .card,.book-grid .champ{min-height:0}}
-    @media(max-width:760px){body{padding:22px 14px}.cards{grid-template-columns:1fr}.champ{padding:20px 18px}.champ-stats{gap:16px}.val{font-size:1.1rem}.card{min-height:0}.headline-grid{grid-template-columns:1fr}.bar{grid-template-columns:1fr}.bar-value{text-align:left}}
-    /* Lovable-style visual system: minimal dark shell, glass cards, app-like navigation. */
-    body{
-      color:#f8fafc;
-      background:
-        radial-gradient(900px 500px at 8% -8%, rgba(96,165,250,.24), transparent 60%),
-        radial-gradient(780px 440px at 94% 0%, rgba(196,181,253,.18), transparent 58%),
-        radial-gradient(760px 520px at 50% 112%, rgba(53,211,153,.13), transparent 60%),
-        linear-gradient(135deg,#07111f 0%,#0f172a 52%,#18143a 100%);
-      background-attachment:fixed;
+    .overview-hero:after {
+      content: "";
+      position: absolute;
+      inset: auto -90px -160px auto;
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(96,165,250,.26), transparent 62%);
+      pointer-events: none;
     }
-    body::before{
-      content:"";position:fixed;inset:0;pointer-events:none;
-      background:
-        linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
-      background-size:42px 42px;
-      mask-image:linear-gradient(to bottom,rgba(0,0,0,.68),transparent 74%);
+    .overview-hero h1 {
+      font-family: Fraunces, Georgia, serif;
+      font-size: clamp(34px, 6vw, 72px);
+      letter-spacing: -.055em;
+      max-width: 880px;
     }
-    .shell{max-width:1180px;position:relative;z-index:1}
-    .brand{align-items:flex-end;margin-bottom:4px}
-    .mark{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.13);box-shadow:0 18px 46px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.08)}
-    h1{font-size:clamp(3rem,7.8vw,6.8rem);letter-spacing:-.085em;text-shadow:0 20px 70px rgba(0,0,0,.34)}
-    h1 span{color:#60a5fa}
-    .sub{color:#aab8cf;max-width:780px}
-    .live{color:#aab8cf}
-    .status,.selector a,.panel,.headline,.card{
-      background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.028)),rgba(12,26,43,.72);
-      border-color:rgba(226,232,240,.13);
-      box-shadow:0 22px 70px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.06);
-      backdrop-filter:blur(18px) saturate(135%);
+    .overview-hero .subtitle { color: #5d6679; max-width: 880px; font-size: 16px; }
+    .hero-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+    .status-stack { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .soft-pill {
+      border: 1px solid rgba(24,32,51,.10);
+      background: rgba(255,255,255,.70);
+      color: #3d475d;
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 10px 30px rgba(40,30,20,.07);
     }
-    .status{color:#aab8cf}
-    .overview{margin-top:18px}
-    .panel{border-radius:28px}
-    .panel h2,.headline-value,.card h2{color:#f8fafc}
-    .status-item{background:rgba(7,17,31,.42);border-color:rgba(226,232,240,.12);border-radius:18px}
-    .status-item strong,.headline-label,.bar-value,.bar-label,.headline-sub,.card p{color:#aab8cf}
-    .selector{
-      background:rgba(255,255,255,.045);
-      border:1px solid rgba(226,232,240,.12);
-      border-radius:999px;
-      padding:8px;
-      width:fit-content;
-      max-width:100%;
-      margin-left:auto;
-      margin-right:auto;
-      box-shadow:0 16px 36px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.055);
-      backdrop-filter:blur(18px) saturate(140%);
+    .soft-pill.good { color: #16734d; background: rgba(220,252,231,.82); }
+    .soft-pill.warn { color: #8a5a00; background: rgba(254,243,199,.88); }
+    .soft-pill.bad { color: #9f1239; background: rgba(255,228,230,.90); }
+    .headline-grid {
+      display: grid;
+      grid-template-columns: 1.35fr repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 28px;
     }
-    .selector a{
-      box-shadow:none;
-      background:transparent;
-      color:#aab8cf;
-      border-color:transparent;
+    .headline-card {
+      border: 1px solid rgba(24,32,51,.10);
+      background: rgba(255,255,255,.76);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 18px 50px rgba(40,30,20,.10);
+      min-width: 0;
     }
-    .selector a:hover,.selector a:focus-visible{background:rgba(255,255,255,.10);color:#f8fafc;border-color:rgba(255,255,255,.08)}
-    .headline{border-radius:22px}
-    .champ{
-      background:
-        radial-gradient(720px 280px at 0% 0%,rgba(247,201,72,.18),transparent 58%),
-        linear-gradient(145deg,rgba(21,23,35,.95) 0%,rgba(7,9,19,.98) 100%);
-      border-color:rgba(255,255,255,.12);
-      box-shadow:0 36px 90px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.08);
+    .headline-card.primary {
+      background: linear-gradient(135deg, rgba(255,255,255,.86), rgba(236,253,245,.84) 52%, rgba(219,234,254,.72));
     }
-    .card{border-radius:28px;color:#f8fafc}
-    .card.dark{background:linear-gradient(180deg,rgba(196,181,253,.13),rgba(255,255,255,.028)),rgba(12,15,30,.82)}
-    .metric-line{border-top-color:rgba(226,232,240,.12)}
-    .go{color:#93c5fd}.card.dark .go{color:#ddd6fe}
-    footer{color:#8291a9}
-    @media(max-width:760px){.selector{border-radius:24px}.selector a{flex:1 1 160px;justify-content:center}}
+    .headline-label { color: #69748a; font-size: 11px; font-weight: 900; letter-spacing: .10em; text-transform: uppercase; }
+    .headline-value { font-size: clamp(26px, 4vw, 42px); line-height: 1; font-weight: 900; margin-top: 12px; color: #172033; font-variant-numeric: tabular-nums; }
+    .headline-sub { color: #69748a; font-size: 12px; margin-top: 9px; line-height: 1.4; }
+    .operating-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .operating-card {
+      min-width: 0;
+      border: 1px solid rgba(24,32,51,.10);
+      background: rgba(255,255,255,.66);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 12px 34px rgba(40,30,20,.08);
+    }
+    .operating-card.good { border-color: rgba(22,115,77,.20); background: rgba(220,252,231,.70); }
+    .operating-card.warn { border-color: rgba(138,90,0,.22); background: rgba(254,243,199,.76); }
+    .operating-card.bad { border-color: rgba(159,18,57,.25); background: rgba(255,228,230,.80); }
+    .operating-card.info { border-color: rgba(37,99,235,.20); background: rgba(219,234,254,.72); }
+    .operating-label { color: #69748a; font-size: 10px; font-weight: 900; letter-spacing: .11em; text-transform: uppercase; }
+    .operating-value { margin-top: 7px; color: #172033; font-weight: 950; line-height: 1.2; overflow-wrap: anywhere; }
+    .operating-sub { margin-top: 6px; color: #69748a; font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; }
+    .account-truth-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .account-truth-strip .operating-card { box-shadow: 0 10px 28px rgba(40,30,20,.07); }
+    .account-truth-title {
+      margin-top: 20px;
+      color: #3d475d;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+    .account-truth-title span {
+      color: #69748a;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    .capital-alert {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-top: 18px;
+      border: 1px solid rgba(138,90,0,.22);
+      background: rgba(254,243,199,.78);
+      border-radius: 20px;
+      padding: 14px 16px;
+      color: #172033;
+      box-shadow: 0 14px 36px rgba(40,30,20,.08);
+    }
+    .capital-alert.good {
+      border-color: rgba(22,115,77,.20);
+      background: rgba(220,252,231,.72);
+    }
+    .capital-alert.bad {
+      border-color: rgba(159,18,57,.25);
+      background: rgba(255,228,230,.82);
+    }
+    .capital-alert-icon {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      box-shadow: inset 0 0 0 1px rgba(24,32,51,.08);
+    }
+    .capital-alert-title { font-weight: 950; letter-spacing: -.01em; }
+    .capital-alert-copy { color: #69748a; font-size: 12px; line-height: 1.35; margin-top: 3px; }
+    .capital-alert a {
+      color: #172033;
+      text-decoration: none;
+      border: 1px solid rgba(24,32,51,.12);
+      background: rgba(255,255,255,.68);
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .tabs { display: flex; gap: 9px; flex-wrap: wrap; margin: 22px 0 0; }
+    .tab-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: #172033;
+      background: rgba(255,255,255,.78);
+      border: 1px solid rgba(24,32,51,.10);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 900;
+      box-shadow: 0 8px 24px rgba(40,30,20,.08);
+    }
+    .tab-link:hover, .tab-link:focus-visible { outline: none; transform: translateY(-1px); border-color: rgba(96,165,250,.45); }
+    .below { margin-top: 22px; display: grid; grid-template-columns: 1.1fr .9fr; gap: 16px; }
+    .curve-panel { margin-top: 18px; }
+    .overview-panel {
+      min-width: 0;
+      background: linear-gradient(180deg, rgba(16,31,51,.96), rgba(12,26,43,.96));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: 0 22px 70px rgba(0,0,0,.26);
+    }
+    .overview-panel.light {
+      background: rgba(255,255,255,.82);
+      color: #172033;
+      border-color: rgba(24,32,51,.10);
+      box-shadow: 0 18px 50px rgba(40,30,20,.10);
+    }
+    .overview-panel.light .panel-title,
+    .overview-panel.light .metric-value,
+    .overview-panel.light .bar-label { color: #172033; }
+    .overview-panel.light .metric {
+      background: rgba(255,255,255,.62);
+      border-color: rgba(24,32,51,.10);
+      box-shadow: none;
+    }
+    .overview-panel.light .small,
+    .overview-panel.light .metric-label,
+    .overview-panel.light .metric-sub,
+    .overview-panel.light .bar-value { color: #69748a; }
+    .panel-title.serif { font-family: Fraunces, Georgia, serif; letter-spacing: -.035em; font-size: 24px; }
+    .catalyst-lane-grid { display: grid; gap: 10px; }
+    .catalyst-lane {
+      display: grid;
+      grid-template-columns: minmax(140px, .9fr) minmax(110px, .62fr) minmax(100px, .58fr) minmax(130px, .82fr) minmax(140px, .86fr);
+      gap: 12px;
+      align-items: center;
+      border: 1px solid var(--border);
+      background: rgba(7,17,31,.46);
+      border-radius: 16px;
+      padding: 12px;
+      min-width: 0;
+    }
+    .catalyst-name { color: var(--text); font-weight: 900; min-width: 0; overflow-wrap: anywhere; }
+    .catalyst-sub { display: block; color: var(--muted); font-size: 11px; font-weight: 800; margin-top: 2px; }
+    .catalyst-stat { color: var(--muted); font-size: 12px; min-width: 0; }
+    .catalyst-stat strong {
+      display: block;
+      color: var(--text);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+    .catalyst-status {
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,.24);
+      padding: 8px 10px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+    .catalyst-status.good { color: #bbf7d0; background: rgba(53,211,153,.10); border-color: rgba(53,211,153,.28); }
+    .catalyst-status.warn { color: #fde68a; background: rgba(251,191,36,.10); border-color: rgba(251,191,36,.28); }
+    .catalyst-status.muted { color: #cbd5e1; background: rgba(148,163,184,.08); }
+    .range-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+    .range-btn {
+      border: 1px solid rgba(148,163,184,.22);
+      background: rgba(255,255,255,.08);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 8px 11px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .range-btn.active {
+      color: #ecfeff;
+      background: rgba(96,165,250,.24);
+      border-color: rgba(96,165,250,.46);
+    }
+    .curve-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+    .curve-mini {
+      border: 1px solid var(--border);
+      background: rgba(7,17,31,.42);
+      border-radius: 16px;
+      padding: 12px;
+      min-width: 0;
+    }
+    .curve-mini span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .curve-mini strong {
+      display: block;
+      margin-top: 6px;
+      font-size: clamp(18px, 4vw, 28px);
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+    .overview-curve-svg { width: 100%; height: 260px; display: block; overflow: visible; }
+    .curve-legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      margin-top: 8px;
+    }
+    .legend-key { display: inline-flex; align-items: center; gap: 7px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; }
+    .legend-dot.gross { background: var(--blue); }
+    .legend-dot.net { background: var(--green); }
+    .legend-dot.base { background: rgba(148,163,184,.8); }
+    .mini-journal { display: grid; gap: 10px; }
+    .journal-row {
+      display: grid;
+      grid-template-columns: 120px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid var(--border);
+      background: rgba(7,17,31,.46);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .overview-panel.light .journal-row { background: rgba(255,255,255,.62); border-color: rgba(24,32,51,.10); }
+    .journal-date { font-family: "JetBrains Mono", monospace; font-weight: 800; font-size: 12px; color: var(--blue); }
+    .journal-line { font-size: 14px; color: var(--text); }
+    .overview-panel.light .journal-line { color: #172033; }
+    .journal-pnl { font-family: "JetBrains Mono", monospace; font-weight: 900; }
+    .journal-row.combined {
+      grid-template-columns: 112px minmax(0, 1fr) minmax(0, 1fr);
+      align-items: stretch;
+      text-decoration: none;
+      color: inherit;
+    }
+    .journal-cell {
+      min-width: 0;
+      border: 1px solid rgba(24,32,51,.08);
+      border-radius: 14px;
+      padding: 11px;
+      background: rgba(255,255,255,.48);
+    }
+    .journal-cell.real-side { border-left: 4px solid var(--green); }
+    .journal-cell.shadow-side { border-left: 4px solid var(--violet); }
+    .journal-cell-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: #69748a;
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+    .journal-cell-title span:last-child {
+      border: 1px solid rgba(24,32,51,.10);
+      border-radius: 999px;
+      padding: 2px 6px;
+      background: rgba(255,255,255,.58);
+      color: #3d475d;
+      white-space: nowrap;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    .journal-cell-value {
+      margin-top: 8px;
+      color: #172033;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 18px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+    .journal-cell-sub {
+      margin-top: 7px;
+      color: #69748a;
+      font-size: 12px;
+      line-height: 1.38;
+      overflow-wrap: anywhere;
+    }
+    .warning-list { display: grid; gap: 10px; }
+    .warning-item {
+      border: 1px solid rgba(251,191,36,.30);
+      background: rgba(251,191,36,.10);
+      color: #fde68a;
+      border-radius: 15px;
+      padding: 12px;
+      line-height: 1.4;
+      min-width: 0;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .warning-item.ok { border-color: rgba(53,211,153,.30); background: rgba(53,211,153,.10); color: #bbf7d0; }
+    .warning-item.bad { border-color: rgba(251,113,133,.38); background: rgba(251,113,133,.12); color: #fecdd3; }
+    .warning-item.info { border-color: rgba(96,165,250,.30); background: rgba(96,165,250,.10); color: #bfdbfe; }
+    .warning-item .raw-code,
+    .source-snapshot-footer .raw-code {
+      display: block;
+      margin-top: 5px;
+      color: rgba(203,213,225,.62);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .01em;
+      text-transform: none;
+    }
+    .source-snapshot-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .source-snapshot-card {
+      min-width: 0;
+      border: 1px solid rgba(148,163,184,.18);
+      background: rgba(7,17,31,.46);
+      border-radius: 16px;
+      padding: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .source-snapshot-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 5px;
+      background: #94a3b8;
+    }
+    .source-snapshot-card.good::before { background: var(--green); }
+    .source-snapshot-card.warn::before { background: var(--amber); }
+    .source-snapshot-card.bad::before { background: var(--red); }
+    .source-snapshot-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      padding-left: 6px;
+    }
+    .source-snapshot-name { color: var(--text); font-weight: 950; overflow-wrap: anywhere; }
+    .source-snapshot-state {
+      flex: 0 0 auto;
+      border: 1px solid rgba(148,163,184,.20);
+      border-radius: 999px;
+      padding: 4px 7px;
+      font-size: 10px;
+      font-weight: 950;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: rgba(148,163,184,.08);
+    }
+    .source-snapshot-card.good .source-snapshot-state { color: #bbf7d0; background: rgba(53,211,153,.12); border-color: rgba(53,211,153,.26); }
+    .source-snapshot-card.warn .source-snapshot-state { color: #fde68a; background: rgba(251,191,36,.12); border-color: rgba(251,191,36,.26); }
+    .source-snapshot-card.bad .source-snapshot-state { color: #fecdd3; background: rgba(251,113,133,.12); border-color: rgba(251,113,133,.28); }
+    .source-snapshot-meta {
+      margin-top: 9px;
+      padding-left: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.42;
+    }
+    .source-snapshot-footer {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .source-gap-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+      padding-left: 6px;
+    }
+    .source-gap-chip {
+      border: 1px solid rgba(251,191,36,.30);
+      background: rgba(251,191,36,.10);
+      color: #fde68a;
+      border-radius: 999px;
+      padding: 4px 7px;
+      font-size: 10px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      overflow-wrap: anywhere;
+    }
+    @media (max-width: 920px) { .source-snapshot-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 560px) { .source-snapshot-grid { grid-template-columns: 1fr; } }
+    .next-actions {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .action-card {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+      border: 1px solid rgba(24,32,51,.10);
+      background: rgba(255,255,255,.72);
+      border-radius: 20px;
+      padding: 16px;
+      color: #172033;
+      text-decoration: none;
+      box-shadow: 0 14px 40px rgba(40,30,20,.09);
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+    .action-card:hover,
+    .action-card:focus-visible {
+      outline: none;
+      transform: translateY(-2px);
+      border-color: rgba(96,165,250,.48);
+      box-shadow: 0 18px 52px rgba(40,30,20,.13);
+    }
+    .action-card.good { border-color: rgba(22,115,77,.18); background: rgba(220,252,231,.68); }
+    .action-card.warn { border-color: rgba(138,90,0,.22); background: rgba(254,243,199,.78); }
+    .action-card.bad { border-color: rgba(159,18,57,.24); background: rgba(255,228,230,.82); }
+    .action-card.info { border-color: rgba(37,99,235,.18); background: rgba(219,234,254,.72); }
+    .action-kicker {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: #69748a;
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+    .action-state {
+      border-radius: 999px;
+      border: 1px solid rgba(24,32,51,.10);
+      padding: 3px 7px;
+      background: rgba(255,255,255,.58);
+      color: #3d475d;
+      letter-spacing: 0;
+      text-transform: none;
+      white-space: nowrap;
+    }
+    .action-title { font-weight: 950; font-size: 16px; line-height: 1.15; overflow-wrap: anywhere; }
+    .action-copy { color: #5d6679; font-size: 12px; line-height: 1.42; overflow-wrap: anywhere; }
+    .action-metric {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      border-top: 1px solid rgba(24,32,51,.10);
+      padding-top: 10px;
+      font-size: 12px;
+      color: #69748a;
+    }
+    .action-metric strong {
+      color: #172033;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 15px;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+      text-align: right;
+    }
+    .launch-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .launch-card { display: block; text-decoration: none; color: inherit; border: 1px solid var(--border);
+      border-radius: 24px; padding: 22px; background: linear-gradient(180deg, rgba(16,31,51,.96), rgba(12,26,43,.96));
+      box-shadow: 0 20px 60px var(--shadow); transition: transform .16s ease, border-color .16s ease; min-height: 210px; }
+    .launch-card:hover, .launch-card:focus-visible { transform: translateY(-4px); border-color: rgba(96,165,250,.5); outline: none; }
+    .launch-card.real { border-top: 4px solid var(--green); }
+    .launch-card.shadow { border-top: 4px solid var(--violet); }
+    .launch-card h2 { margin: 12px 0 6px; font-size: 1.5rem; }
+    .launch-card p { color: var(--muted); line-height: 1.5; margin: 0 0 14px; }
+    .metric-line { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--border); font-size: 14px; min-width: 0; }
+    .metric-line span,
+    .metric-line strong { min-width: 0; overflow-wrap: anywhere; }
+    .metric-line strong { font-variant-numeric: tabular-nums; }
+    .go { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; font-weight: 900; color: var(--blue); }
+    @media (max-width: 980px) {
+      .headline-grid, .below, .launch-cards { grid-template-columns: 1fr; }
+      .next-actions { grid-template-columns: 1fr 1fr; }
+      .operating-strip, .account-truth-strip { grid-template-columns: 1fr 1fr; }
+      .capital-alert { grid-template-columns: auto 1fr; }
+      .capital-alert a { grid-column: 1 / -1; text-align: center; }
+      .catalyst-lane { grid-template-columns: 1fr 1fr; }
+      .curve-summary { grid-template-columns: 1fr 1fr; }
+      .journal-row { grid-template-columns: 1fr; }
+      .journal-row.combined { grid-template-columns: 1fr; }
+      .status-stack { justify-content: flex-start; }
+    }
+    @media (max-width: 520px) {
+      .next-actions { grid-template-columns: 1fr; }
+      .operating-strip, .account-truth-strip { grid-template-columns: 1fr; }
+      .capital-alert { grid-template-columns: 1fr; }
+      .capital-alert-icon { display: none; }
+      .catalyst-lane { grid-template-columns: 1fr; }
+      .curve-summary { grid-template-columns: 1fr; }
+      .overview-curve-svg { height: 220px; }
+    }
 
-    /* 2026-07-23 Lovable replica pass: calm Trading Analyst main dashboard.
-       This intentionally mirrors the cream, dotted, minimalist dashboard reference
-       while preserving the live-data IDs and fail-closed behavior above. */
-    :root{
-      --cream-bg:#f4f3ee;
-      --cream-card:#fffefa;
-      --cream-card-2:#f8f6ef;
-      --cream-border:#e4dfd2;
-      --cream-border-2:#d8d1bf;
-      --cream-ink:#26232e;
-      --cream-soft:#686170;
-      --cream-muted:#928b98;
-      --cream-ok:#3f8f5f;
-      --cream-bad:#b64a3a;
-      --cream-warn:#b8862a;
-      --cream-warn-soft:#faedc6;
-      --cream-info:#4a6da8;
-      --cream-shadow:0 1px 2px rgba(0,0,0,.04),0 14px 34px -22px rgba(40,30,20,.28);
+    /* Lovable-inspired landing shell: clean, centered, off-white, minimal. */
+    .overview-shell.lovable-landing { width: min(960px, calc(100vw - 32px)); padding: clamp(40px, 7vw, 86px) 0 64px; }
+    .overview-shell.lovable-landing .overview-hero {
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+      overflow: visible;
+      text-align: center;
     }
-    body{
-      padding:26px 24px 64px;
-      color:var(--cream-ink);
-      font-family:"Spline Sans",Inter,system-ui,sans-serif;
-      background-color:var(--cream-bg);
-      background-image:radial-gradient(rgba(90,80,70,.10) 1px,transparent 1px);
-      background-size:22px 22px;
-      background-attachment:fixed;
+    .overview-shell.lovable-landing .overview-hero:after { display: none; }
+    .lovable-logo {
+      width: 54px;
+      height: 54px;
+      margin: 0 auto 18px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      background: #ffffff;
+      border: 1px solid rgba(20,24,39,.08);
+      box-shadow: 0 18px 42px rgba(34,29,19,.10);
+      color: #2563eb;
     }
-    body::before{display:none}
-    .shell{max-width:1120px}
-    .brand{
-      justify-content:flex-start;
-      align-items:center;
-      margin:0 0 2px;
-      text-align:left;
-      gap:12px;
+    .lovable-logo svg { width: 34px; height: 34px; }
+    .lovable-landing .eyebrow {
+      color: #5d6679;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      justify-content: center;
     }
-    .mark{
-      width:10px;height:10px;border-radius:50%;background:var(--cream-ok);
-      border:0;box-shadow:none;display:block;transform:none;flex:0 0 10px;
+    .lovable-landing .overview-hero h1 {
+      max-width: none;
+      margin: 12px auto 0;
+      font-size: clamp(42px, 8vw, 82px);
+      line-height: .92;
+      letter-spacing: -.07em;
+      color: #171827;
     }
-    .mark::before{display:none}
-    h1{
-      font-family:"Fraunces",Georgia,serif;
-      font-size:clamp(2.05rem,4.5vw,3.35rem);
-      line-height:1.03;
-      letter-spacing:-.045em;
-      font-weight:600;
-      color:var(--cream-ink);
-      text-shadow:none;
+    .lovable-landing .overview-hero h1 .accent { color: #2563eb; }
+    .lovable-landing .subtitle {
+      margin: 20px auto 0;
+      max-width: 680px;
+      color: #687085;
+      font-size: 16px;
+      line-height: 1.7;
     }
-    h1 span{color:var(--cream-ink)}
-    .sub{
-      align-self:flex-start;
-      margin:2px 0 16px 0;
-      max-width:720px;
-      text-align:left;
-      color:var(--cream-soft);
-      font-size:.96rem;
+    .lovable-landing .status-stack {
+      justify-content: center;
+      margin-top: 20px;
     }
-    .live{
-      align-self:flex-end;
-      margin:-44px 0 16px;
-      color:var(--cream-muted);
-      font-family:"Spline Sans Mono",ui-monospace,monospace;
-      font-size:.68rem;
-      text-transform:uppercase;
-      letter-spacing:.12em;
+    .lovable-landing .soft-pill {
+      background: rgba(255,255,255,.82);
+      border-color: rgba(20,24,39,.09);
+      box-shadow: 0 10px 28px rgba(34,29,19,.07);
     }
-    .dot{width:7px;height:7px;background:var(--cream-ok)}
-    .status-wrap{text-align:left;order:3}
-    .status{
-      width:100%;
-      justify-content:space-between;
-      margin:0 0 14px;
-      padding:14px 20px;
-      border-radius:999px;
-      border-color:#e8c879;
-      background:linear-gradient(180deg,#fff2c9,#fae5aa);
-      box-shadow:var(--cream-shadow);
-      color:#765719;
-      font-family:"Fraunces",Georgia,serif;
-      font-size:1rem;
-      font-weight:600;
-      flex-wrap:wrap;
-      justify-content:flex-start;
-      line-height:1.45;
+    .lovable-topbook {
+      margin-top: 44px;
+      text-align: left;
+      color: #f8fafc;
+      background: linear-gradient(145deg, #151723 0%, #070913 100%);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 28px;
+      box-shadow: 0 34px 80px rgba(10,12,21,.28);
+      overflow: hidden;
     }
-    .status.ok{background:linear-gradient(180deg,#e8f4e7,#d7ead7);border-color:#b8d6ba;color:#2f7148}
-    .status.bad{background:linear-gradient(180deg,#f7e3dd,#f1d2c9);border-color:#ddb1a7;color:#8d392e}
-    .status.warn{background:linear-gradient(180deg,#fff2c9,#fae5aa);border-color:#e8c879;color:#765719}
-    .overview{grid-template-columns:1fr;gap:14px;margin:10px 0 14px;order:8}
-    .panel,.headline,.card{
-      background:var(--cream-card);
-      border:1px solid var(--cream-border);
-      border-radius:22px;
-      box-shadow:var(--cream-shadow);
-      backdrop-filter:none;
-      color:var(--cream-ink);
+    .lovable-topbook .gold-strip { height: 7px; background: linear-gradient(90deg, #f7c948, #ff8a3d); }
+    .lovable-topbook-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 22px 24px 0;
+      flex-wrap: wrap;
     }
-    .panel{padding:20px}
-    .panel h2,.card h2{
-      font-family:"Fraunces",Georgia,serif;
-      font-size:1.3rem;
-      font-weight:600;
-      color:var(--cream-ink);
-      letter-spacing:-.02em;
+    .lovable-topbook h2 {
+      margin: 0;
+      font-family: Fraunces, Georgia, serif;
+      font-size: clamp(28px, 4vw, 44px);
+      letter-spacing: -.045em;
     }
-    .status-grid{
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:8px;
+    .lovable-topbook p { margin: 8px 0 0; color: rgba(226,232,240,.72); max-width: 620px; line-height: 1.55; }
+    .lovable-topbook .headline-grid {
+      grid-template-columns: 1.2fr repeat(3, 1fr);
+      margin: 18px 0 0;
+      padding: 0 24px 24px;
     }
-    .status-item{
-      background:rgba(255,255,255,.55);
-      border-color:var(--cream-border);
-      border-radius:999px;
-      padding:8px 12px;
-      display:grid;
-      grid-template-columns:auto 1fr;
-      gap:9px;
-      align-items:center;
+    .lovable-topbook .headline-card {
+      background: rgba(255,255,255,.055);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: none;
+      backdrop-filter: blur(14px);
     }
-    .status-item strong{
-      margin:0;
-      color:var(--cream-muted);
-      font-family:"Spline Sans Mono",ui-monospace,monospace;
-      font-size:.58rem;
-      letter-spacing:.12em;
+    .lovable-topbook .headline-card.primary {
+      background: linear-gradient(135deg, rgba(37,99,235,.22), rgba(247,201,72,.13));
     }
-    .status-value{font-size:.82rem;color:var(--cream-ink);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .warning-list{gap:8px}
-    .warning{
-      border-color:#e8c879;
-      background:var(--cream-warn-soft);
-      color:#765719;
-      border-radius:999px;
-      padding:9px 14px;
-      font-size:.82rem;
+    .lovable-topbook .headline-label,
+    .lovable-topbook .headline-sub { color: rgba(226,232,240,.70); }
+    .lovable-topbook .headline-value { color: #ffffff; }
+    .lovable-landing .operating-strip,
+    .lovable-landing .account-truth-strip,
+    .lovable-landing .reader-guide,
+    .lovable-landing .next-actions,
+    .lovable-landing .capital-alert {
+      text-align: left;
     }
-    .warning.bad{border-color:#ddb1a7;background:#f7e3dd;color:#8d392e}
-    .warning.ok{border-color:#b8d6ba;background:#e8f4e7;color:#2f7148}
-    .guard-grid{grid-template-columns:repeat(3,minmax(0,1fr));order:9}
-    .guard-card{
-      background:var(--cream-card);
-      border-color:var(--cream-border);
-      border-radius:22px;
-      box-shadow:var(--cream-shadow);
+    .lovable-landing .operating-strip { margin-top: 22px; }
+    .lovable-landing .account-truth-title { text-align: left; margin-top: 24px; }
+    .lovable-landing .tabs {
+      justify-content: center;
+      margin: 26px auto 0;
     }
-    .guard-label,.guard-copy{color:var(--cream-muted);font-family:"Spline Sans Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;font-size:.62rem}
-    .guard-value{font-family:"Fraunces",Georgia,serif;color:var(--cream-ink);font-weight:600;font-size:1.8rem;letter-spacing:-.035em}
-    .guard-badge{background:var(--cream-card-2);border-color:var(--cream-border);color:var(--cream-muted)}
-    .guard-badge.ok{background:#e8f4e7;border-color:#b8d6ba;color:#2f7148}
-    .guard-badge.warn{background:var(--cream-warn-soft);border-color:#e8c879;color:#765719}
-    .guard-badge.bad{background:#f7e3dd;border-color:#ddb1a7;color:#8d392e}
-    .headline-grid{
-      order:6;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:14px;
-      margin:18px 0;
+    .lovable-landing .tab-link {
+      background: rgba(255,255,255,.82);
+      border-color: rgba(20,24,39,.09);
+      box-shadow: 0 12px 30px rgba(34,29,19,.08);
     }
-    .headline{
-      min-height:110px;
-      padding:18px;
+    .lovable-landing .overview-panel {
+      background: rgba(255,255,255,.80);
+      color: #171827;
+      border-color: rgba(20,24,39,.10);
+      box-shadow: 0 20px 58px rgba(34,29,19,.12);
     }
-    .headline-label,.bar-value,.bar-label,.headline-sub,.card p,.cap{
-      color:var(--cream-muted);
-      font-family:"Spline Sans Mono",ui-monospace,monospace;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      font-size:.62rem;
+    .lovable-landing .overview-panel .panel-title,
+    .lovable-landing .overview-panel .metric-value,
+    .lovable-landing .overview-panel .bar-label,
+    .lovable-landing .overview-panel .catalyst-name { color: #171827; }
+    .lovable-landing .overview-panel .small,
+    .lovable-landing .overview-panel .metric-label,
+    .lovable-landing .overview-panel .metric-sub,
+    .lovable-landing .overview-panel .bar-value,
+    .lovable-landing .overview-panel .catalyst-stat,
+    .lovable-landing .overview-panel .catalyst-sub { color: #687085; }
+    .lovable-landing .overview-panel code { color: #3b4a66; background: rgba(20,24,39,.06); }
+    .lovable-landing .metric,
+    .lovable-landing .catalyst-lane,
+    .lovable-landing .source-snapshot-card,
+    .lovable-landing .warning-card,
+    .lovable-landing .journal-row,
+    .lovable-landing .guide-card,
+    .lovable-landing .action-card {
+      background: rgba(255,255,255,.64);
+      border-color: rgba(20,24,39,.10);
+      color: #171827;
     }
-    .headline-value{
-      color:var(--cream-ink);
-      font-family:"Fraunces",Georgia,serif;
-      font-size:2rem;
-      font-weight:600;
-      letter-spacing:-.04em;
+    .lovable-landing .below {
+      grid-template-columns: 1fr;
+      gap: 18px;
     }
-    .selector{
-      order:5;
-      position:sticky;
-      top:10px;
-      z-index:10;
-      display:flex;
-      background:var(--cream-card);
-      border:1px solid var(--cream-border);
-      border-radius:999px;
-      padding:7px;
-      box-shadow:var(--cream-shadow);
-      width:100%;
-      margin:10px 0 20px;
-      gap:4px;
+    .lovable-landing .launch-cards {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 24px;
     }
-    .selector a{
-      flex:1 1 0;
-      justify-content:center;
-      border:0;
-      border-radius:999px;
-      background:transparent;
-      color:var(--cream-muted);
-      box-shadow:none;
-      font-family:"Spline Sans Mono",ui-monospace,monospace;
-      font-size:.68rem;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      padding:12px 10px;
+    .lovable-landing .launch-card {
+      background: rgba(255,255,255,.82);
+      border-color: rgba(20,24,39,.10);
+      color: #171827;
+      box-shadow: 0 20px 58px rgba(34,29,19,.12);
     }
-    .selector a:first-child,.selector a:hover,.selector a:focus-visible{
-      background:#171b28;
-      color:#fffefa;
-    }
-    .charts{
-      order:7;
-      grid-template-columns:1.35fr .85fr;
-      gap:16px;
-      margin-bottom:18px;
-    }
-    .spark{height:260px}
-    .chart-head h2{font-family:"Fraunces",Georgia,serif;color:var(--cream-ink)}
-    .range-tabs{
-      background:var(--cream-card-2);
-      border-color:var(--cream-border);
-    }
-    .range-button{color:var(--cream-muted)}
-    .range-button.active{background:#171b28;color:#fffefa}
-    .bar{grid-template-columns:150px 1fr 116px}
-    .bar-track{background:#e8e3d8}
-    .bar-fill{background:linear-gradient(90deg,#b7dfbe,var(--cream-ok))}
-    .bar-fill.neg{background:linear-gradient(90deg,#e9b0a2,var(--cream-bad))}
-    .book-grid{
-      order:4;
-      grid-template-columns:1.16fr 1fr 1fr;
-      gap:16px;
-    }
-    .champ{
-      border-radius:22px;
-      background:var(--cream-card);
-      border-color:var(--cream-border);
-      box-shadow:var(--cream-shadow);
-      color:var(--cream-ink);
-      padding:22px;
-      min-height:250px;
-    }
-    .champ::before{height:0}
-    .champ-label{
-      color:var(--cream-muted);
-      font-family:"Spline Sans Mono",ui-monospace,monospace;
-      letter-spacing:.14em;
-    }
-    .champ-name{
-      font-family:"Fraunces",Georgia,serif;
-      font-size:clamp(2rem,4vw,3.55rem);
-      font-weight:600;
-      color:var(--cream-ink);
-      letter-spacing:-.055em;
-    }
-    .val{font-family:"Fraunces",Georgia,serif;color:var(--cream-ink);font-weight:600}
-    .up{color:var(--cream-ok)}.down{color:var(--cream-bad)}.flat{color:var(--cream-info)}
-    .card{
-      min-height:250px;
-      padding:22px;
-      transition:transform .16s ease,box-shadow .16s ease;
-    }
-    .card::before{display:none}
-    .card.dark{
-      background:var(--cream-card);
-      border-color:var(--cream-border);
-      color:var(--cream-ink);
-    }
-    .card:hover{transform:translateY(-3px);box-shadow:0 18px 46px -24px rgba(40,30,20,.42)}
-    .pill,.card.dark .pill{
-      background:#171b28;
-      color:#fffefa;
-      font-family:"Spline Sans Mono",ui-monospace,monospace;
-    }
-    .card.dark p{color:var(--cream-muted)}
-    .metric-line{border-top-color:var(--cream-border);color:var(--cream-soft)}
-    .go,.card.dark .go{color:var(--cream-ok)}
-    footer{color:var(--cream-muted);font-family:"Spline Sans Mono",ui-monospace,monospace}
-    @media(max-width:980px){
-      .live{align-self:flex-start;margin:8px 0 12px}
-      .status-grid,.headline-grid,.charts,.book-grid,.guard-grid{grid-template-columns:1fr}
-      .selector{position:static;border-radius:22px}
-      .selector a{flex:1 1 180px}
-    }
-    @media(max-width:760px){
-      body{padding:18px 14px 48px}
-      .status-item{grid-template-columns:1fr;border-radius:16px}
-      .bar{grid-template-columns:1fr}
+    .lovable-landing .launch-card h2 { font-family: Fraunces, Georgia, serif; letter-spacing: -.035em; }
+    .lovable-landing .footer { color: #687085; text-align: center; }
+    @media (max-width: 760px) {
+      .lovable-topbook .headline-grid,
+      .lovable-landing .operating-strip,
+      .lovable-landing .account-truth-strip,
+      .lovable-landing .launch-cards { grid-template-columns: 1fr; }
+      .lovable-topbook-head,
+      .lovable-topbook .headline-grid { padding-left: 16px; padding-right: 16px; }
+      .lovable-landing .overview-hero h1 { font-size: clamp(38px, 15vw, 58px); }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <div class="brand"><div class="mark"></div><h1>Quant<span>Pulse</span> · Live Agent</h1></div>
-    <p class="sub">One live build, two navigable cockpits: IBKR / REAL executable trades vs SHADOW research observations.</p>
-    <div class="live"><span class="dot" id="liveDot"></span> Verified data only for REAL · SHADOW is research-only, not executable</div>
-    <div class="status-wrap"><div class="status" id="siteStatus">Loading live agent…</div></div>
-
-    <section class="overview" aria-label="System safety overview">
-      <div class="panel">
-        <h2>System status</h2>
-        <div class="status-grid">
-          <div class="status-item"><strong>Agent data API</strong><div class="status-value" id="agentState">Checking…</div></div>
-          <div class="status-item"><strong>IBKR Gateway</strong><div class="status-value" id="ibkrState">Unknown until backend reports</div></div>
-          <div class="status-item"><strong>NDAX</strong><div class="status-value" id="ndaxState">Unknown until backend reports</div></div>
-          <div class="status-item"><strong>Last refresh</strong><div class="status-value" id="refreshState">—</div></div>
-          <div class="status-item"><strong>Market session</strong><div class="status-value" id="marketState">Checking local clock…</div></div>
-          <div class="status-item"><strong>Owner / action</strong><div class="status-value" id="ownerState">Codex checking</div></div>
+  <main class="overview-shell lovable-landing">
+    <section class="overview-hero">
+      <div class="lovable-logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none">
+          <path d="M16 4 28 28H4L16 4Z" fill="currentColor" opacity=".95"></path>
+          <path d="M16 11 22 24H10L16 11Z" fill="#f7c948"></path>
+        </svg>
+      </div>
+      <div class="eyebrow">Trading Analyst · Trading Lab</div>
+      <h1>Quant<span class="accent">Pulse</span> · Trading Lab</h1>
+      <p class="subtitle">
+        One simple place to open the live IBKR/NDAX cockpit, the SHADOW research cockpit, and the top-book daily view.
+        Real money and research stay separated; missing evidence stays visible.
+      </p>
+      <div class="hero-top">
+        <div class="status-stack" aria-label="System status">
+          <span class="soft-pill" id="agentStatus">Agent: checking…</span>
+          <span class="soft-pill" id="ibkrStatus">IBKR: checking…</span>
+          <span class="soft-pill" id="ndaxStatus">NDAX: gated</span>
+          <span class="soft-pill" id="telegramStatus">Telegram: checking…</span>
+          <span class="soft-pill" id="ownerStatus">Owner: checking…</span>
         </div>
       </div>
-      <div class="panel">
-        <h2>Jon attention</h2>
-        <div class="warning-list" id="warningList"><div class="warning">Checking for stale data, missing sources, and reconciliation warnings…</div></div>
-      </div>
-    </section>
 
-    <section class="guard-grid" aria-label="Data and execution guardrails">
-      <div class="guard-card">
-        <div class="guard-label">Source coverage <span class="guard-badge warn" id="sourceGuardBadge">Checking</span></div>
-        <div class="guard-value" id="sourceGuardValue">—</div>
-        <div class="guard-copy" id="sourceGuardCopy">Expected sources, zero-coverage lanes, and source freshness.</div>
+      <div class="operating-strip" id="operatingStrip" aria-label="Operating picture">
+        <div class="operating-card"><div class="operating-label">Safety</div><div class="operating-value">Checking…</div><div class="operating-sub">verified-only public accounting</div></div>
+        <div class="operating-card"><div class="operating-label">Broker</div><div class="operating-value">Checking…</div><div class="operating-sub">IBKR / NDAX state</div></div>
+        <div class="operating-card"><div class="operating-label">Sources</div><div class="operating-value">Checking…</div><div class="operating-sub">coverage and freshness</div></div>
+        <div class="operating-card"><div class="operating-label">Owner</div><div class="operating-value">Checking…</div><div class="operating-sub">who needs to act</div></div>
       </div>
-      <div class="guard-card">
-        <div class="guard-label">Execution quality <span class="guard-badge warn" id="executionGuardBadge">Checking</span></div>
-        <div class="guard-value" id="executionGuardValue">—</div>
-        <div class="guard-copy" id="executionGuardCopy">Fees, brackets, slippage, latency, stale positions.</div>
-      </div>
-      <div class="guard-card">
-        <div class="guard-label">Data contract <span class="guard-badge warn" id="contractGuardBadge">Checking</span></div>
-        <div class="guard-value" id="contractGuardValue">—</div>
-        <div class="guard-copy" id="contractGuardCopy">Generated/source timestamps, schema, population, venue.</div>
-      </div>
-    </section>
-
-    <section class="headline-grid" aria-label="Today headline metrics">
-      <div class="headline"><div class="headline-label">REAL net today</div><div class="headline-value" id="todayNet">—</div><div class="headline-sub" id="todayNetSub">live verified closed only</div></div>
-      <div class="headline"><div class="headline-label">Capital deployed today</div><div class="headline-value" id="todayCapital">—</div><div class="headline-sub" id="todayCapitalSub">entry notional in visible REAL rows</div></div>
-      <div class="headline"><div class="headline-label">Open REAL positions</div><div class="headline-value" id="todayOpen">—</div><div class="headline-sub" id="todayOpenSub">IBKR/PAPER, separate from SHADOW</div></div>
-      <div class="headline"><div class="headline-label">Commission drag</div><div class="headline-value" id="todayDrag">—</div><div class="headline-sub" id="todayDragSub">fees vs gross P&L</div></div>
-    </section>
-
-    <nav class="selector" aria-label="Population selector">
-      <a href="./real.html">✅ IBKR PAPER</a>
-      <a href="./real.html#ndax">🛑 NDAX REAL</a>
-      <a href="./shadow.html">🔬 SHADOW RESEARCH</a>
-      <a href="./journal.html">📓 Daily journal</a>
-      <a href="./catalyst.html">🧪 Catalyst Edge</a>
-      <a href="./sources.html">🛰️ Sources</a>
-      <a href="./execution.html">⚙️ Execution</a>
-    </nav>
-
-    <section class="charts" aria-label="Overview charts">
-      <div class="panel">
-        <div class="chart-head">
-          <div>
-            <h2>REAL P&L curve</h2>
-            <div class="headline-sub" id="curveCaption">Gross and net-after-fees · USD</div>
-          </div>
-          <div class="range-tabs" aria-label="P&L curve range">
-            <button class="range-button active" type="button" data-range="day">Daily</button>
-            <button class="range-button" type="button" data-range="week">Weekly</button>
-            <button class="range-button" type="button" data-range="all">All-time</button>
-          </div>
-        </div>
-        <div id="todayCurve"></div>
-      </div>
-      <div class="panel">
-        <h2>Catalyst lanes</h2>
-        <div id="catalystBars"></div>
-      </div>
-    </section>
-
-    <section class="book-grid" aria-label="Primary books">
-      <a class="champ" id="topCard" href="./real.html" aria-label="Open the top book cockpit">
+      <div id="capitalAlert" class="capital-alert" role="status" aria-live="polite">
+        <div class="capital-alert-icon">💵</div>
         <div>
-          <div class="champ-label">Top book · live agent</div>
-          <div class="champ-name" id="topName">Loading top book…</div>
+          <div class="capital-alert-title">Checking broker cash/equity snapshot…</div>
+          <div class="capital-alert-copy">If live broker balances are missing, the dashboard uses trade-level notional only and says so.</div>
         </div>
-        <div class="champ-stats">
-          <div><span class="cap">Evidence</span><span class="val" id="topEvidence">—</span></div>
-          <div><span class="cap">Primary metric</span><span class="val" id="topMetric">—</span></div>
-          <div><span class="cap">Status</span><span class="val" id="topStatus">—</span></div>
+        <a href="./real.html">Open REAL cockpit →</a>
+      </div>
+
+      <section class="lovable-topbook" id="top-book" aria-label="Top book headline">
+        <div class="gold-strip" aria-hidden="true"></div>
+        <div class="lovable-topbook-head">
+          <div>
+            <div class="eyebrow">Top book · verified rows only</div>
+            <h2>Today’s top book</h2>
+            <p>Fast answer first: net P&amp;L, capital used, live exposure, and fees. Open IBKR/NDAX or SHADOW for the full cockpit.</p>
+          </div>
+          <a class="tab-link" href="./real.html">Open IBKR / NDAX →</a>
         </div>
-      </a>
+      <div class="headline-grid" aria-label="Today headline metrics">
+        <div class="headline-card primary">
+          <div class="headline-label">REAL net P&L today <span class="info-tip" tabindex="0" role="button" aria-label="Help: REAL net P&L today" data-help="Broker-backed closed trades only. Net P&L means gross trading result minus commissions/costs, so it is the number closest to what actually matters.">?</span></div>
+          <div class="headline-value" id="todayNet">—</div>
+          <div class="headline-sub" id="todayNetSub">gross − commissions = net · n shown</div>
+        </div>
+        <div class="headline-card">
+          <div class="headline-label">Capital deployed today <span class="info-tip" tabindex="0" role="button" aria-label="Help: Capital deployed today" data-help="The notional dollars committed by verified trade rows today. This is separate from cash/equity balances, which only show when a trusted broker snapshot exists.">?</span></div>
+          <div class="headline-value" id="todayDeployed">—</div>
+          <div class="headline-sub" id="todayDeployedSub">spent/notional from verified rows</div>
+        </div>
+        <div class="headline-card">
+          <div class="headline-label">Open REAL positions <span class="info-tip" tabindex="0" role="button" aria-label="Help: open REAL positions" data-help="Broker-backed positions that have an entry but no exit timestamp yet. They are live exposure, not finished performance.">?</span></div>
+          <div class="headline-value" id="todayOpen">—</div>
+          <div class="headline-sub">exit_ts is null</div>
+        </div>
+        <div class="headline-card">
+          <div class="headline-label">Commission drag <span class="info-tip" tabindex="0" role="button" aria-label="Help: Commission drag" data-help="Fees as dollars and as a share of gross P&L. If drag is high, the strategy has to overcome costs before it can be real edge.">?</span></div>
+          <div class="headline-value" id="todayFees">—</div>
+          <div class="headline-sub" id="todayFeesSub">fees versus gross P&L</div>
+        </div>
+      </div>
+      </section>
 
-      <a class="card" id="realCard" href="./real.html" aria-label="Open IBKR REAL executable cockpit" title="Open IBKR / REAL cockpit">
-        <span class="pill">IBKR / REAL</span>
-        <h2>Executable trades</h2>
-        <p>Verified broker-backed fills from <code>agent_trades</code>. The trusted side for actual P&L (Rule 21).</p>
-        <div class="metric-line"><span>Verified closed</span><strong id="realN">—</strong></div>
-        <div class="metric-line"><span>Open positions</span><strong id="realOpen">—</strong></div>
-        <div class="metric-line"><span>Net P&L</span><strong id="realNet">—</strong></div>
-        <span class="go">Open IBKR cockpit →</span>
-      </a>
+      <div class="account-truth-title">Account capital truth <span>— live broker balances fail closed; trade-level sizing proof stays separate</span></div>
+      <div class="account-truth-strip" id="accountTruthStrip" aria-label="Account capital truth">
+        <div class="operating-card warn"><div class="operating-label">Cash</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
+        <div class="operating-card warn"><div class="operating-label">Equity</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
+        <div class="operating-card warn"><div class="operating-label">Buying power</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
+        <div class="operating-card info"><div class="operating-label">Sizing evidence</div><div class="operating-value">Checking…</div><div class="operating-sub">entry-time proof from trade rows</div></div>
+      </div>
 
-      <a class="card dark" id="shadowCard" href="./shadow.html" aria-label="Open SHADOW research cockpit" title="Open SHADOW research cockpit">
-        <span class="pill">SHADOW / RESEARCH</span>
-        <h2>Research observations</h2>
-        <p>Priced forward marks from <code>agent_shadow_trades</code>. Research only — not executable P&L.</p>
-        <div class="metric-line"><span>Priced n</span><strong id="shadowN">—</strong></div>
-        <div class="metric-line"><span>Best horizon</span><strong id="shadowHorizon">—</strong></div>
-        <div class="metric-line"><span>Best avg return</span><strong id="shadowReturn">—</strong></div>
-        <span class="go">Open SHADOW cockpit →</span>
-      </a>
+      <nav class="tabs" aria-label="Population selector">
+        <a class="tab-link" href="./real.html">✅ IBKR PAPER / REAL</a>
+        <a class="tab-link" href="./shadow.html">🔬 SHADOW RESEARCH</a>
+        <a class="tab-link" href="./catalyst.html">📊 CATALYST EDGE</a>
+        <a class="tab-link" href="./sources.html">🛰️ SOURCES</a>
+        <a class="tab-link" href="./execution.html">💸 EXECUTION QUALITY</a>
+        <span class="tab-link" aria-disabled="true">🛑 NDAX REAL: gated until enabled</span>
+      </nav>
+
+      <section class="launch-cards" aria-label="Primary dashboard cards">
+        <a class="launch-card" href="#top-book" aria-label="Jump to the top book daily snapshot">
+          <span class="badge warn">TOP BOOK</span>
+          <h2>Daily snapshot</h2>
+          <p>One card for the current best answer: account status, net P&amp;L, trade spend, open risk, and Jon/Codex ownership.</p>
+          <div class="metric-line"><span>Primary source</span><strong>verified rows</strong></div>
+          <div class="metric-line"><span>Style</span><strong>10-sec read</strong></div>
+          <span class="go">Jump to top book ↑</span>
+        </a>
+        <a class="launch-card real" id="realCard" href="./real.html" aria-label="Open the IBKR REAL verified cockpit">
+          <span class="badge real">IBKR / NDAX</span>
+          <h2>Executable trades</h2>
+          <p>Verified, costed, broker-backed fills from <code>agent_trades</code>. IBKR is live/paper; NDAX stays gated until enabled.</p>
+          <div class="metric-line"><span>Verified closed</span><strong id="cardRealN">—</strong></div>
+          <div class="metric-line"><span>Open positions</span><strong id="cardRealOpen">—</strong></div>
+          <div class="metric-line"><span>Net P&L</span><strong id="cardRealNet">—</strong></div>
+          <span class="go">Open IBKR cockpit →</span>
+        </a>
+        <a class="launch-card shadow" id="shadowCard" href="./shadow.html" aria-label="Open the SHADOW research cockpit">
+          <span class="badge shadow">SHADOW / RESEARCH</span>
+          <h2>Research observations</h2>
+          <p>Forward marks and modeled scenarios from <code>agent_shadow_trades</code>. Research only — not broker P&L.</p>
+          <div class="metric-line"><span>Complete evidence n</span><strong id="cardShadowN">—</strong></div>
+          <div class="metric-line"><span>Modeled rows</span><strong id="cardShadowModeled">—</strong></div>
+          <div class="metric-line"><span>Best horizon</span><strong id="cardShadowHorizon">—</strong></div>
+          <span class="go">Open SHADOW cockpit →</span>
+        </a>
+      </section>
+
+      <div class="reader-guide" aria-label="Plain English metric guide">
+        <div class="guide-card">
+          <strong>Net P&amp;L</strong>
+          <span>What is left after broker commissions. If commission proof is missing, the trade is excluded fail-closed.</span>
+        </div>
+        <div class="guide-card">
+          <strong>Commission drag</strong>
+          <span>How much fees ate from gross P&amp;L. High drag means the strategy must win by more just to break even.</span>
+        </div>
+        <div class="guide-card">
+          <strong>Capital deployed</strong>
+          <span>Dollars actually committed by verified rows. Broker cash/equity only appears when a trusted snapshot exists.</span>
+        </div>
+        <div class="guide-card">
+          <strong>Clean n</strong>
+          <span>The sample size that is allowed to count. Pending, stale, quarantined, or unpriced rows stay diagnostic.</span>
+        </div>
+      </div>
+
+      <div class="next-actions" id="nextActions" aria-label="Today next actions">
+        <div class="action-card info">
+          <div class="action-kicker">Next click <span class="action-state">Checking…</span></div>
+          <div class="action-title">Loading daily action cards…</div>
+          <div class="action-copy">These cards will point to the page that best explains today’s evidence.</div>
+        </div>
+      </div>
     </section>
 
-    <a class="card" id="journalCard" href="./journal.html" aria-label="Open daily trading journal" title="Open daily trading journal" style="min-height:0;margin-bottom:22px">
-      <span class="pill">DAILY JOURNAL</span>
-      <h2>What did today teach us?</h2>
-      <p>One page per day: REAL P&L, SHADOW research marks, catalyst breakdowns, trade notes, and whether the evidence is getting better or worse.</p>
-      <div class="metric-line"><span>Purpose</span><strong>measure learning</strong></div>
-      <div class="metric-line"><span>View</span><strong>day by day</strong></div>
-      <span class="go">Open daily journal →</span>
-    </a>
+    <section class="overview-panel curve-panel" aria-label="REAL gross versus net P&L curve">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title serif">Today’s REAL P&L curve <span class="info-tip" tabindex="0" role="button" aria-label="Help: REAL P&L curve" data-help="Gross shows the trade result before broker costs. Net subtracts commissions. The gap between them is how much execution cost is eating the strategy.">?</span></h2>
+          <p class="small">Gross line versus net-after-fees line from verified closed <code>agent_trades</code>. Currency shown in dashboard units.</p>
+        </div>
+        <div class="range-controls" role="tablist" aria-label="P&L curve range">
+          <button class="range-btn active" type="button" data-curve-range="day">Daily</button>
+          <button class="range-btn" type="button" data-curve-range="week">7D</button>
+          <button class="range-btn" type="button" data-curve-range="all">All-time</button>
+        </div>
+      </div>
+      <div class="curve-summary" id="curveSummary">
+        <div class="loading">Loading P&L curve…</div>
+      </div>
+      <div id="overviewPnlCurve" class="chart-wrap"></div>
+      <div class="curve-legend" aria-label="Curve legend">
+        <span class="legend-key"><span class="legend-dot gross"></span>Gross P&L before costs</span>
+        <span class="legend-key"><span class="legend-dot net"></span>Net P&L after commissions</span>
+        <span class="legend-key"><span class="legend-dot base"></span>Break-even baseline</span>
+      </div>
+    </section>
 
-    <footer>
-      Paper/verified data only · not financial advice · old QuantPulse landing archived append-only under <code>/archive/</code>.
-    </footer>
+    <section class="below">
+      <div class="overview-panel">
+        <div class="panel-header">
+          <h2 class="panel-title serif">Catalyst lanes working <span class="info-tip" tabindex="0" role="button" aria-label="Help: catalyst lanes" data-help="Each lane is a kind of reason to trade, like filings or crypto news. The dashboard keeps lanes separate so one busy lane cannot hide another lane’s weakness.">?</span></h2>
+          <span class="badge real">REAL verified n</span>
+        </div>
+        <div id="catalystBars" class="loading">Loading catalyst performance…</div>
+      </div>
+      <div class="overview-panel">
+        <div class="panel-header">
+          <h2 class="panel-title serif">Needs Jon’s attention <span class="info-tip" tabindex="0" role="button" aria-label="Help: attention panel" data-help="These are visible safety/data warnings: stale sources, gateway issues, missing brackets, database mismatch, or other conditions that should not be silent.">?</span></h2>
+          <span class="badge warn">visible warnings</span>
+        </div>
+        <div id="warnings" class="warning-list"><div class="loading">Checking warnings…</div></div>
+      </div>
+    </section>
+
+    <section class="overview-panel section-gap" aria-label="Source coverage snapshot">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title serif">Source coverage snapshot <span class="info-tip" tabindex="0" role="button" aria-label="Help: source coverage snapshot" data-help="A quick provider health strip from the same source evidence as the Sources page. Zero-row sources stay visible here so missing coverage is not hidden.">?</span></h2>
+          <p class="small">Priority providers shown here; open Sources for the full expected-source list.</p>
+        </div>
+        <a class="tab-link" href="./sources.html">Open full source cards →</a>
+      </div>
+      <div id="sourceSnapshot" class="source-snapshot-grid"><div class="loading">Checking source coverage…</div></div>
+    </section>
+
+    <section class="below">
+      <div class="overview-panel light">
+        <div class="panel-header">
+          <h2 class="panel-title serif">Daily journal</h2>
+          <span class="badge real">closed REAL trades</span>
+        </div>
+        <div id="dailyJournal" class="mini-journal"><div class="loading">Building daily journal…</div></div>
+      </div>
+      <div class="overview-panel light">
+        <div class="panel-header">
+          <h2 class="panel-title serif">Research trust</h2>
+          <span class="badge shadow">complete evidence only</span>
+        </div>
+        <div class="grid two" id="researchTrust">
+          <div class="loading">Loading SHADOW completeness…</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      Paper/verified data only · not financial advice · dashboard reads the backend API only · old NEWSALPHA panels archived append-only under <code>./archive/</code>.
+    </div>
   </main>
+  <script>window.API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";</script>
+  <script src="./cockpit-common.js?v=20260723-readable-contract"></script>
+  <script>
+    const REAL_TZ = "America/New_York";
+    const LOCAL_TZ = "America/Edmonton";
+    const overviewState = { curveRange: "day", latestData: null };
 
-<script>
-const API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";
-let DATA = null;
-let CURVE_RANGE = "day";
-const $ = (id) => document.getElementById(id);
-const money = (v) => new Intl.NumberFormat("en-US", { style:"currency", currency:"USD" }).format(Number(v || 0));
-const num = (v) => new Intl.NumberFormat("en-US").format(Number(v || 0));
-const pct = (v) => `${Number(v || 0).toFixed(3)}%`;
-const cls = (v) => Number(v || 0) > 0 ? "up" : Number(v || 0) < 0 ? "down" : "flat";
-function esc(v){return String(v ?? "—").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
-function localDate(v){
-  if(!v) return "unknown";
-  const d = new Date(v);
-  if(Number.isNaN(d.getTime())) return "unknown";
-  return d.toLocaleDateString("en-CA");
-}
-function todayKey(){ return new Date().toLocaleDateString("en-CA"); }
-function ageMinutes(v){ if(!v) return null; const d=new Date(v); if(Number.isNaN(d.getTime())) return null; return (Date.now()-d.getTime())/60000; }
-function realNetValue(row){ return Number(row?._net_pnl ?? row?.net_pnl_after_commissions_cad ?? row?.net_pnl_after_commissions ?? row?.net_pnl ?? 0); }
-function grossValue(row){ return Number(row?._gross_pnl ?? row?.gross_pnl_cad ?? row?.gross_pnl ?? 0); }
-function commissionValue(row){
-  const value = row?._commissions ?? row?.commissions_cad ?? row?.commissions;
-  return typeof value === "number" ? Number(value) : Number(value?.total ?? value?.cad ?? 0);
-}
-function capitalValue(row){
-  const qty = Math.abs(Number(row?.quantity ?? row?.qty ?? 0));
-  const entry = Number(row?.entry_price ?? 0);
-  return qty && entry ? qty * entry : Number(row?.spent || 0);
-}
-function rowsToday(rows, timeField){
-  const key = todayKey();
-  return (rows || []).filter((row) => localDate(row?.[timeField] || row?.exit_ts || row?.entry_fill_ts || row?.decision_ts) === key);
-}
-function rowsForCurve(rows){
-  const sorted = (rows || []).filter((row) => row?.exit_ts || row?.entry_fill_ts || row?.decision_ts)
-    .slice().sort((a,b)=>new Date(a.exit_ts || a.entry_fill_ts || a.decision_ts || 0)-new Date(b.exit_ts || b.entry_fill_ts || b.decision_ts || 0));
-  if(CURVE_RANGE === "all") return sorted;
-  const now = Date.now();
-  const windowMs = CURVE_RANGE === "week" ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
-  return sorted.filter((row) => {
-    const t = new Date(row.exit_ts || row.entry_fill_ts || row.decision_ts || 0).getTime();
-    return Number.isFinite(t) && now - t <= windowMs;
-  });
-}
-function statusLabel(kind, text){
-  const icons = { ok:"✅", warn:"⚠️", bad:"🛑", info:"ℹ️" };
-  return `${icons[kind] || "ℹ️"} ${text}`;
-}
-function readableCode(value){
-  const raw = String(value || "DATA_UNAVAILABLE").trim();
-  const labels = {
-    VERIFIED: "Verified",
-    VERIFIED_PARTIAL: "Verified partial",
-    DERIVED_FROM_DASHBOARD_ROWS: "Derived from live dashboard rows",
-    SOURCE_OBSERVABILITY_SCHEMA_PENDING_DERIVED_FROM_DASHBOARD_ROWS: "Source monitor pending; derived from live rows",
-    NO_ROWS_IN_DASHBOARD_WINDOW: "Zero rows in dashboard window",
-    DATA_UNAVAILABLE: "Data unavailable",
-    ROW_DERIVED: "Row-derived",
-    NOT_EXPOSED: "Not exposed",
-    NOT_EXPOSED_BY_ROW_DERIVED_FALLBACK: "Not exposed by row-derived fallback",
-  };
-  const key = raw.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-  return labels[key] || raw.replaceAll("_", " ").replaceAll("-", " ").toLowerCase().replace(/\b\w/g, (c)=>c.toUpperCase());
-}
-function warningText(value){
-  const raw = String(value || "").trim();
-  const match = raw.match(/^([^:]+):\s*(.+)$/);
-  return match ? `${match[1]}: ${readableCode(match[2])}` : readableCode(raw);
-}
-function setGuard(id, badgeId, value, copy, kind){
-  $(id).textContent = value;
-  $(badgeId).textContent = kind === "ok" ? "OK" : kind === "bad" ? "Blocked" : "Watch";
-  $(badgeId).className = `guard-badge ${kind}`;
-  const copyId = id.replace("Value","Copy");
-  if($(copyId)) $(copyId).textContent = copy;
-}
-function marketSessionLabel(now = new Date()){
-  const parts = new Intl.DateTimeFormat("en-US", { timeZone:"America/New_York", hour:"numeric", minute:"numeric", hour12:false, weekday:"short" }).formatToParts(now);
-  const get = (type) => parts.find((p) => p.type === type)?.value;
-  const day = get("weekday");
-  const hour = Number(get("hour"));
-  const minute = Number(get("minute"));
-  const mins = hour * 60 + minute;
-  const weekday = !["Sat","Sun"].includes(day);
-  if(!weekday) return statusLabel("info", "Equity market closed · crypto open");
-  if(mins >= 570 && mins < 960) return statusLabel("ok", "US regular hours · crypto open");
-  if((mins >= 240 && mins < 570) || (mins >= 960 && mins < 1200)) return statusLabel("warn", "US extended hours · crypto open");
-  return statusLabel("info", "Equity market closed · crypto open");
-}
-function routeHash(){
-  const hash = String(window.location.hash || "").toLowerCase();
-  if(hash === "#shadow") window.location.replace("./shadow.html");
-  if(hash === "#ibkr" || hash === "#real") window.location.replace("./real.html");
-}
-async function getJson(path){
-  const r = await fetch(API_BASE + path, { cache:"no-store" });
-  const d = await r.json().catch(() => ({}));
-  if(!r.ok) throw new Error(d.error || d.detail || `HTTP ${r.status}`);
-  return d;
-}
-function setClassText(id, value, klass){ const el = $(id); el.textContent = value; el.className = "val " + klass; }
-function bestShadow(){
-  const ladder = DATA?.shadow?.horizon_ladder || [];
-  if(!ladder.length) return null;
-  return ladder.slice().sort((a,b)=>Number(b.avg_direction_adjusted_return_pct||0)-Number(a.avg_direction_adjusted_return_pct||0))[0];
-}
-function renderWarnings(data, security, freshnessKind){
-  const warnings = [];
-  if(!data) warnings.push({kind:"bad", text:"Live dashboard data is unavailable. No trusted values should be acted on."});
-  if(freshnessKind === "stale") warnings.push({kind:"warn", text:"Dashboard data is stale. Treat counts as last-known, not live."});
-  if(freshnessKind === "missing") warnings.push({kind:"bad", text:"Backend did not provide generated_at. Freshness is unknown."});
-  const rec = data?.real?.reconciliation;
-  for(const warning of rec?.warnings || []) warnings.push({kind:"warn", text: warning});
-  if(data?.real?.capture_status?.closed_net_missing_unflagged) warnings.push({kind:"bad", text:"Some closed REAL rows are missing net-after-fees evidence without a flag."});
-  if(data?.real?.capture_status?.closed_commissions_missing_unflagged) warnings.push({kind:"bad", text:"Some closed REAL rows are missing commission evidence without a flag."});
-  if(data?.execution_quality?.commission_drag_pct_of_gross > 100) warnings.push({kind:"warn", text:`Commission drag is ${Number(data.execution_quality.commission_drag_pct_of_gross).toFixed(1)}% of gross P&L. Fees are dominating the current REAL sample.`});
-  if(data?.execution_quality?.rejections_and_skips?.stale_open_n > 0) warnings.push({kind:"bad", text:`${data.execution_quality.rejections_and_skips.stale_open_n} stale open REAL position(s) need reconciliation.`});
-  const ibkrStatus = data?.sources?.ibkr || data?.real?.ibkr_status || security?.ibkr;
-  const ndaxStatus = data?.sources?.ndax || data?.real?.ndax_status || security?.ndax;
-  const telegramStatus = data?.telegram || data?.alerts?.telegram || security?.telegram;
-  const killSwitchStatus = data?.kill_switch || data?.risk?.kill_switch || security?.kill_switch;
-  if(data && !ibkrStatus) warnings.push({kind:"warn", text:"IBKR Gateway connection proof is not exposed on the public contract. Treat Gateway state as DATA UNAVAILABLE until the backend reports it."});
-  if(data && !ndaxStatus) warnings.push({kind:"warn", text:"NDAX state / kill-switch proof is not exposed on the public contract. NDAX remains separated from IBKR/PAPER results."});
-  if(data && !telegramStatus) warnings.push({kind:"warn", text:"Telegram delivery proof is not exposed. Expected alerts: real fills, exits, kill-switch/Gateway events, and daily digest."});
-  if(data && !killSwitchStatus) warnings.push({kind:"warn", text:"Kill-switch state is not exposed on the public contract. Do not assume it is armed from the dashboard alone."});
-  const bracket = data?.execution_quality?.bracket;
-  if(bracket && Number(bracket.bracket_complete_pct || 0) < 100) warnings.push({kind:"bad", text:`Bracket completeness is ${Number(bracket.bracket_complete_pct || 0).toFixed(1)}%. Open/closed protection proof needs attention.`});
-  if(bracket && Number(bracket.fill_adjusted_proof_pct || 0) < 100) warnings.push({kind:"bad", text:`Fill-adjusted bracket proof is ${Number(bracket.fill_adjusted_proof_pct || 0).toFixed(1)}%. Bracket evidence is incomplete.`});
-  for(const warning of data?.execution_quality?.warnings || []) warnings.push({kind:"warn", text: warningText(warning)});
-  const srcWarnings = data?.source_observability?.coverage?.warnings || data?.source_observability?.warnings || [];
-  for(const warning of srcWarnings) warnings.push({kind:String(warning).includes("NO_ROWS") ? "warn" : "warn", text: warningText(warning)});
-  if(security && security.ok === false) warnings.push({kind:"warn", text:"Security/status endpoint is not green or unavailable."});
-  if(!warnings.length) warnings.push({kind:"ok", text:"No dashboard warnings from live data. Keep monitoring source freshness and open positions."});
-  $("warningList").innerHTML = warnings.slice(0, 10).map((w) => `<div class="warning ${w.kind === "bad" ? "bad" : w.kind === "ok" ? "ok" : ""}">${statusLabel(w.kind, esc(w.text))}</div>`).join("");
-}
-function renderGuardrails(data){
-  if(!data){
-    setGuard("sourceGuardValue","sourceGuardBadge","DATA UNAVAILABLE","Backend did not return source coverage.", "bad");
-    setGuard("executionGuardValue","executionGuardBadge","DATA UNAVAILABLE","Backend did not return execution quality.", "bad");
-    setGuard("contractGuardValue","contractGuardBadge","DATA UNAVAILABLE","No generated_at/schema evidence.", "bad");
-    return;
-  }
-  const source = data.source_observability || {};
-  const counts = source.coverage?.counts || {};
-  const expected = Number(counts.expected_sources || 0);
-  const observed = Number(counts.observed_expected_sources || 0);
-  const sourcePct = expected ? observed / expected * 100 : null;
-  const sourceWarnings = source.coverage?.warnings || source.warnings || [];
-  const sourceKind = source.coverage?.visible_warning || sourceWarnings.length ? "warn" : "ok";
-  setGuard(
-    "sourceGuardValue",
-    "sourceGuardBadge",
-    sourcePct == null ? "DATA UNAVAILABLE" : `${observed}/${expected}`,
-    sourceWarnings.length ? `${sourceWarnings.slice(0,2).map(warningText).join(" · ")}${sourceWarnings.length > 2 ? " · more on Sources" : ""}` : `${num(source.event_n)} events from observed sources · ${readableCode(source.data_quality_status)}`,
-    sourceKind
-  );
+    function bestHorizon(ladder) {
+      if (!ladder || !ladder.length) return null;
+      return ladder.slice().sort((a, b) => Number(b.avg_direction_adjusted_return_pct || 0) - Number(a.avg_direction_adjusted_return_pct || 0))[0];
+    }
+    function localDateKey(value, timeZone = LOCAL_TZ) {
+      if (!value) return "";
+      try {
+        return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value));
+      } catch { return ""; }
+    }
+    function rowsForToday(rows, todayKey) {
+      return (rows || []).filter((row) => {
+        const ts = row.exit_ts || row.entry_fill_ts || row.decision_ts || row.updated_at;
+        return localDateKey(ts) === todayKey;
+      });
+    }
+    function sumRows(rows, field) {
+      return (rows || []).reduce((acc, row) => acc + Number(row[field] || 0), 0);
+    }
+    function rowTs(row) {
+      return row?.exit_ts || row?.entry_fill_ts || row?.decision_ts || row?.updated_at || "";
+    }
+    function rowGross(row) {
+      return Number(row?._gross_pnl ?? row?.gross_pnl ?? 0);
+    }
+    function rowFees(row) {
+      return Number(row?._commissions ?? row?.commissions_reported ?? row?.commission ?? 0);
+    }
+    function rowNet(row) {
+      return Number(row?._net_pnl ?? row?.net_pnl_after_commissions ?? row?.net_pnl ?? (rowGross(row) - rowFees(row)) ?? 0);
+    }
+    function realClosedRowsForRange(real, range, todayKey) {
+      const rows = (real.recent_closed || []).filter((row) => rowTs(row)).slice()
+        .sort((a, b) => new Date(rowTs(a)) - new Date(rowTs(b)));
+      if (range === "all") return rows;
+      if (range === "day") return rows.filter((row) => localDateKey(rowTs(row)) === todayKey);
+      const generatedAt = new Date(real.generated_at || Date.now());
+      const cutoff = new Date(generatedAt.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return rows.filter((row) => new Date(rowTs(row)) >= cutoff);
+    }
+    function renderOverviewPnlCurve(real, generatedAt) {
+      const todayKey = real.local_trading_date || localDateKey(generatedAt);
+      const rows = realClosedRowsForRange(real, overviewState.curveRange, todayKey);
+      const gross = rows.reduce((acc, row) => acc + rowGross(row), 0);
+      const net = rows.reduce((acc, row) => acc + rowNet(row), 0);
+      const fees = rows.reduce((acc, row) => acc + rowFees(row), 0);
+      const deployed = rows.reduce((acc, row) => acc + Number(row.spent || 0), 0);
+      $("curveSummary").innerHTML = [
+        `<div class="curve-mini"><span>Closed n</span><strong>${num(rows.length)}</strong></div>`,
+        `<div class="curve-mini"><span>Gross P&L</span><strong class="${cls(gross)}">${money(gross)}</strong></div>`,
+        `<div class="curve-mini"><span>Fees / drag</span><strong class="${fees > 0 ? "negative" : "muted"}">${money(fees)}</strong></div>`,
+        `<div class="curve-mini"><span>Net after fees</span><strong class="${cls(net)}">${money(net)}</strong></div>`,
+      ].join("");
+      if (!rows.length) {
+        $("overviewPnlCurve").innerHTML = `<div class="empty">No verified closed REAL trades in this range yet. The curve stays empty instead of inventing P&L.</div>`;
+        return;
+      }
+      const points = [];
+      let cumGross = 0, cumNet = 0;
+      rows.forEach((row, index) => {
+        cumGross += rowGross(row);
+        cumNet += rowNet(row);
+        points.push({
+          i: index + 1,
+          ts: rowTs(row),
+          symbol: row.symbol || "UNKNOWN",
+          gross: cumGross,
+          net: cumNet,
+          tradeGross: rowGross(row),
+          tradeNet: rowNet(row),
+          deployed,
+        });
+      });
+      const width = 860, height = 260;
+      const pad = { left: 58, right: 22, top: 24, bottom: 40 };
+      const values = points.flatMap((p) => [p.gross, p.net, 0]);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const spread = Math.max(max - min, 1);
+      const x = (idx) => pad.left + (points.length === 1 ? 0 : (idx / (points.length - 1)) * (width - pad.left - pad.right));
+      const y = (v) => pad.top + ((max - v) / spread) * (height - pad.top - pad.bottom);
+      const linePath = (field) => points.map((p, idx) => `${idx === 0 ? "M" : "L"} ${x(idx).toFixed(1)} ${y(p[field]).toFixed(1)}`).join(" ");
+      const zeroY = y(0);
+      const area = `M ${x(0).toFixed(1)} ${y(points[0].net).toFixed(1)} ${points.map((p, idx) => `L ${x(idx).toFixed(1)} ${y(p.net).toFixed(1)}`).join(" ")} L ${x(points.length - 1).toFixed(1)} ${zeroY.toFixed(1)} L ${x(0).toFixed(1)} ${zeroY.toFixed(1)} Z`;
+      $("overviewPnlCurve").innerHTML = `
+        <svg class="overview-curve-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="REAL gross versus net P&L curve">
+          <line x1="${pad.left}" y1="${zeroY.toFixed(1)}" x2="${width - pad.right}" y2="${zeroY.toFixed(1)}" stroke="rgba(148,163,184,.35)" stroke-dasharray="5 6" />
+          <line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${height - pad.bottom}" stroke="rgba(148,163,184,.20)" />
+          <line x1="${pad.left}" y1="${height - pad.bottom}" x2="${width - pad.right}" y2="${height - pad.bottom}" stroke="rgba(148,163,184,.20)" />
+          <path d="${area}" fill="${net >= 0 ? "rgba(53,211,153,.10)" : "rgba(251,113,133,.10)"}" />
+          <path d="${linePath("gross")}" fill="none" stroke="var(--blue)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="${linePath("net")}" fill="none" stroke="${net >= 0 ? "var(--green)" : "var(--red)"}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+          ${points.map((p, idx) => `<circle cx="${x(idx).toFixed(1)}" cy="${y(p.net).toFixed(1)}" r="4" fill="${net >= 0 ? "var(--green)" : "var(--red)"}"><title>#${p.i} ${esc(p.symbol)} · gross ${money(p.tradeGross)} · net ${money(p.tradeNet)} · ${when(p.ts)}</title></circle>`).join("")}
+          <text x="${pad.left}" y="16" fill="#93a4ba" font-size="12">${money(max)}</text>
+          <text x="${pad.left}" y="${height - 8}" fill="#93a4ba" font-size="12">${money(min)}</text>
+          <text x="${width - pad.right}" y="${height - 8}" fill="#93a4ba" font-size="12" text-anchor="end">${overviewState.curveRange.toUpperCase()} · n=${points.length}</text>
+        </svg>
+      `;
+    }
+    function marketSession() {
+      const now = new Date();
+      const day = new Intl.DateTimeFormat("en-US", { timeZone: REAL_TZ, weekday: "short" }).format(now);
+      if (["Sat", "Sun"].includes(day)) return "Equity market: closed";
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: REAL_TZ, hour12: false, hour: "2-digit", minute: "2-digit"
+      }).formatToParts(now);
+      const h = Number(parts.find(p => p.type === "hour")?.value || 0);
+      const m = Number(parts.find(p => p.type === "minute")?.value || 0);
+      const minutes = h * 60 + m;
+      if (minutes < 4 * 60) return "Equity market: closed";
+      if (minutes < 9 * 60 + 30) return "Equity market: pre-market";
+      if (minutes < 16 * 60) return "Equity market: regular hours";
+      if (minutes < 20 * 60) return "Equity market: after-hours";
+      return "Equity market: closed";
+    }
+    function freshnessLabel(sourceUpdatedAt, generatedAt) {
+      if (!sourceUpdatedAt) return { text: "DATA UNAVAILABLE", cls: "bad" };
+      const ageMin = (new Date(generatedAt || Date.now()) - new Date(sourceUpdatedAt)) / 60000;
+      if (!Number.isFinite(ageMin)) return { text: "DATA UNAVAILABLE", cls: "bad" };
+      if (ageMin <= 45) return { text: "LIVE", cls: "good" };
+      if (ageMin <= 240) return { text: "STALE", cls: "warn" };
+      return { text: "STALE >4h", cls: "warn" };
+    }
+    const CODE_LABELS = {
+      DATA_UNAVAILABLE: "Data unavailable",
+      DATA_UNAVAILABLE_EXPECTED_SOURCE_MISSING: "Expected source missing from provider rows",
+      NO_ROWS_IN_DASHBOARD_WINDOW: "No rows in dashboard window",
+      NOT_EXPOSED_BY_ROW_DERIVED_FALLBACK: "Rate-limit usage not exposed by row-derived fallback",
+      OBSERVED_FROM_DASHBOARD_ROWS: "Observed from dashboard rows",
+      ROW_DERIVED: "Derived from dashboard rows",
+      SOURCE_OBSERVABILITY_SCHEMA_PENDING_DERIVED_FROM_DASHBOARD_ROWS: "Dedicated source monitor is pending — this view is derived from dashboard rows",
+      SOURCE_OBSERVABILITY_TABLES_NOT_ENABLED_DERIVED_FROM_LIVE_REAL_SHADOW_DASHBOARD_ROWS: "Dedicated source-observability tables are not enabled yet — source cards are derived from live REAL/SHADOW dashboard rows",
+      expected_source_missing_from_source_observability_rows: "Expected source missing from source-observability rows",
+    };
+    const CATALYST_LABELS = {
+      all: "All",
+      filing: "Filing",
+      crypto_news: "Crypto news",
+      company_news: "Company news",
+      trading_halt: "Trading halt",
+      exchange_listing: "Exchange listing",
+      cryptolab_x: "X / CryptoLab",
+      movers: "Movers",
+      macro: "Macro",
+      news: "News",
+      unknown: "Unknown",
+    };
+    function normalizeCatalystKey(value) {
+      const raw = String(value || "UNKNOWN").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+      if (!raw || raw === "unknown") return "unknown";
+      if (["sec", "sec_filing", "sec_filings", "filings", "8_k", "8k", "edgar", "edgar_filing"].includes(raw)) return "filing";
+      if (["crypto", "crypto_catalyst", "crypto_news", "crypto_rss", "tokenpost", "coindesk", "decrypt", "the_block"].includes(raw)) return "crypto_news";
+      if (["company", "company_news", "press_release", "business_wire", "pr_newswire", "globenewswire", "company_ir"].includes(raw)) return "company_news";
+      if (["halt", "trading_halt", "halts"].includes(raw)) return "trading_halt";
+      if (["listing", "exchange_listing", "exchange_listings", "coinbase_listing", "binance_listing"].includes(raw)) return "exchange_listing";
+      if (["x", "twitter", "x_sentiment", "cryptolab_x"].includes(raw)) return "cryptolab_x";
+      if (["mover", "movers", "crypto_mover", "fmp_crypto_mover"].includes(raw)) return "movers";
+      if (["macro", "economic", "economic_calendar", "fomc", "cpi"].includes(raw)) return "macro";
+      return raw;
+    }
+    function catalystLabel(value) {
+      const key = normalizeCatalystKey(value);
+      return CATALYST_LABELS[key] || String(key || "UNKNOWN").replaceAll("_", " ").replace(/\b\w/g, (m) => m.toUpperCase());
+    }
+    function titleCaseCode(value) {
+      return String(value || "")
+        .replace(/^Source coverage:\s*/i, "")
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase()
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+    function readableCode(value) {
+      if (value === null || value === undefined || value === "") return "Data unavailable";
+      const raw = String(value);
+      const normalized = raw.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+      const direct = CODE_LABELS[raw] || CODE_LABELS[raw.toUpperCase()] || CODE_LABELS[normalized];
+      if (direct) return direct;
+      if (/SOURCE_OBSERVABILITY_TABLES(?:_ARE)?_NOT_ENABLED/.test(normalized)) return CODE_LABELS.SOURCE_OBSERVABILITY_TABLES_NOT_ENABLED_DERIVED_FROM_LIVE_REAL_SHADOW_DASHBOARD_ROWS;
+      if (/expected source missing from source_observability rows/i.test(raw)) return CODE_LABELS.expected_source_missing_from_source_observability_rows;
+      if (/NO_ROWS_IN_DASHBOARD_WINDOW/i.test(raw)) return CODE_LABELS.NO_ROWS_IN_DASHBOARD_WINDOW;
+      if (/ROW_DERIVED/i.test(raw)) return CODE_LABELS.ROW_DERIVED;
+      if (/DATA_UNAVAILABLE/i.test(raw)) return CODE_LABELS.DATA_UNAVAILABLE;
+      if (/SOURCE_OBSERVABILITY_SCHEMA_PENDING/i.test(raw)) return CODE_LABELS.SOURCE_OBSERVABILITY_SCHEMA_PENDING_DERIVED_FROM_DASHBOARD_ROWS;
+      return titleCaseCode(raw);
+    }
+    function readableWarning(value) {
+      const raw = String(value || "");
+      const cleaned = raw.replace(/^Source coverage:\s*/i, "");
+      return readableCode(cleaned);
+    }
+    function rawCodeDetail(value) {
+      const raw = String(value || "");
+      const friendly = readableWarning(raw);
+      const normalizedFriendly = friendly.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+      const normalizedRaw = raw.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+      if (["ROW_DERIVED", "OBSERVED_FROM_DASHBOARD_ROWS"].includes(normalizedRaw)) return "";
+      return normalizedRaw && normalizedRaw !== normalizedFriendly ? raw : "";
+    }
+    function warningItem(text, level = "warn", raw = "") {
+      return `<div class="warning-item ${level}">${esc(text)}${raw ? `<span class="raw-code">raw: ${esc(raw)}</span>` : ""}</div>`;
+    }
+    function operatingCard(label, value, sub, level = "warn") {
+      return `
+        <div class="operating-card ${level}">
+          <div class="operating-label">${esc(label)}</div>
+          <div class="operating-value">${esc(value)}</div>
+          <div class="operating-sub">${esc(sub)}</div>
+        </div>`;
+    }
+    function firstPresent(...values) {
+      for (const value of values) {
+        if (value !== null && value !== undefined && value !== "") return value;
+      }
+      return null;
+    }
+    function realRows(real) {
+      return [...(real.open_positions || []), ...(real.recent_closed || [])];
+    }
+    function accountSnapshot(data, real) {
+      return data.account_capital || data.account || data.account_snapshot || data.broker_account || data.execution_quality?.account || real.account || real.account_snapshot || {};
+    }
+    function renderMoneyOrUnavailable(value) {
+      return value === null || value === undefined || value === "" ? "DATA UNAVAILABLE" : money(value);
+    }
+    function brokerBalanceFields(account) {
+      const cash = firstPresent(account.current_cash, account.cash, account.cash_balance, account.available_cash);
+      const equity = firstPresent(account.current_equity, account.equity, account.net_liquidation, account.net_liquidation_value, account.account_equity);
+      const buyingPower = firstPresent(account.buying_power, account.available_funds, account.excess_liquidity);
+      return { cash, equity, buyingPower };
+    }
+    function renderCapitalAlert(data, real) {
+      const host = $("capitalAlert");
+      if (!host) return;
+      const account = accountSnapshot(data, real);
+      const { cash, equity, buyingPower } = brokerBalanceFields(account);
+      const snapStatus = String(account.snapshot_status || "").toUpperCase();
+      const hasBrokerBalances = cash != null || equity != null || buyingPower != null;
+      const openExposure = (real.open_positions || []).reduce((acc, row) => acc + Number(row.spent || row.entry_notional || row.amount_spent || (Number(row.quantity || 0) * Number(row.entry_price || 0)) || 0), 0);
+      const className = hasBrokerBalances ? (snapStatus === "STALE" ? "capital-alert" : "capital-alert good") : "capital-alert bad";
+      const title = hasBrokerBalances
+        ? `Broker balances visible · ${snapStatus || "snapshot status unknown"}`
+        : "Broker cash/equity snapshot unavailable";
+      const copy = hasBrokerBalances
+        ? `Cash ${renderMoneyOrUnavailable(cash)} · equity ${renderMoneyOrUnavailable(equity)} · buying power ${renderMoneyOrUnavailable(buyingPower)}. Open trade-level exposure ${money(openExposure)} remains shown separately.`
+        : `The public API does not expose trusted cash/equity/buying-power yet. Today’s capital cards use verified trade notional only; current open exposure is ${money(openExposure)} from ${num(real.open_n)} open rows.`;
+      const icon = hasBrokerBalances ? "✅" : "⚠️";
+      host.className = className;
+      host.innerHTML = `
+        <div class="capital-alert-icon">${icon}</div>
+        <div>
+          <div class="capital-alert-title">${esc(title)}</div>
+          <div class="capital-alert-copy">${esc(copy)}</div>
+        </div>
+        <a href="./real.html">Open REAL cockpit →</a>`;
+    }
+    function renderAccountTruth(data, real) {
+      const account = accountSnapshot(data, real);
+      const snapStatus = String(account.snapshot_status || "").toUpperCase();
+      const brokerSnapLabel = snapStatus === "LIVE"
+        ? "LIVE broker snapshot"
+        : snapStatus === "STALE"
+          ? `STALE broker snapshot${account.snapshot_age_sec == null ? "" : ` · ${Math.round(Number(account.snapshot_age_sec))}s old`}`
+          : "not published by live-agent API yet";
+      const rows = realRows(real);
+      const withEntryEquity = rows.filter((row) => row.account_equity_at_entry !== null && row.account_equity_at_entry !== undefined);
+      const latestEntry = withEntryEquity.slice().sort((a, b) => new Date(rowTs(b)) - new Date(rowTs(a)))[0] || {};
+      const pctRows = rows.filter((row) => row.pct_of_equity !== null && row.pct_of_equity !== undefined);
+      const avgPct = pctRows.length ? pctRows.reduce((acc, row) => acc + Number(row.pct_of_equity || 0), 0) / pctRows.length : null;
+      const openNotional = (real.open_positions || []).reduce((acc, row) => acc + Number(row.spent || 0), 0);
+      const evidenceOpenNotional = firstPresent(account.open_notional, openNotional);
+      const evidenceEquity = firstPresent(account.latest_account_equity_at_entry, latestEntry.account_equity_at_entry);
+      const evidenceEquityRows = firstPresent(account.entry_equity_rows_n, withEntryEquity.length);
+      const evidenceAvgPct = firstPresent(account.avg_pct_of_equity, avgPct);
+      const { cash, equity, buyingPower } = brokerBalanceFields(account);
+      const bridgeLabel = snapStatus === "LIVE" ? "LIVE" : snapStatus === "STALE" ? "STALE" : "DATA UNAVAILABLE";
+      const bridgeSub = account.next_action || (snapStatus === "LIVE" ? "broker account heartbeat is fresh" : "Mac IBKR bridge has not posted a broker balance snapshot yet");
+      $("accountTruthStrip").innerHTML = [
+        operatingCard("Cash", renderMoneyOrUnavailable(cash), cash == null ? "not published by live-agent API yet" : brokerSnapLabel, cash == null ? "warn" : snapStatus === "STALE" ? "warn" : "good"),
+        operatingCard("Equity", renderMoneyOrUnavailable(equity), equity == null ? "not published by live-agent API yet" : brokerSnapLabel, equity == null ? "warn" : snapStatus === "STALE" ? "warn" : "good"),
+        operatingCard("Buying power", renderMoneyOrUnavailable(buyingPower), buyingPower == null ? "not published by live-agent API yet" : brokerSnapLabel, buyingPower == null ? "warn" : snapStatus === "STALE" ? "warn" : "good"),
+        operatingCard("IBKR bridge", bridgeLabel, bridgeSub, snapStatus === "LIVE" ? "good" : "warn"),
+        operatingCard(
+          "Sizing evidence",
+          evidenceEquity == null ? "DATA UNAVAILABLE" : `${money(evidenceEquity)} at entry`,
+          `${num(evidenceEquityRows || 0)} trade rows with entry-equity proof · open notional ${money(evidenceOpenNotional || 0)}${evidenceAvgPct == null ? "" : ` · avg ${pct(evidenceAvgPct)} of equity`}`,
+          Number(evidenceEquityRows || 0) ? "info" : "warn",
+        ),
+      ].join("");
+    }
+    function sourceCoverageSummary(data) {
+      const coverage = data.source_observability?.coverage || {};
+      const counts = coverage.counts || {};
+      const observed = Number(counts.observed_expected_sources || 0);
+      const expected = Number(counts.expected_sources || 0);
+      return {
+        coverage,
+        observed,
+        expected,
+        pct: expected ? observed / expected * 100 : null,
+      };
+    }
+    const EXPECTED_SOURCES = ["SEC EDGAR", "Business Wire", "PR Newswire", "GlobeNewswire", "Company IR", "Federal Reserve", "BLS", "Crypto RSS", "Binance", "X", "FMP", "IBKR prices", "CoinGecko/Kraken prices"];
+    function sourceRowsWithExpectedFallback(data) {
+      const rows = data.source_observability?.by_source || [];
+      const byName = Object.fromEntries(rows.map((row) => [String(row.source || row.name || "").toLowerCase(), row]));
+      const merged = [];
+      for (const name of EXPECTED_SOURCES) {
+        merged.push(byName[name.toLowerCase()] || {
+          source: name,
+          status: "DATA_UNAVAILABLE_EXPECTED_SOURCE_MISSING",
+          events_in_dashboard_window: 0,
+          events_today: 0,
+          real_eligible_n: 0,
+          shadow_eligible_n: 0,
+          data_freshness: "DATA_UNAVAILABLE",
+          last_failure_reason: "expected source missing from source_observability rows",
+        });
+      }
+      for (const row of rows) {
+        const key = String(row.source || row.name || "").toLowerCase();
+        if (!EXPECTED_SOURCES.some((name) => name.toLowerCase() === key)) merged.push(row);
+      }
+      return merged;
+    }
+    function sourceZeroCoverageSummary(data) {
+      const rows = sourceRowsWithExpectedFallback(data);
+      const zeroRows = rows.filter((row) => {
+        const observed = Number(row.events_in_dashboard_window ?? row.seen ?? row.events_today ?? 0);
+        const status = String(row.status || "").toUpperCase();
+        return observed <= 0 || status.includes("NO_ROWS") || status.includes("DATA_UNAVAILABLE");
+      });
+      return {
+        total: zeroRows.length,
+        names: zeroRows.map((row) => row.source || row.name || "UNKNOWN"),
+      };
+    }
+    function gatewayStatus(data, real) {
+      const account = accountSnapshot(data, real);
+      const connected = firstPresent(
+        account.connected,
+        account.gateway_connected,
+        account.ibkr_gateway_connected,
+        data.execution_quality?.gateway_connected,
+      );
+      if (connected === true || String(connected).toUpperCase() === "CONNECTED") {
+        return {
+          value: "CONNECTED",
+          level: "good",
+          detail: "Direct IBKR Gateway heartbeat says connected.",
+        };
+      }
+      if (connected === false || String(connected).toUpperCase() === "DISCONNECTED") {
+        return {
+          value: "DISCONNECTED",
+          level: "bad",
+          detail: "IBKR Gateway heartbeat says disconnected; do not trust new executions until restored.",
+        };
+      }
+      return {
+        value: "DATA UNAVAILABLE",
+        level: "warn",
+        detail: account.status_endpoint
+          ? `Public dashboard has no live IBKR Gateway heartbeat yet; expected status endpoint ${account.status_endpoint}.`
+          : "Public dashboard has no trusted IBKR Gateway heartbeat yet.",
+      };
+    }
+    function buildAttentionSummary(data, security, real, shadow) {
+      const issues = [];
+      const realFresh = freshnessLabel(real.source_updated_at, data.generated_at);
+      const shadowFresh = freshnessLabel(shadow.source_updated_at, data.generated_at);
+      const account = accountSnapshot(data, real);
+      const { cash, equity, buyingPower } = brokerBalanceFields(account);
+      const zeroSources = sourceZeroCoverageSummary(data);
+      const eq = data.execution_quality || {};
+      const telegramKnown = security?.ok || security?.telegram_token_set !== undefined || security?.telegram_chat_id_set !== undefined;
+      const telegramReady = Boolean(security?.telegram_token_set && security?.telegram_chat_id_set);
+      const accountMissing = cash == null || equity == null || buyingPower == null;
 
-  const exec = data.execution_quality || {};
-  const bracketPct = exec.bracket?.bracket_complete_pct;
-  const drag = Number(exec.commission_drag_pct_of_gross);
-  const stale = Number(exec.rejections_and_skips?.stale_open_n || 0);
-  const execKind = stale > 0 ? "bad" : (drag > 100 || (exec.warnings || []).length ? "warn" : "ok");
-  setGuard(
-    "executionGuardValue",
-    "executionGuardBadge",
-    bracketPct == null ? "DATA UNAVAILABLE" : `${Number(bracketPct).toFixed(0)}% brackets`,
-    `${money(exec.net_pnl)} net · ${Number.isFinite(drag) ? `${drag.toFixed(1)}% fee drag` : "fee drag unavailable"} · stale open ${num(stale)}`,
-    execKind
-  );
+      if (real.data_quality_status && real.data_quality_status !== "PASS") {
+        issues.push({
+          key: "real-quality",
+          level: "bad",
+          owner: "Jon",
+          title: `REAL data quality is ${real.data_quality_status}`,
+          detail: "Keep trusted results verified-only; inspect the REAL cockpit before acting on performance.",
+          href: "/real",
+        });
+      }
+      if (realFresh.cls !== "good") {
+        issues.push({
+          key: "real-stale",
+          level: "warn",
+          owner: "Jon",
+          title: `REAL broker feed is ${realFresh.text}`,
+          detail: `Last trusted REAL update ${when(real.source_updated_at)}. Refresh the Mac bridge if this is unexpected.`,
+          href: "/execution",
+        });
+      }
+      if (accountMissing) {
+        issues.push({
+          key: "broker-snapshot",
+          level: "warn",
+          owner: "Jon",
+          title: "Broker cash/equity snapshot unavailable",
+          detail: account.next_action || "Run the Mac IBKR bridge once so cash, equity, and buying power can publish.",
+          href: "/real",
+        });
+      }
+      if (Number(real.open_n || 0) > 0) {
+        issues.push({
+          key: "open-positions",
+          level: "warn",
+          owner: "Jon",
+          title: `${num(real.open_n)} REAL position(s) open`,
+          detail: "Check bracket proof, stale-position warnings, and current exposure in the REAL cockpit.",
+          href: "/real",
+        });
+      }
+      if (Number(real.commissions || 0) > Math.abs(Number(real.gross_pnl || 0)) && Number(real.n || 0) > 0) {
+        issues.push({
+          key: "fee-drag",
+          level: "warn",
+          owner: "Codex",
+          title: "Fee drag is larger than gross P&L",
+          detail: `${money(real.commissions)} commissions versus ${money(real.gross_pnl)} gross. Use Execution Quality before judging edge.`,
+          href: "/execution",
+        });
+      }
+      if (shadowFresh.cls !== "good") {
+        issues.push({
+          key: "shadow-stale",
+          level: "warn",
+          owner: "Codex",
+          title: `SHADOW research feed is ${shadowFresh.text}`,
+          detail: `Last trusted SHADOW update ${when(shadow.source_updated_at)}. Research stays stale-but-visible.`,
+          href: "/shadow",
+        });
+      }
+      if (zeroSources.total > 0) {
+        issues.push({
+          key: "source-zero",
+          level: "warn",
+          owner: "Codex",
+          title: `${num(zeroSources.total)} expected source(s) have zero/unavailable coverage`,
+          detail: `${zeroSources.names.slice(0, 4).join(", ")}${zeroSources.total > 4 ? ` + ${zeroSources.total - 4} more` : ""}.`,
+          href: "/sources",
+        });
+      }
+      if (eq.status && eq.status !== "VERIFIED_FULL" && eq.status !== "VERIFIED") {
+        issues.push({
+          key: "execution-partial",
+          level: "info",
+          owner: "Codex",
+          title: `Execution quality is ${eq.status}`,
+          detail: "Gross/fees/net are visible, but some execution fields remain partial.",
+          href: "/execution",
+        });
+      }
+      if (telegramKnown && !telegramReady) {
+        issues.push({
+          key: "telegram",
+          level: "warn",
+          owner: "Jon",
+          title: "Telegram alert config is incomplete",
+          detail: "Token/chat proof is not fully visible on the public status endpoint.",
+          href: "/execution",
+        });
+      }
 
-  const missingContract = ["generated_at","schema_version"].filter((key)=>!data?.[key]);
-  const realMissing = ["generated_at","source_updated_at","schema_version","population","venue","local_trading_date","data_quality_status"].filter((key)=>!data?.real?.[key]);
-  const shadowMissing = ["generated_at","source_updated_at","schema_version","population","venue","local_trading_date","data_quality_status"].filter((key)=>!data?.shadow?.[key]);
-  const contractKind = missingContract.length || realMissing.length || shadowMissing.length ? "warn" : "ok";
-  setGuard(
-    "contractGuardValue",
-    "contractGuardBadge",
-    contractKind === "ok" ? "LIVE CONTRACT" : "PARTIAL",
-    contractKind === "ok" ? `schema ${data.schema_version} · REAL ${data.real.population}/${data.real.venue} · SHADOW ${data.shadow.population}/${data.shadow.venue}` : `missing top ${missingContract.join(",") || "none"} · REAL missing ${realMissing.length} · SHADOW missing ${shadowMissing.length}`,
-    contractKind
-  );
-}
-function renderSystem(data, security){
-  const generated = data?.generated_at;
-  const age = ageMinutes(generated);
-  const freshnessKind = age == null ? "missing" : age > 5 ? "stale" : "live";
-  $("agentState").textContent = freshnessKind === "live" ? statusLabel("ok","LIVE") : freshnessKind === "stale" ? statusLabel("warn","STALE") : statusLabel("bad","DATA UNAVAILABLE");
-  const ibkr = data?.sources?.ibkr || data?.real?.ibkr_status || security?.ibkr;
-  const ndax = data?.sources?.ndax || data?.real?.ndax_status || security?.ndax;
-  $("ibkrState").textContent = ibkr?.status ? statusLabel(ibkr.status === "ok" || ibkr.status === "connected" ? "ok" : "warn", ibkr.status) : statusLabel(data?.real ? "info" : "bad", data?.real ? "not reported by backend" : "unavailable");
-  $("ndaxState").textContent = ndax?.status ? statusLabel(ndax.status === "ok" || ndax.status === "enabled" ? "ok" : "info", ndax.status) : (data?.real?.excluded_population_n ? statusLabel("info", "isolated from IBKR book") : statusLabel("info","gated/none reported"));
-  $("refreshState").textContent = generated ? `${new Date(generated).toLocaleTimeString()} · ${age == null ? "age unknown" : `${Math.max(0, age).toFixed(1)}m old`}` : "missing generated_at";
-  $("marketState").textContent = data?.market_session || marketSessionLabel();
-  $("ownerState").textContent = freshnessKind === "live" ? statusLabel("ok","Codex handling") : statusLabel("warn","Jon/Codex attention needed");
-  $("liveDot").style.background = freshnessKind === "live" ? "var(--ok)" : freshnessKind === "stale" ? "#f59e0b" : "var(--down)";
-  renderWarnings(data, security, freshnessKind);
-  renderGuardrails(data);
-  return freshnessKind;
-}
-function renderHeadlines(data){
-  if(!data){
-    $("todayNet").textContent = "DATA UNAVAILABLE"; $("todayNet").className = "headline-value flat";
-    $("todayNetSub").textContent = "backend unavailable · no trusted value";
-    $("todayCapital").textContent = "DATA UNAVAILABLE";
-    $("todayCapitalSub").textContent = "backend unavailable · no trusted value";
-    $("todayOpen").textContent = "DATA UNAVAILABLE";
-    $("todayOpenSub").textContent = "backend unavailable · no trusted value";
-    $("todayDrag").textContent = "DATA UNAVAILABLE"; $("todayDrag").className = "headline-value flat";
-    $("todayDragSub").textContent = "backend unavailable · no trusted value";
-    return;
-  }
-  const real = data?.real || {};
-  const closedToday = rowsToday(real.recent_costed_closed || real.recent_closed || [], "exit_ts");
-  const openToday = rowsToday(real.open_positions || [], "entry_fill_ts");
-  const net = closedToday.reduce((sum,row)=>sum+realNetValue(row),0);
-  const gross = closedToday.reduce((sum,row)=>sum+grossValue(row),0);
-  const commissions = closedToday.reduce((sum,row)=>sum+commissionValue(row),0);
-  const capital = closedToday.concat(openToday).reduce((sum,row)=>sum+capitalValue(row),0);
-  const dragPct = Math.abs(gross) > 0 ? Math.abs(commissions)/Math.abs(gross)*100 : null;
-  $("todayNet").textContent = money(net); $("todayNet").className = "headline-value " + cls(net);
-  $("todayNetSub").textContent = `today closed n=${num(closedToday.length)} · source generated ${data?.generated_at ? "present" : "missing"}`;
-  $("todayCapital").textContent = money(capital);
-  $("todayCapitalSub").textContent = `entry notional in today rows n=${num(closedToday.length + openToday.length)}`;
-  $("todayOpen").textContent = num(openToday.length);
-  $("todayOpenSub").textContent = `all open visible n=${num(real.open_n)} · stale hidden n=${num(real.stale_open_n || 0)}`;
-  $("todayDrag").textContent = dragPct == null ? "DATA UNAVAILABLE" : pct(dragPct);
-  $("todayDrag").className = "headline-value " + (dragPct == null ? "flat" : dragPct > 30 ? "down" : "flat");
-  $("todayDragSub").textContent = `${money(commissions)} commissions · ${money(gross)} gross`;
-}
-function lineSvg(points, label){
-  if(!points.length) return `<div class="warning">ℹ️ DATA UNAVAILABLE: no closed REAL trades in this range for a curve.</div>`;
-  const w=620,h=210,p=28;
-  const vals=points.flatMap(p=>[p.gross,p.net]), min=Math.min(0,...vals), max=Math.max(0,...vals), span=Math.max(1,max-min);
-  const x=i=>p+(points.length===1?0:i/(points.length-1)*(w-p*2));
-  const y=v=>p+(max-v)/span*(h-p*2);
-  const pathFor=(key)=>points.map((pt,i)=>`${i?"L":"M"} ${x(i).toFixed(1)} ${y(pt[key]).toFixed(1)}`).join(" ");
-  const grossLast = points[points.length-1].gross;
-  const netLast = points[points.length-1].net;
-  return `<svg class="spark" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(label)} REAL gross and net P&L curve in USD">
-    <line x1="${p}" x2="${w-p}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" stroke="#cbd5e1" stroke-dasharray="4 5"/>
-    <path d="${pathFor("gross")}" fill="none" stroke="#60a5fa" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="${pathFor("net")}" fill="none" stroke="${netLast >= 0 ? "#34d399" : "#f87171"}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="${p}" y="16" fill="#64748b" font-size="12">${money(max)}</text>
-    <text x="${p}" y="${h-6}" fill="#64748b" font-size="12">${money(min)}</text>
-    <text x="${w-p}" y="16" text-anchor="end" fill="#93c5fd" font-size="12">gross ${money(grossLast)}</text>
-    <text x="${w-p}" y="${h-6}" text-anchor="end" fill="${netLast >= 0 ? "#86efac" : "#fecdd3"}" font-size="12">net ${money(netLast)} · n=${points.length}</text>
-  </svg>
-  <div class="chart-legend">
-    <span><span class="legend-dot gross"></span>Gross P&L before fees</span>
-    <span><span class="legend-dot net"></span>Net P&L after commissions</span>
-    <span>USD · ${esc(label)} · closed n=${num(points.length)}</span>
-  </div>`;
-}
-function renderCurve(data){
-  const allRows = data?.real?.recent_costed_closed || data?.real?.recent_closed || [];
-  const rows = rowsForCurve(allRows);
-  let grossTotal = 0, netTotal = 0;
-  const points = rows.map((row) => {
-    grossTotal += grossValue(row);
-    netTotal += realNetValue(row);
-    return { label: row.symbol, gross: grossTotal, net: netTotal };
-  });
-  const label = CURVE_RANGE === "day" ? "Daily" : CURVE_RANGE === "week" ? "Weekly" : "All-time visible";
-  $("curveCaption").textContent = `${label}: gross vs net-after-fees · USD · n=${num(points.length)}`;
-  $("todayCurve").innerHTML = lineSvg(points, label);
-  document.querySelectorAll("[data-range]").forEach((button) => {
-    button.classList.toggle("active", button.getAttribute("data-range") === CURVE_RANGE);
-  });
-}
-const EXPECTED_CATALYST_LANES = [
-  { key:"sec_filings", label:"SEC filings", match:["SEC_FILING","filing"] },
-  { key:"eight_k_202", label:"8-K item 2.02", match:["ITEM_2_02","2.02","8-K"] },
-  { key:"company_news", label:"Company news", match:["COMPANY_NEWS","company_news","press_release","company article"] },
-  { key:"crypto_news", label:"Crypto news", match:["CRYPTO_NEWS","crypto_news"] },
-  { key:"x", label:"X", match:["X","cryptolab_x","x_sentiment","x_bearer"] },
-  { key:"macro", label:"Macro", match:["MACRO","macro","economic","FOMC","CPI"] },
-  { key:"movers", label:"Movers", match:["MOVER","mover","fmp_crypto_mover","momentum"] },
-];
-function laneMatches(row, lane){
-  const haystack = [
-    row?.value, row?.catalyst_type, row?.catalyst_subtype, row?.source, row?.source_provider, row?.rule_id
-  ].filter(Boolean).join(" ").toLowerCase();
-  return lane.match.some((term) => haystack.includes(String(term).toLowerCase()));
-}
-function renderCatalysts(data){
-  const realRows = data?.real?.by_catalyst || [];
-  const shadowRows = data?.shadow?.by_catalyst || [];
-  const laneRows = EXPECTED_CATALYST_LANES.map((lane) => {
-    const realMatches = realRows.filter((row) => laneMatches(row, lane));
-    const shadowMatches = shadowRows.filter((row) => laneMatches(row, lane));
-    const realN = realMatches.reduce((sum,row)=>sum+Number(row.n||0),0);
-    const realNet = realMatches.reduce((sum,row)=>sum+Number(row.net_pnl||0),0);
-    const weightedWins = realMatches.reduce((sum,row)=>sum+Number(row.win_rate||0)*Number(row.n||0),0);
-    const winRate = realN ? weightedWins / realN : null;
-    const shadowN = shadowMatches.reduce((sum,row)=>sum+Number(row.priced_n||row.n||0),0);
-    const expectancy = realN ? realNet / realN : null;
-    const status = realN || shadowN ? "observed" : "DATA UNAVAILABLE";
-    const cleanN = Math.max(realN, shadowN);
-    const completeness = realN >= 30
-      ? "RULE-ELIGIBLE REAL"
-      : shadowN >= 30
-        ? "RESEARCH n≥30"
-        : cleanN > 0
-          ? `EARLY SAMPLE n=${cleanN}/30`
-          : "NO DATA";
-    return { ...lane, realN, realNet, winRate, shadowN, expectancy, status, cleanN, completeness };
-  });
-  const max = Math.max(...laneRows.map((r)=>Math.abs(r.expectancy ?? r.realNet) || r.realN || r.shadowN),1);
-  $("catalystBars").innerHTML = laneRows.map((r)=>{
-    const metric = r.expectancy ?? r.realNet;
-    const value = Math.abs(metric) || r.realN || r.shadowN;
-    const width = r.status === "DATA UNAVAILABLE" ? 5 : Math.max(5, Math.round(value/max*100));
-    const neg = Number(metric || 0) < 0 ? " neg" : "";
-    const statusIcon = r.status === "observed" ? "✅" : "⚠️";
-    const text = r.realN
-      ? `${r.completeness} · REAL n=${num(r.realN)} · win ${Number(r.winRate||0).toFixed(1)}% · expectancy ${money(r.expectancy)} · SHADOW priced n=${num(r.shadowN)}`
-      : r.shadowN
-        ? `${r.completeness} · REAL n=0 · SHADOW priced n=${num(r.shadowN)} · expectancy DATA UNAVAILABLE`
-        : `${r.completeness} · REAL n=0 · SHADOW priced n=0 · DATA UNAVAILABLE`;
-    return `<div class="bar"><div class="bar-label" title="${esc(r.label)}">${statusIcon} ${esc(r.label)}</div><div class="bar-track"><div class="bar-fill${neg}" style="width:${width}%"></div></div><div class="bar-value">${esc(text)}</div></div>`;
-  }).join("");
-}
-function renderTop(){
-  const real = DATA.real || {}, shadow = DATA.shadow || {};
-  const realN = Number(real.n || 0), realNet = Number(real.net_pnl || 0);
-  const sh = bestShadow();
-  const top = $("topCard");
-  if(realN > 0){
-    $("topName").textContent = "IBKR / REAL is the executable book";
-    $("topEvidence").textContent = `verified n=${num(realN)}`;
-    setClassText("topMetric", money(realNet), cls(realNet));
-    $("topStatus").textContent = "Executable"; $("topStatus").className = "val up";
-    top.href = "./real.html";
-  } else if(sh){
-    $("topName").textContent = "SHADOW is the research book";
-    $("topEvidence").textContent = `priced n=${num(shadow.priced_n)}`;
-    setClassText("topMetric", `${esc(sh.horizon)} ${pct(sh.avg_direction_adjusted_return_pct)}`, cls(sh.avg_direction_adjusted_return_pct));
-    $("topStatus").textContent = "Research only"; $("topStatus").className = "val flat";
-    top.href = "./shadow.html";
-  } else {
-    $("topName").textContent = "Waiting for a top book";
-    $("topEvidence").textContent = "no verified REAL yet";
-    $("topMetric").textContent = "—"; $("topStatus").textContent = "Collecting";
-    top.href = "./real.html";
-  }
-}
-function renderCards(){
-  const real = DATA.real || {}, shadow = DATA.shadow || {};
-  const sh = bestShadow();
-  $("realN").textContent = num(real.n);
-  $("realOpen").textContent = num(real.open_n);
-  $("realNet").textContent = money(real.net_pnl); $("realNet").className = cls(real.net_pnl);
-  $("shadowN").textContent = num(shadow.priced_n);
-  $("shadowHorizon").textContent = sh ? sh.horizon : "—";
-  $("shadowReturn").textContent = sh ? pct(sh.avg_direction_adjusted_return_pct) : "—";
-  $("shadowReturn").className = sh ? cls(sh.avg_direction_adjusted_return_pct) : "";
-}
-async function load(){
-  try{
-    DATA = await getJson("/api/live-agent/dashboard");
-    const security = await getJson("/api/live-agent/security").catch(() => ({ok:false}));
-    const freshnessKind = renderSystem(DATA, security);
-    renderHeadlines(DATA); renderCurve(DATA); renderCatalysts(DATA);
-    renderTop(); renderCards();
-    $("siteStatus").className = "status " + (freshnessKind === "live" ? "ok" : "warn");
-    const refreshAge = DATA.generated_at ? `${Math.max(0, ageMinutes(DATA.generated_at) || 0).toFixed(1)}m old` : "missing timestamp";
-    $("siteStatus").textContent = [
-      freshnessKind === "live" ? "✅ Agent LIVE" : "⚠️ Agent STALE/WATCH",
-      `IBKR ${$("ibkrState").textContent.replace(/^.*?\\s/, "")}`,
-      `NDAX ${$("ndaxState").textContent.replace(/^.*?\\s/, "")}`,
-      `Refresh ${refreshAge}`,
-      $("marketState").textContent,
-      $("ownerState").textContent,
-      `REAL n=${num(DATA.real?.n)} · SHADOW priced n=${num(DATA.shadow?.priced_n)}`,
-    ].join(" · ");
-  }catch(e){
-    DATA = null;
-    $("siteStatus").className = "status bad";
-    $("siteStatus").textContent = `Live agent failed closed · ${e.message}`;
-    $("agentState").textContent = statusLabel("bad","DATA UNAVAILABLE");
-    $("ibkrState").textContent = statusLabel("bad","unavailable");
-    $("ndaxState").textContent = statusLabel("bad","unavailable");
-    $("refreshState").textContent = "no trusted refresh";
-    $("marketState").textContent = marketSessionLabel();
-    $("ownerState").textContent = statusLabel("warn","Jon/Codex attention needed");
-    $("liveDot").style.background = "var(--down)";
-    renderGuardrails(null);
-    renderWarnings(null, {ok:false}, "missing");
-    renderHeadlines(null); renderCurve(null); renderCatalysts(null);
-    $("topName").textContent = "Data unavailable";
-    $("topEvidence").textContent = "blocked"; $("topMetric").textContent = "—"; $("topStatus").textContent = "Fail closed";
-  }
-}
-routeHash();
-document.querySelectorAll("[data-range]").forEach((button) => {
-  button.addEventListener("click", () => {
-    CURVE_RANGE = button.getAttribute("data-range") || "day";
-    renderCurve(DATA);
-  });
-});
-load();
-setInterval(load, 30000);
-window.addEventListener("hashchange", routeHash);
-</script>
+      const jonCount = issues.filter((item) => item.owner === "Jon").length;
+      const badCount = issues.filter((item) => item.level === "bad").length;
+      const level = badCount ? "bad" : issues.length ? "warn" : "good";
+      const primary = issues.find((item) => item.owner === "Jon") || issues[0];
+      return {
+        issues,
+        count: issues.length,
+        jonCount,
+        level,
+        title: primary ? `${primary.owner === "Jon" ? "Jon action required" : "Codex handling"}: ${primary.title}` : "Codex handling",
+        detail: primary ? primary.detail : "No visible public dashboard action is needed right now.",
+      };
+    }
+    function sourceSnapshotState(row) {
+      if (!row) return { level: "bad", label: "unavailable", reason: "no backend row" };
+      const observed = Number(row.events_in_dashboard_window ?? row.seen ?? row.events_today ?? 0);
+      const status = String(row.status || "").toUpperCase();
+      if (observed > 0 && !status.includes("NO_ROWS") && !status.includes("DATA_UNAVAILABLE")) {
+        return { level: "good", label: "observed", reason: readableCode(row.data_freshness || row.status || "rows observed"), raw: rawCodeDetail(row.data_freshness || row.status || "") };
+      }
+      if (status.includes("NO_ROWS")) {
+        const raw = row.last_failure_reason || "NO_ROWS_IN_DASHBOARD_WINDOW";
+        return { level: "warn", label: "zero rows", reason: readableWarning(raw), raw: rawCodeDetail(raw) };
+      }
+      const raw = row.last_failure_reason || row.data_freshness || row.status || "DATA_UNAVAILABLE";
+      return { level: "bad", label: "unavailable", reason: readableWarning(raw), raw: rawCodeDetail(raw) };
+    }
+    function sourceSnapshotCard(row) {
+      const state = sourceSnapshotState(row);
+      const observed = Number(row?.events_in_dashboard_window ?? row?.seen ?? row?.events_today ?? 0);
+      const today = Number(row?.events_today ?? 0);
+      return `
+        <div class="source-snapshot-card ${state.level}">
+          <div class="source-snapshot-top">
+            <div class="source-snapshot-name">${esc(row?.source || row?.name || "Missing source")}</div>
+            <div class="source-snapshot-state">${esc(state.label)}</div>
+          </div>
+          <div class="source-snapshot-meta">
+            <strong>${num(observed)}</strong> window rows · <strong>${num(today)}</strong> today<br>
+            REAL eligible ${num(row?.real_eligible_n)} · SHADOW eligible ${num(row?.shadow_eligible_n)}<br>
+            Last success ${row?.last_successful_fetch ? when(row.last_successful_fetch) : "DATA UNAVAILABLE"}
+          </div>
+          <div class="source-snapshot-footer">${esc(state.reason)}${state.raw ? `<span class="raw-code">raw: ${esc(state.raw)}</span>` : ""}</div>
+        </div>`;
+    }
+    function renderSourceSnapshot(data) {
+      const host = $("sourceSnapshot");
+      if (!host) return;
+      const rows = sourceRowsWithExpectedFallback(data);
+      if (!rows.length) {
+        host.innerHTML = `<div class="warning-item bad">Source-observability rows are DATA UNAVAILABLE on the live API. Open Sources for the fail-closed detail.</div>`;
+        return;
+      }
+      const priority = ["IBKR prices", "FMP", "SEC EDGAR", "Crypto RSS", "Binance", "X"];
+      const byName = Object.fromEntries(rows.map((row) => [String(row.source || row.name || "").toLowerCase(), row]));
+      const chosen = [];
+      for (const name of priority) {
+        const row = byName[name.toLowerCase()];
+        if (row) chosen.push(row);
+      }
+      const zeroRows = rows.filter((row) => {
+        const observed = Number(row.events_in_dashboard_window ?? row.seen ?? row.events_today ?? 0);
+        const status = String(row.status || "").toUpperCase();
+        return observed <= 0 || status.includes("NO_ROWS") || status.includes("DATA_UNAVAILABLE");
+      });
+      for (const row of zeroRows) {
+        if (chosen.length >= 6) break;
+        if (!chosen.includes(row)) chosen.push(row);
+      }
+      if (chosen.length < 6) {
+        for (const row of rows) {
+          if (chosen.length >= 6) break;
+          if (!chosen.includes(row)) chosen.push(row);
+        }
+      }
+      const coverage = sourceCoverageSummary(data);
+      const visible = chosen.slice(0, 6);
+      const gapNames = zeroRows.map((row) => row.source || row.name || "UNKNOWN");
+      host.innerHTML = visible.map(sourceSnapshotCard).join("") + `
+        <div class="source-snapshot-card ${zeroRows.length ? "warn" : "good"}">
+          <div class="source-snapshot-top">
+            <div class="source-snapshot-name">Coverage rollup</div>
+            <div class="source-snapshot-state">${zeroRows.length ? "review" : "ok"}</div>
+          </div>
+          <div class="source-snapshot-meta">
+            <strong>${num(coverage.observed)} / ${num(coverage.expected)}</strong> expected sources observed<br>
+            ${coverage.pct == null ? "DATA UNAVAILABLE" : `${pct(coverage.pct)} coverage`} · ${num(data.source_observability?.event_n)} events<br>
+            Zero/unavailable sources: ${num(zeroRows.length)}
+          </div>
+          ${gapNames.length ? `<div class="source-gap-list" aria-label="Zero or unavailable expected sources">${gapNames.map((name) => `<span class="source-gap-chip">⚠ ${esc(name)}</span>`).join("")}</div>` : ""}
+          <div class="source-snapshot-footer">${esc(readableWarning(data.source_observability?.coverage?.caveat || "Open Sources for full provider evidence."))}${rawCodeDetail(data.source_observability?.coverage?.caveat || "") ? `<span class="raw-code">raw: ${esc(data.source_observability.coverage.caveat)}</span>` : ""}</div>
+        </div>`;
+    }
+    function renderOperatingStrip(data, security, real, shadow) {
+      const realFresh = freshnessLabel(real.source_updated_at, data.generated_at);
+      const src = sourceCoverageSummary(data);
+      const account = accountSnapshot(data, real);
+      const { cash, equity, buyingPower } = brokerBalanceFields(account);
+      const gateway = gatewayStatus(data, real);
+      const eq = data.execution_quality || {};
+      const slippage = eq.slippage_vs_reference || {};
+      const slipN = Number(slippage.n || 0);
+      const slipValue = slipN ? `${Number(slippage.avg || 0).toFixed(3)}% avg` : "DATA UNAVAILABLE";
+      const feeDrag = Number(eq.commission_drag_pct_of_gross ?? (Math.abs(Number(real.gross_pnl || 0)) > 0 ? Math.abs(Number(real.commissions || 0)) / Math.abs(Number(real.gross_pnl || 0)) * 100 : NaN));
+      const securitySource = security?.ok ? security : (data.security || {});
+      const rlsTables = securitySource.rls_verified_tables || {};
+      const rlsCount = Array.isArray(rlsTables) ? rlsTables.length : Object.values(rlsTables).filter(Boolean).length;
+      const telegramKnown = security?.ok || security?.telegram_token_set !== undefined || security?.telegram_chat_id_set !== undefined;
+      const telegramReady = Boolean(security?.telegram_token_set && security?.telegram_chat_id_set);
+      const brokerLevel = real.reconciliation_status === "WARN" || realFresh.cls !== "good" ? "warn" : "good";
+      const sourceLevel = data.source_observability?.coverage?.visible_warning ? "warn" : "good";
+      const attention = buildAttentionSummary(data, security, real, shadow);
+      $("operatingStrip").innerHTML = [
+        operatingCard(
+          "Safety",
+          `Verified-only · ${safe(real.data_quality_status || "UNKNOWN")}`,
+          `${num(real.n)} costed closed · ${num(real.open_n)} open · Gateway/Telegram warnings are visible`,
+          real.data_quality_status === "PASS" ? "good" : "warn",
+        ),
+        operatingCard(
+          "IBKR Gateway",
+          `${gateway.value} · ${marketSession().replace("Equity market: ", "")}`,
+          `${gateway.detail} · venue ${safe(real.venue || "IBKR/PAPER")}`,
+          gateway.level === "bad" ? "bad" : brokerLevel === "warn" ? "warn" : gateway.level,
+        ),
+        operatingCard(
+          "Capital",
+          cash == null || equity == null || buyingPower == null ? "DATA UNAVAILABLE" : `cash ${money(cash)} · equity ${money(equity)}`,
+          `Capital proof: open exposure ${money(account.open_notional || 0)} · sizing rows ${num(account.notional_rows_n || 0)} · balances fail closed`,
+          cash == null || equity == null || buyingPower == null ? "warn" : "good",
+        ),
+        operatingCard(
+          "Commission + Slippage",
+          `${money(real.commissions)} fees · ${slipValue} slippage`,
+          `Commission + Slippage proof: ${Number.isFinite(feeDrag) ? `${feeDrag.toFixed(1)}% commission drag` : "commission drag unavailable"} · slippage n=${num(slipN)} · gross ${money(real.gross_pnl)}`,
+          Number(real.commissions || 0) > Math.abs(Number(real.gross_pnl || 0)) && Number(real.n || 0) > 0 ? "warn" : "info",
+        ),
+        operatingCard(
+          "Sources",
+          src.expected ? `${num(src.observed)} / ${num(src.expected)} observed` : "DATA UNAVAILABLE",
+          src.pct == null ? "source coverage schema unavailable" : `${pct(src.pct)} coverage · ${num(data.source_observability?.event_n)} events in window`,
+          sourceLevel,
+        ),
+        operatingCard(
+          "Jon / Codex attention",
+          attention.jonCount ? `Jon action required · ${num(attention.jonCount)} item(s)` : attention.count ? `Codex handling · ${num(attention.count)} item(s)` : "Codex handling",
+          `${attention.detail} · ${telegramKnown ? (telegramReady ? "Telegram alerts configured" : "Telegram config incomplete") : "Telegram status not exposed"} · ${rlsCount ? `RLS verified for ${num(rlsCount)} table(s)` : "RLS proof unavailable"}`,
+          attention.level,
+        ),
+      ].join("");
+    }
+    function rowByValue(rows, value) {
+      return aggregateCatalystRows(rows || []).find((row) => row.value === normalizeCatalystKey(value)) || null;
+    }
+    function aggregateRows(rows) {
+      const n = rows.reduce((acc, row) => acc + Number(row?.n || 0), 0);
+      const wins = rows.reduce((acc, row) => acc + Number(row?.wins || 0), 0);
+      const net = rows.reduce((acc, row) => acc + Number(row?.net_pnl || 0), 0);
+      return {
+        n,
+        wins,
+        net_pnl: net,
+        win_rate: n ? wins / n * 100 : 0,
+      };
+    }
+    function aggregateCatalystRows(rows) {
+      const groups = {};
+      for (const row of rows || []) {
+        const key = normalizeCatalystKey(row?.value || row?.catalyst_type || row?.catalyst || row?.source_type || "unknown");
+        const bucket = groups[key] || { value: key, n: 0, wins: 0, net_pnl: 0, gross_pnl: 0, commissions: 0 };
+        const n = Number(row?.n || 0);
+        const wins = Number.isFinite(Number(row?.wins))
+          ? Number(row.wins)
+          : (Number.isFinite(Number(row?.win_rate)) && n ? Number(row.win_rate) / 100 * n : 0);
+        bucket.n += n;
+        bucket.wins += wins;
+        bucket.net_pnl += Number(row?.net_pnl || 0);
+        bucket.gross_pnl += Number(row?.gross_pnl || 0);
+        bucket.commissions += Number(row?.commissions || 0);
+        groups[key] = bucket;
+      }
+      return Object.values(groups).map((row) => ({
+        ...row,
+        win_rate: row.n ? row.wins / row.n * 100 : 0,
+      }));
+    }
+    function catalystCompleteness(n) {
+      if (n >= 30) return { text: "✅ rule-eligible n≥30", cls: "good" };
+      if (n > 0) return { text: "⚠️ early sample n<30", cls: "warn" };
+      return { text: "— no verified closed rows", cls: "muted" };
+    }
+    function renderCatalystBars(real) {
+      const byCatalyst = aggregateCatalystRows(real.by_catalyst || []);
+      const byRule = real.by_rule || [];
+      const filing = rowByValue(byCatalyst, "filing");
+      const crypto = rowByValue(byCatalyst, "crypto_news");
+      const item202 = rowByValue(byRule, "RULE_SEC_8K_202_DEFAULT_LONG");
+      const companyNews = rowByValue(byCatalyst, "company_news") || rowByValue(byCatalyst, "news");
+      const lanes = [
+        { key: "filing", label: "SEC filings", sub: "all filing catalysts", row: filing },
+        { key: "8k202", label: "8-K item 2.02", sub: "earnings/results filings", row: item202 },
+        { key: "company_news", label: "Company news", sub: "non-filing company catalysts", row: companyNews },
+        { key: "crypto_news", label: "Crypto news", sub: "COIN/IBIT/ETHA proxies", row: crypto },
+        { key: "x", label: "X", sub: "disabled / not mixed into current REAL", row: null },
+        { key: "macro", label: "Macro", sub: "Fed/BLS/economic catalysts", row: null },
+        { key: "movers", label: "Movers", sub: "momentum/mover lane", row: null },
+      ];
+      $("catalystBars").innerHTML = `<div class="catalyst-lane-grid">` + lanes.map((lane) => {
+        const r = lane.row || {};
+        const n = Number(r.n || 0);
+        const net = Number(r.net_pnl || 0);
+        const expectancy = n ? net / n : 0;
+        const status = catalystCompleteness(n);
+        return `
+          <div class="catalyst-lane">
+            <div class="catalyst-name">${esc(lane.label)}<span class="catalyst-sub">${esc(lane.sub)}</span></div>
+            <div class="catalyst-stat"><strong>${num(n)}</strong>clean verified n</div>
+            <div class="catalyst-stat"><strong>${n ? pct(r.win_rate) : "—"}</strong>win rate</div>
+            <div class="catalyst-stat"><strong class="${cls(expectancy)}">${n ? money(expectancy) : "—"}</strong>net expectancy / trade</div>
+            <div class="catalyst-status ${status.cls}">${status.text}</div>
+          </div>
+        `;
+      }).join("") + `</div>`;
+    }
+    function shadowReturnValue(row) {
+      const keys = ["eod", "1h", "15m", "5m", "1d", "3d", "5d"];
+      for (const key of keys) {
+        const v = Number(row?.[`direction_adjusted_return_${key}_pct`] ?? row?.[`return_${key}_pct`]);
+        if (Number.isFinite(v)) return { horizon: key, value: v };
+        const hr = row?.horizon_results?.[key];
+        const hv = Number(hr?.direction_adjusted_return_pct ?? hr?.raw_return_pct);
+        if (Number.isFinite(hv)) return { horizon: key, value: hv };
+      }
+      return { horizon: null, value: null };
+    }
+    function portfolioNetByDay(model) {
+      const out = {};
+      for (const point of model?.curve || []) {
+        const day = localDateKey(point?.ts || point?.timestamp || point?.date);
+        const net = Number(point?.trade_net ?? point?.trade_pnl ?? point?.pnl ?? point?.net_pnl);
+        if (!day || !Number.isFinite(net)) continue;
+        out[day] = (out[day] || 0) + net;
+      }
+      return out;
+    }
+    function shadowJournalByDay(shadow) {
+      const buckets = {};
+      const observations = Array.isArray(shadow?.observations) ? shadow.observations : [];
+      for (const row of observations) {
+        const day = localDateKey(row?.decision_ts || row?.catalyst_ts || row?.updated_at);
+        if (!day) continue;
+        const b = buckets[day] || { observations: 0, priced: 0, wins: 0, returnSum: 0, catalysts: {} };
+        b.observations += 1;
+        const ret = shadowReturnValue(row);
+        if (Number.isFinite(ret.value)) {
+          b.priced += 1;
+          b.returnSum += ret.value;
+          if (ret.value > 0) b.wins += 1;
+        }
+        const cat = normalizeCatalystKey(row.catalyst_type || row.catalyst || "unknown");
+        b.catalysts[cat] = (b.catalysts[cat] || 0) + 1;
+        buckets[day] = b;
+      }
+      const fixedNet = portfolioNetByDay(shadow?.portfolio_models?.fixed);
+      const compoundNet = portfolioNetByDay(shadow?.portfolio_models?.compound);
+      for (const day of new Set([...Object.keys(buckets), ...Object.keys(fixedNet), ...Object.keys(compoundNet)])) {
+        const b = buckets[day] || { observations: 0, priced: 0, wins: 0, returnSum: 0, catalysts: {} };
+        b.fixedNet = fixedNet[day];
+        b.compoundNet = compoundNet[day];
+        const top = Object.entries(b.catalysts).sort((a, b) => b[1] - a[1])[0];
+        b.topCatalyst = top ? catalystLabel(top[0]) : "—";
+        b.avgReturn = b.priced ? b.returnSum / b.priced : null;
+        b.winRate = b.priced ? b.wins / b.priced * 100 : null;
+        buckets[day] = b;
+      }
+      return buckets;
+    }
+    function realJournalByDay(real) {
+      const contractRows = Array.isArray(real.daily_journal) ? real.daily_journal : [];
+      const buckets = {};
+      if (contractRows.length) {
+        for (const b of contractRows) {
+          const date = b.local_trading_date || "unknown";
+          buckets[date] = {
+            n: Number(b.n || 0),
+            wins: Number(b.wins || 0),
+            net: Number(b.net_pnl || 0),
+            gross: Number(b.gross_pnl || 0),
+            fees: Number(b.commissions || 0),
+            deployed: Number(b.deployed || 0),
+            winRate: Number(b.win_rate || 0),
+          };
+        }
+        return buckets;
+      }
+      const rows = real.recent_closed || [];
+      for (const r of rows) {
+        const key = localDateKey(r.exit_ts || r.updated_at) || "unknown";
+        if (!buckets[key]) buckets[key] = { n: 0, wins: 0, net: 0, gross: 0, fees: 0, deployed: 0, winRate: 0 };
+        buckets[key].n += 1;
+        if (rowNet(r) > 0) buckets[key].wins += 1;
+        buckets[key].net += Number(r._net_pnl ?? r.net_pnl ?? r.net_pnl_after_commissions ?? 0);
+        buckets[key].gross += Number(r._gross_pnl ?? r.gross_pnl ?? 0);
+        buckets[key].fees += Number(r._commissions ?? r.commissions ?? r.commissions_reported ?? 0);
+        buckets[key].deployed += Number(r.spent || 0);
+      }
+      for (const b of Object.values(buckets)) b.winRate = b.n ? b.wins / b.n * 100 : 0;
+      return buckets;
+    }
+    function journalRow(date, realDay, shadowDay) {
+      const realHref = `/real?date=${encodeURIComponent(date)}`;
+      const shadowHref = `/shadow?date=${encodeURIComponent(date)}`;
+      const realEmpty = !realDay || !realDay.n;
+      const shadowEmpty = !shadowDay || (!shadowDay.priced && !Number.isFinite(shadowDay.fixedNet) && !Number.isFinite(shadowDay.compoundNet));
+      const shadowModeled = Number.isFinite(shadowDay?.fixedNet) || Number.isFinite(shadowDay?.compoundNet);
+      return `
+        <div class="journal-row combined" role="group" aria-label="Daily journal for ${esc(date)}">
+          <div>
+            <div class="journal-date">${esc(date)}</div>
+            <div class="journal-line">${realEmpty ? "REAL: no closed trades" : `REAL n ${num(realDay.n)}`} · ${shadowEmpty ? "SHADOW: no priced evidence" : `SHADOW priced n ${num(shadowDay.priced)}`}</div>
+          </div>
+          <a class="journal-cell real-side" href="${realHref}" aria-label="Open REAL journal for ${esc(date)}">
+            <div class="journal-cell-title">REAL broker-backed <span>verified</span></div>
+            <div class="journal-cell-value ${realEmpty ? "muted" : cls(realDay.net)}">${realEmpty ? "—" : money(realDay.net)}</div>
+            <div class="journal-cell-sub">${realEmpty ? "No verified closed broker trades that day." : `${num(realDay.n)} closed · ${money(realDay.deployed)} deployed · ${money(realDay.gross)} gross − ${money(realDay.fees)} fees · win ${pct(realDay.winRate)}`}</div>
+          </a>
+          <a class="journal-cell shadow-side" href="${shadowHref}" aria-label="Open SHADOW research journal for ${esc(date)}">
+            <div class="journal-cell-title">SHADOW research <span>modeled</span></div>
+            <div class="journal-cell-value ${shadowModeled ? cls(shadowDay.fixedNet ?? shadowDay.compoundNet) : "muted"}">${shadowModeled ? `${money(shadowDay.fixedNet ?? shadowDay.compoundNet)}` : "—"}</div>
+            <div class="journal-cell-sub">${shadowEmpty ? "No priced research evidence that day." : `${num(shadowDay.priced)} priced · avg signal ${shadowDay.avgReturn == null ? "—" : pct3(shadowDay.avgReturn)} · top catalyst ${esc(shadowDay.topCatalyst || "—")} · ${shadowModeled ? "fixed model net shown" : "model pending"}`}</div>
+          </a>
+        </div>`;
+    }
+    function renderJournal(real, shadow) {
+      const realDays = realJournalByDay(real);
+      const shadowDays = shadowJournalByDay(shadow);
+      const dates = Array.from(new Set([...Object.keys(realDays), ...Object.keys(shadowDays)]))
+        .filter(Boolean)
+        .sort((a, b) => b.localeCompare(a))
+        .slice(0, 7);
+      if (!dates.length) {
+        $("dailyJournal").innerHTML = `<div class="empty">No REAL or SHADOW daily evidence in the current feed.</div>`;
+        return;
+      }
+      $("dailyJournal").innerHTML = dates.map((date) => journalRow(date, realDays[date], shadowDays[date])).join("");
+    }
+    function shadowObservationStatus(row) {
+      return String(row?.status || row?.validation_state || "").toUpperCase();
+    }
+    function isShadowComplete(row) {
+      const status = shadowObservationStatus(row);
+      return status === "COMPLETE" || status === "SHADOW_COMPLETE";
+    }
+    function isShadowPending(row) {
+      const status = shadowObservationStatus(row);
+      return status.includes("PENDING");
+    }
+    function summarizeShadowEvidence(shadow) {
+      const observations = Array.isArray(shadow.observations) ? shadow.observations : [];
+      const complete = observations.filter(isShadowComplete).length;
+      const partialPending = observations.filter((row) => !isShadowComplete(row) && isShadowPending(row)).length;
+      const partialOrPriced = observations.length;
+      const total = Number(shadow.total_rows_diagnostic || Math.max(partialOrPriced, complete + partialPending, 0));
+      const unpriced = Math.max(0, total - complete - partialPending);
+      return {
+        complete: observations.length ? complete : Number(shadow.priced_n || 0),
+        partialPending: observations.length ? partialPending : 0,
+        partialOrPriced,
+        total,
+        unpriced,
+      };
+    }
+    function renderResearchTrust(shadow) {
+      const evidence = summarizeShadowEvidence(shadow);
+      const modeled = Number(shadow.modeled_pnl_n || 0);
+      const completeness = evidence.total > 0 ? evidence.complete / evidence.total * 100 : 0;
+      const best = bestHorizon(shadow.horizon_ladder);
+      $("researchTrust").innerHTML = [
+        metric("Clean COMPLETE evidence", num(evidence.complete), evidence.complete, `${pct(completeness)} of ${num(evidence.total)} total diagnostic rows`),
+        metric("Partial priced / pending", num(evidence.partialPending), evidence.partialPending, "has some marks, but not complete evidence yet", evidence.partialPending ? "negative" : "positive"),
+        metric("Unpriced / not mature", num(evidence.unpriced), evidence.unpriced, "diagnostic only until required marks arrive", evidence.unpriced ? "negative" : "positive"),
+        metric("Modeled scenario rows", num(modeled), modeled, "hypothetical sizing only"),
+        metric("Best research horizon", best ? `${best.horizon} ${pct3(best.avg_direction_adjusted_return_pct)}` : "—",
+          best?.priced_n || best?.n || 0, "direction-adjusted return; early sample"),
+      ].join("");
+    }
+    function renderWarnings(data, security, real, shadow) {
+      const attention = buildAttentionSummary(data, security, real, shadow);
+      const warnings = attention.issues.map((item) => ({
+        text: `${item.owner === "Jon" ? "Jon action required" : "Codex handling"}: ${item.title}. ${item.detail}`,
+        level: item.level,
+      }));
+      const sourceWarnings = Array.from(new Set([
+        ...(data.source_observability?.coverage?.warnings || []),
+        ...(data.source_observability?.warnings || []),
+      ].filter(Boolean)));
+      for (const w of sourceWarnings.slice(0, 3)) warnings.push({ text: `Source coverage: ${readableWarning(w)}`, level: "warn", raw: rawCodeDetail(w) });
+      if (sourceWarnings.length > 3) warnings.push({ text: `Source coverage has ${num(sourceWarnings.length - 3)} more warning(s); open Sources for the full provider list.`, level: "warn" });
+      if (!warnings.length) warnings.push({ text: "No visible dashboard warnings right now.", level: "ok" });
+      $("warnings").innerHTML = warnings.map((w) => warningItem(w.text, w.level, w.raw)).join("");
+    }
+    function actionCard({ href, tone = "info", kicker, state, title, copy, metricLabel, metricValue }) {
+      return `
+        <a class="action-card ${tone}" href="${esc(href)}">
+          <div class="action-kicker">${esc(kicker)}<span class="action-state">${esc(state)}</span></div>
+          <div class="action-title">${esc(title)}</div>
+          <div class="action-copy">${esc(copy)}</div>
+          <div class="action-metric"><span>${esc(metricLabel)}</span><strong>${esc(metricValue)}</strong></div>
+        </a>`;
+    }
+    function topCatalyst(real) {
+      const rows = aggregateCatalystRows(real.by_catalyst || []).filter((row) => Number(row.n || 0) > 0);
+      if (!rows.length) return null;
+      return rows.slice().sort((a, b) => Math.abs(Number(b.net_pnl || 0)) - Math.abs(Number(a.net_pnl || 0)))[0];
+    }
+    function renderNextActions(data, security, real, shadow, todayRows, todayOpenRows) {
+      const todayNet = sumRows(todayRows, "_net_pnl");
+      const todayGross = sumRows(todayRows, "_gross_pnl");
+      const todayFees = sumRows(todayRows, "_commissions");
+      const shadowEvidence = summarizeShadowEvidence(shadow);
+      const best = bestHorizon(shadow.horizon_ladder);
+      const src = sourceCoverageSummary(data);
+      const attention = buildAttentionSummary(data, security, real, shadow);
+      const catalyst = topCatalyst(real);
+      const telegramReady = Boolean(security?.telegram_token_set && security?.telegram_chat_id_set);
+      const items = [];
+
+      items.push(actionCard({
+        href: "/real",
+        tone: Number(real.open_n || 0) > 0 ? "warn" : todayNet < 0 ? "bad" : todayRows.length ? "good" : "info",
+        kicker: "REAL cockpit",
+        state: `${num(todayRows.length)} closed today · ${num(real.open_n)} open`,
+        title: Number(real.open_n || 0) > 0 ? "Check open positions and bracket proof" : "Review today’s real-money receipts",
+        copy: todayRows.length
+          ? `${money(todayGross)} gross minus ${money(todayFees)} fees. Every row should show notional, quantity, entry, exit, and reason.`
+          : "No verified closed REAL trades today yet. Open positions still belong in the REAL cockpit.",
+        metricLabel: "Today net",
+        metricValue: money(todayNet),
+      }));
+
+      items.push(actionCard({
+        href: "/shadow",
+        tone: shadowEvidence.complete >= 30 ? "good" : shadowEvidence.complete > 0 ? "warn" : "info",
+        kicker: "SHADOW research",
+        state: `${num(shadowEvidence.complete)} complete`,
+        title: shadowEvidence.complete >= 30 ? "Research sample is rule-eligible" : "Research is still early-sample",
+        copy: best
+          ? `Best visible horizon is ${best.horizon} at ${pct3(best.avg_direction_adjusted_return_pct)} direction-adjusted return. Shadow stays research-only.`
+          : "No complete horizon ladder yet; pending and unpriced rows remain diagnostic.",
+        metricLabel: "Complete / total",
+        metricValue: `${num(shadowEvidence.complete)} / ${num(shadowEvidence.total)}`,
+      }));
+
+      items.push(actionCard({
+        href: "/catalyst",
+        tone: catalyst && Number(catalyst.n || 0) >= 30 ? "good" : catalyst ? "warn" : "info",
+        kicker: "Catalyst edge",
+        state: catalyst ? `${safe(catalystLabel(catalyst.value))} · n=${num(catalyst.n)}` : "No leader yet",
+        title: catalyst ? "Inspect the strongest current catalyst lane" : "Wait for catalyst lanes to collect",
+        copy: catalyst
+          ? `${safe(catalystLabel(catalyst.value))} has ${money(catalyst.net_pnl || 0)} net and ${pct(catalyst.win_rate)} win rate. Keep n visible before calling it an edge.`
+          : "The dashboard will not declare an edge below n=30; lanes with zero verified rows stay visible.",
+        metricLabel: "Rule threshold",
+        metricValue: catalyst && Number(catalyst.n || 0) >= 30 ? "n≥30 met" : "n<30",
+      }));
+
+      items.push(actionCard({
+        href: attention.issues[0]?.href || (src.expected ? "/sources" : "/execution"),
+        tone: attention.level === "bad" ? "bad" : attention.count || !telegramReady ? "warn" : "good",
+        kicker: "Attention",
+        state: attention.jonCount ? `Jon · ${num(attention.jonCount)}` : attention.count ? `Codex · ${num(attention.count)}` : "Clear",
+        title: attention.title,
+        copy: attention.detail,
+        metricLabel: "Coverage",
+        metricValue: src.expected ? `${num(src.observed)} / ${num(src.expected)}` : "unavailable",
+      }));
+
+      $("nextActions").innerHTML = items.join("");
+    }
+    async function loadLauncher() {
+      try {
+        const [data, security] = await Promise.all([fetchDashboard(), fetchSecurity()]);
+        const real = data.real || {}, shadow = data.shadow || {};
+        const todayKey = real.local_trading_date || localDateKey(data.generated_at);
+        const todayRows = rowsForToday(real.recent_closed || [], todayKey);
+        const openRows = real.open_positions || [];
+        const todayOpenRows = rowsForToday(openRows, todayKey);
+        const todayNet = sumRows(todayRows, "_net_pnl");
+        const todayGross = sumRows(todayRows, "_gross_pnl");
+        const todayFees = sumRows(todayRows, "_commissions");
+        const todaySpent = sumRows(todayRows, "spent") + sumRows(todayOpenRows, "spent");
+        const openExposure = (real.open_positions || []).reduce((acc, row) => acc + Number(row.spent || row.entry_notional || row.amount_spent || (Number(row.quantity || 0) * Number(row.entry_price || 0)) || 0), 0);
+        const feeDrag = Math.abs(todayGross) > 0 ? Math.abs(todayFees) / Math.abs(todayGross) * 100 : null;
+        const realFresh = freshnessLabel(real.source_updated_at, data.generated_at);
+        const best = bestHorizon(shadow.horizon_ladder);
+
+        $("todayNet").innerHTML = `<span class="${cls(todayNet)}">${money(todayNet)}</span>`;
+        $("todayNetSub").textContent = `${money(todayGross)} gross − ${money(todayFees)} commissions · today n=${num(todayRows.length)}`;
+        $("todayDeployed").textContent = money(todaySpent);
+        $("todayDeployedSub").textContent = `${num(todayOpenRows.length)} open entries today included · total open exposure ${money(openExposure)}`;
+        $("todayOpen").textContent = num(real.open_n);
+        $("todayFees").innerHTML = `<span class="${todayFees > 0 ? "negative" : "muted"}">${money(todayFees)}</span>`;
+        $("todayFeesSub").textContent = feeDrag == null ? "gross P&L is zero/unavailable" : `${feeDrag.toFixed(1)}% of gross P&L`;
+
+        $("agentStatus").className = `soft-pill ${realFresh.cls}`;
+        $("agentStatus").textContent = `Agent data: ${realFresh.text}`;
+        $("ibkrStatus").className = `soft-pill ${real.open_n >= 0 ? "good" : "warn"}`;
+        $("ibkrStatus").textContent = `IBKR paper: ${real.venue || "IBKR/PAPER"} · ${marketSession()}`;
+        $("ndaxStatus").className = "soft-pill warn";
+        $("ndaxStatus").textContent = "NDAX REAL: gated / not mixed into IBKR";
+        const telegramReady = Boolean(security?.telegram_token_set && security?.telegram_chat_id_set);
+        $("telegramStatus").className = `soft-pill ${telegramReady ? "good" : "warn"}`;
+        $("telegramStatus").textContent = telegramReady ? "Telegram: alerts configured" : "Telegram: config unavailable";
+        const attention = buildAttentionSummary(data, security, real, shadow);
+        $("ownerStatus").className = `soft-pill ${attention.level}`;
+        $("ownerStatus").textContent = attention.jonCount
+          ? `Jon action required: ${num(attention.jonCount)} item(s)`
+          : attention.count
+            ? `Codex handling: ${num(attention.count)} item(s)`
+            : "Codex handling";
+        renderOperatingStrip(data, security, real, shadow);
+        renderCapitalAlert(data, real);
+        renderAccountTruth(data, real);
+
+        $("cardRealN").textContent = num(real.n);
+        $("cardRealOpen").textContent = num(real.open_n);
+        $("cardRealNet").innerHTML = `<span class="${cls(real.net_pnl)}">${money(real.net_pnl)}</span>`;
+        $("cardShadowN").textContent = num(summarizeShadowEvidence(shadow).complete);
+        $("cardShadowModeled").textContent = num(shadow.modeled_pnl_n);
+        $("cardShadowHorizon").textContent = best ? `${best.horizon} ${pct3(best.avg_direction_adjusted_return_pct)}` : "—";
+
+        renderCatalystBars(real);
+        renderWarnings(data, security, real, shadow);
+        renderSourceSnapshot(data);
+        renderNextActions(data, security, real, shadow, todayRows, todayOpenRows);
+        renderJournal(real, shadow);
+        renderResearchTrust(shadow);
+        overviewState.latestData = data;
+        renderOverviewPnlCurve(real, data.generated_at);
+      } catch (e) {
+        $("agentStatus").className = "soft-pill bad";
+        $("agentStatus").textContent = "Agent data: unavailable";
+        $("telegramStatus").className = "soft-pill bad";
+        $("telegramStatus").textContent = "Telegram: unavailable";
+        $("operatingStrip").innerHTML = [
+          operatingCard("Safety", "DATA UNAVAILABLE", `Dashboard is fail-closed: ${e.message}`, "bad"),
+          operatingCard("Broker", "DATA UNAVAILABLE", "No trusted live payload", "bad"),
+          operatingCard("Sources", "DATA UNAVAILABLE", "No trusted live payload", "bad"),
+          operatingCard("Owner", "Jon action required", "Refresh or inspect backend health", "bad"),
+        ].join("");
+        $("nextActions").innerHTML = actionCard({
+          href: "/sources",
+          tone: "bad",
+          kicker: "Dashboard data",
+          state: "Unavailable",
+          title: "Public dashboard is fail-closed",
+          copy: e.message,
+          metricLabel: "Next action",
+          metricValue: "inspect backend",
+        });
+        $("warnings").innerHTML = warningItem(`Dashboard is fail-closed: ${e.message}`, "bad");
+        $("sourceSnapshot").innerHTML = `<div class="warning-item bad">Source coverage is DATA UNAVAILABLE because the live dashboard payload failed closed: ${esc(e.message)}</div>`;
+      }
+    }
+    document.querySelectorAll("[data-curve-range]").forEach((button) => {
+      button.addEventListener("click", () => {
+        overviewState.curveRange = button.dataset.curveRange;
+        document.querySelectorAll("[data-curve-range]").forEach((b) => b.classList.toggle("active", b === button));
+        if (overviewState.latestData?.real) renderOverviewPnlCurve(overviewState.latestData.real, overviewState.latestData.generated_at);
+      });
+    });
+    loadLauncher();
+    setInterval(loadLauncher, 30000);
+  </script>
 </body>
 </html>
