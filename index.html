@@ -725,14 +725,25 @@ function renderWarnings(data, security, freshnessKind){
   for(const warning of rec?.warnings || []) warnings.push({kind:"warn", text: warning});
   if(data?.real?.capture_status?.closed_net_missing_unflagged) warnings.push({kind:"bad", text:"Some closed REAL rows are missing net-after-fees evidence without a flag."});
   if(data?.real?.capture_status?.closed_commissions_missing_unflagged) warnings.push({kind:"bad", text:"Some closed REAL rows are missing commission evidence without a flag."});
-  const srcWarnings = data?.source_observability?.coverage?.warnings || data?.source_observability?.warnings || [];
-  for(const warning of srcWarnings) warnings.push({kind:String(warning).includes("NO_ROWS") ? "warn" : "warn", text: warningText(warning)});
-  for(const warning of data?.execution_quality?.warnings || []) warnings.push({kind:"warn", text: warningText(warning)});
   if(data?.execution_quality?.commission_drag_pct_of_gross > 100) warnings.push({kind:"warn", text:`Commission drag is ${Number(data.execution_quality.commission_drag_pct_of_gross).toFixed(1)}% of gross P&L. Fees are dominating the current REAL sample.`});
   if(data?.execution_quality?.rejections_and_skips?.stale_open_n > 0) warnings.push({kind:"bad", text:`${data.execution_quality.rejections_and_skips.stale_open_n} stale open REAL position(s) need reconciliation.`});
+  const ibkrStatus = data?.sources?.ibkr || data?.real?.ibkr_status || security?.ibkr;
+  const ndaxStatus = data?.sources?.ndax || data?.real?.ndax_status || security?.ndax;
+  const telegramStatus = data?.telegram || data?.alerts?.telegram || security?.telegram;
+  const killSwitchStatus = data?.kill_switch || data?.risk?.kill_switch || security?.kill_switch;
+  if(data && !ibkrStatus) warnings.push({kind:"warn", text:"IBKR Gateway connection proof is not exposed on the public contract. Treat Gateway state as DATA UNAVAILABLE until the backend reports it."});
+  if(data && !ndaxStatus) warnings.push({kind:"warn", text:"NDAX state / kill-switch proof is not exposed on the public contract. NDAX remains separated from IBKR/PAPER results."});
+  if(data && !telegramStatus) warnings.push({kind:"warn", text:"Telegram delivery proof is not exposed. Expected alerts: real fills, exits, kill-switch/Gateway events, and daily digest."});
+  if(data && !killSwitchStatus) warnings.push({kind:"warn", text:"Kill-switch state is not exposed on the public contract. Do not assume it is armed from the dashboard alone."});
+  const bracket = data?.execution_quality?.bracket;
+  if(bracket && Number(bracket.bracket_complete_pct || 0) < 100) warnings.push({kind:"bad", text:`Bracket completeness is ${Number(bracket.bracket_complete_pct || 0).toFixed(1)}%. Open/closed protection proof needs attention.`});
+  if(bracket && Number(bracket.fill_adjusted_proof_pct || 0) < 100) warnings.push({kind:"bad", text:`Fill-adjusted bracket proof is ${Number(bracket.fill_adjusted_proof_pct || 0).toFixed(1)}%. Bracket evidence is incomplete.`});
+  for(const warning of data?.execution_quality?.warnings || []) warnings.push({kind:"warn", text: warningText(warning)});
+  const srcWarnings = data?.source_observability?.coverage?.warnings || data?.source_observability?.warnings || [];
+  for(const warning of srcWarnings) warnings.push({kind:String(warning).includes("NO_ROWS") ? "warn" : "warn", text: warningText(warning)});
   if(security && security.ok === false) warnings.push({kind:"warn", text:"Security/status endpoint is not green or unavailable."});
   if(!warnings.length) warnings.push({kind:"ok", text:"No dashboard warnings from live data. Keep monitoring source freshness and open positions."});
-  $("warningList").innerHTML = warnings.slice(0, 6).map((w) => `<div class="warning ${w.kind === "bad" ? "bad" : w.kind === "ok" ? "ok" : ""}">${statusLabel(w.kind, esc(w.text))}</div>`).join("");
+  $("warningList").innerHTML = warnings.slice(0, 10).map((w) => `<div class="warning ${w.kind === "bad" ? "bad" : w.kind === "ok" ? "ok" : ""}">${statusLabel(w.kind, esc(w.text))}</div>`).join("");
 }
 function renderGuardrails(data){
   if(!data){
