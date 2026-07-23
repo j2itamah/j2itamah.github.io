@@ -67,7 +67,8 @@
     .bar-fill.neg{background:linear-gradient(90deg,#fb7185,#f59e0b)}
     .bar-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#334155}
     .bar-value{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.78rem}
-    .champ{order:6;display:block;text-decoration:none;color:#f8fafc;width:100%;margin:0 0 24px;background:linear-gradient(145deg,#151723 0%,#070913 100%);
+    .book-grid{order:6;display:grid;grid-template-columns:1.08fr .96fr .96fr;gap:22px;margin:0 0 22px}
+    .champ{display:block;text-decoration:none;color:#f8fafc;width:100%;margin:0;background:linear-gradient(145deg,#151723 0%,#070913 100%);
       border:1px solid rgba(255,255,255,.10);border-radius:28px;padding:28px 32px;box-shadow:0 34px 80px rgba(10,12,21,.28);position:relative;overflow:hidden;min-height:150px}
     .champ::before{content:"";position:absolute;inset:0 0 auto 0;height:7px;background:linear-gradient(90deg,#f7c948,#ff8a3d)}
     .champ-label{font-size:.72rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#fcd34d;margin-bottom:8px}
@@ -76,7 +77,7 @@
     .cap{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:#8a96ad;margin-bottom:3px}
     .val{font-size:1.35rem;font-weight:800;font-variant-numeric:tabular-nums}
     .up{color:#34d399}.down{color:#f87171}.flat{color:#cbd5e1}
-    .cards{order:7;display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
+    .cards{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
     .card{display:block;position:relative;overflow:hidden;background:rgba(255,255,255,.86);border:1px solid rgba(20,24,39,.10);border-radius:24px;padding:28px;
       text-decoration:none;color:inherit;box-shadow:0 20px 58px rgba(34,29,19,.12);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;min-height:230px}
     .card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--ok),#4ade80)}
@@ -93,9 +94,12 @@
     .metric-line strong{font-variant-numeric:tabular-nums}
     .go{display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-weight:800;color:#15803d}
     .card.dark .go{color:#c4b5fd}
+    .book-grid .card,.book-grid .champ{min-height:300px}
+    .book-grid .champ{display:flex;flex-direction:column;justify-content:space-between}
     #journalCard{order:8}
     footer{order:12;margin-top:20px;color:#94a3b8;font-size:.78rem;text-align:center;line-height:1.5}
     @media(max-width:900px){.overview,.charts{grid-template-columns:1fr}.headline-grid{grid-template-columns:1fr 1fr}.status-grid{grid-template-columns:1fr}}
+    @media(max-width:1020px){.book-grid{grid-template-columns:1fr}.book-grid .card,.book-grid .champ{min-height:0}}
     @media(max-width:760px){body{padding:22px 14px}.cards{grid-template-columns:1fr}.champ{padding:20px 18px}.champ-stats{gap:16px}.val{font-size:1.1rem}.card{min-height:0}.headline-grid{grid-template-columns:1fr}.bar{grid-template-columns:1fr}.bar-value{text-align:left}}
     /* Lovable-style visual system: minimal dark shell, glass cards, app-like navigation. */
     body{
@@ -222,17 +226,19 @@
       </div>
     </section>
 
-    <a class="champ" id="topCard" href="./real.html" aria-label="Open the top book cockpit">
-      <div class="champ-label">Top book · live agent</div>
-      <div class="champ-name" id="topName">Loading top book…</div>
-      <div class="champ-stats">
-        <div><span class="cap">Evidence</span><span class="val" id="topEvidence">—</span></div>
-        <div><span class="cap">Primary metric</span><span class="val" id="topMetric">—</span></div>
-        <div><span class="cap">Status</span><span class="val" id="topStatus">—</span></div>
-      </div>
-    </a>
+    <section class="book-grid" aria-label="Primary books">
+      <a class="champ" id="topCard" href="./real.html" aria-label="Open the top book cockpit">
+        <div>
+          <div class="champ-label">Top book · live agent</div>
+          <div class="champ-name" id="topName">Loading top book…</div>
+        </div>
+        <div class="champ-stats">
+          <div><span class="cap">Evidence</span><span class="val" id="topEvidence">—</span></div>
+          <div><span class="cap">Primary metric</span><span class="val" id="topMetric">—</span></div>
+          <div><span class="cap">Status</span><span class="val" id="topStatus">—</span></div>
+        </div>
+      </a>
 
-    <section class="cards">
       <a class="card" id="realCard" href="./real.html" aria-label="Open IBKR REAL executable cockpit" title="Open IBKR / REAL cockpit">
         <span class="pill">IBKR / REAL</span>
         <h2>Executable trades</h2>
