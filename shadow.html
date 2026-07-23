@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Spline+Sans:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./cockpit.css?v=20260723-lovable-replica" />
+  <link rel="stylesheet" href="./cockpit.css?v=20260723-dark-shadow-source" />
   <link rel="stylesheet" href="./lovable-exact.css?v=20260723-exact-port-2" />
 </head>
 <body class="shadow-theme">
@@ -183,8 +183,25 @@
         <div id="shadow-by-direction"></div>
       </div>
       <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">By source</h2>
+            <div class="filter-copy">Priced research observations by source/provider so one noisy feed cannot hide the true sample.</div>
+          </div>
+          <span class="badge shadow">source counts · priced n</span>
+        </div>
+        <div id="shadow-by-source"><div class="loading">Loading source breakdown…</div></div>
+      </div>
+    </section>
+
+    <section class="grid two section-gap">
+      <div class="panel">
         <div class="panel-header"><h2 class="panel-title">Pending marks</h2><span class="badge warn">waiting for later horizons</span></div>
         <div id="pending-marks" class="loading">Loading pending marks…</div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">Source contract</h2><span class="badge warn">research evidence only</span></div>
+        <div class="small">SHADOW source counts are not broker P&amp;L. They only describe where priced forward observations came from.</div>
       </div>
     </section>
 
@@ -209,6 +226,6 @@
   </main>
   <script>window.API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";</script>
   <script src="./cockpit-common.js?v=20260723-readable-contract"></script>
-  <script src="./shadow.js?v=20260723-contract-audit"></script>
+  <script src="./shadow.js?v=20260723-source-breakdown"></script>
 </body>
 </html>

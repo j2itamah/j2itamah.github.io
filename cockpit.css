@@ -1093,3 +1093,247 @@ body.shadow-theme::before{display:none}
   .real-theme .app-nav a,
   .shadow-theme .app-nav a { flex:1 1 145px; }
 }
+
+/* 2026-07-23 final Lovable duplicate pass.
+   Latest Jon direction: overview stays calm/cream; IBKR/NDAX and SHADOW use
+   the richer dark Trade Compass-style cockpit cards. Display-only. */
+body.shadow-theme {
+  --sr-bg:#090d1d;
+  --sr-card:rgba(29,35,70,.76);
+  --sr-card-2:rgba(16,23,47,.82);
+  --sr-border:rgba(164,174,255,.18);
+  --sr-border-2:rgba(255,255,255,.13);
+  --sr-ink:#f5f7ff;
+  --sr-soft:#aeb7d0;
+  --sr-muted:#8590b2;
+  --sr-ok:#18f0ae;
+  --sr-bad:#ff4d76;
+  --sr-warn:#ffd166;
+  --sr-warn-soft:rgba(255,209,102,.14);
+  --sr-purple:#a78bfa;
+  --sr-cyan:#22d3ee;
+  --sr-shadow:0 24px 76px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.07);
+  background:
+    radial-gradient(920px 540px at 0% -5%,rgba(71,85,196,.42),transparent 64%),
+    radial-gradient(720px 500px at 94% 0%,rgba(167,139,250,.31),transparent 62%),
+    radial-gradient(680px 520px at 50% 116%,rgba(34,211,238,.13),transparent 60%),
+    linear-gradient(180deg,#090d1d 0%,#11162b 55%,#101010 100%) !important;
+  background-attachment:fixed !important;
+  background-size:auto !important;
+  color:var(--sr-ink) !important;
+  font-family:"Outfit","Inter","Spline Sans",system-ui,sans-serif !important;
+}
+body.shadow-theme::before {
+  display:block !important;
+  background:
+    linear-gradient(rgba(255,255,255,.026) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:42px 42px;
+  opacity:.50;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.70),transparent 78%);
+}
+.shadow-theme .shell {
+  width:min(100% - 32px,1240px) !important;
+  padding-top:24px;
+}
+.shadow-theme .topbar {
+  align-items:flex-end;
+  border:1px solid var(--sr-border) !important;
+  border-radius:24px;
+  padding:24px;
+  background:
+    radial-gradient(520px 240px at 100% 0%,rgba(167,139,250,.22),transparent 60%),
+    linear-gradient(135deg,rgba(45,54,110,.82),rgba(24,28,67,.86)) !important;
+  box-shadow:var(--sr-shadow) !important;
+}
+.shadow-theme h1,
+.shadow-theme h2,
+.shadow-theme h3,
+.shadow-theme h4,
+.shadow-theme .panel-title {
+  font-family:"Outfit","Inter",system-ui,sans-serif !important;
+  color:var(--sr-ink) !important;
+  letter-spacing:-.045em !important;
+  font-weight:900 !important;
+}
+.shadow-theme h1 { font-size:clamp(2.35rem,5vw,4.4rem) !important; }
+.shadow-theme .subtitle,
+.shadow-theme .small,
+.shadow-theme .footer,
+.shadow-theme .metric-sub,
+.shadow-theme .filter-copy,
+.shadow-theme .gauge-title,
+.shadow-theme .bar-value,
+.shadow-theme .bar-label {
+  color:var(--sr-soft) !important;
+}
+.shadow-theme .eyebrow,
+.shadow-theme .metric-label,
+.shadow-theme .badge,
+.shadow-theme th,
+.shadow-theme .n-tag {
+  font-family:"Inter",system-ui,sans-serif !important;
+  color:var(--sr-muted) !important;
+  letter-spacing:.13em !important;
+  text-transform:uppercase;
+}
+.shadow-theme .backlink,
+.shadow-theme .app-nav,
+.shadow-theme .status-pill,
+.shadow-theme .panel,
+.shadow-theme .hero-card,
+.shadow-theme .metric,
+.shadow-theme .rule-card,
+.shadow-theme .ladder-card,
+.shadow-theme .decision-card,
+.shadow-theme .gauge,
+.shadow-theme .custom-scenario,
+.shadow-theme .filter-pill {
+  background:linear-gradient(180deg,rgba(255,255,255,.078),rgba(255,255,255,.024)),var(--sr-card-2) !important;
+  border:1px solid var(--sr-border-2) !important;
+  box-shadow:var(--sr-shadow) !important;
+  color:var(--sr-ink) !important;
+  backdrop-filter:blur(20px) saturate(135%) !important;
+  border-radius:22px;
+}
+.shadow-theme .backlink {
+  display:inline-flex;
+  width:max-content;
+  border-radius:999px;
+  color:#d8d3ff !important;
+  padding:9px 12px;
+  text-decoration:none;
+}
+.shadow-theme .app-nav {
+  position:sticky;
+  top:12px;
+  z-index:20;
+  width:fit-content;
+  max-width:100%;
+  margin:18px auto;
+  padding:8px;
+  border-radius:18px;
+}
+.shadow-theme .app-nav a {
+  border-radius:14px;
+  color:var(--sr-soft) !important;
+  font-weight:850;
+  padding:12px 18px;
+  font-family:"Inter",system-ui,sans-serif !important;
+  letter-spacing:.04em;
+}
+.shadow-theme .app-nav a.active,
+.shadow-theme .app-nav a:hover {
+  background:rgba(167,139,250,.18) !important;
+  color:#fff !important;
+}
+.shadow-theme .research-banner {
+  border:1px solid rgba(255,209,102,.36) !important;
+  background:linear-gradient(135deg,rgba(255,209,102,.16),rgba(167,139,250,.10)) !important;
+  color:#ffe9a8 !important;
+  box-shadow:var(--sr-shadow) !important;
+  border-radius:18px;
+}
+.shadow-theme .panel::before { display:block; background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent); }
+.shadow-theme .hero-card.primary {
+  background:
+    radial-gradient(340px 180px at 92% 18%,rgba(167,139,250,.30),transparent 64%),
+    linear-gradient(135deg,rgba(34,211,238,.14),rgba(45,54,110,.90)) !important;
+  border-color:rgba(167,139,250,.32) !important;
+}
+.shadow-theme .metric-value,
+.shadow-theme .decision-title,
+.shadow-theme .rc-name,
+.shadow-theme .ladder-top,
+.shadow-theme .gauge-center {
+  color:var(--sr-ink) !important;
+  fill:var(--sr-ink) !important;
+}
+.shadow-theme .metric-value {
+  font-family:"Outfit","Inter",system-ui,sans-serif !important;
+  font-weight:900;
+  letter-spacing:-.055em;
+}
+.shadow-theme .badge.shadow,
+.shadow-theme .filter-pill.active {
+  background:rgba(167,139,250,.18) !important;
+  color:#f3efff !important;
+  border-color:rgba(167,139,250,.38) !important;
+}
+.shadow-theme .badge.warn,
+.shadow-theme .chip.warn {
+  background:rgba(255,209,102,.15) !important;
+  color:#ffe9a8 !important;
+  border-color:rgba(255,209,102,.34) !important;
+}
+.shadow-theme .filter-pill:hover {
+  background:rgba(255,255,255,.095) !important;
+  color:#fff !important;
+}
+.shadow-theme .custom-scenario input {
+  background:rgba(255,255,255,.075) !important;
+  color:var(--sr-ink) !important;
+  border-color:rgba(255,255,255,.14) !important;
+}
+.shadow-theme .chart-wrap,
+.shadow-theme .table-scroll,
+.shadow-theme .empty {
+  background:rgba(255,255,255,.052) !important;
+  border-color:rgba(255,255,255,.10) !important;
+  color:var(--sr-soft) !important;
+}
+.shadow-theme th { background:rgba(255,255,255,.055) !important; color:var(--sr-muted) !important; }
+.shadow-theme td { background:rgba(255,255,255,.035) !important; color:var(--sr-ink) !important; }
+.shadow-theme tbody tr:hover td { background:rgba(167,139,250,.075) !important; }
+.shadow-theme .bar-track { background:rgba(255,255,255,.10) !important; }
+.shadow-theme .bar-fill.shadow,
+.shadow-theme .bar-track > span.info-fill {
+  background:linear-gradient(90deg,var(--sr-cyan),var(--sr-purple)) !important;
+}
+.shadow-theme .bar-fill.neg,
+.shadow-theme .bar-track > span.bad-fill {
+  background:linear-gradient(90deg,var(--sr-bad),#ff7a91) !important;
+}
+.shadow-theme .bar-track > span.good-fill {
+  background:linear-gradient(90deg,var(--sr-cyan),var(--sr-ok)) !important;
+}
+.shadow-theme .positive { color:#b8f7d8 !important; }
+.shadow-theme .negative { color:#ffbdc8 !important; }
+.shadow-theme code {
+  background:rgba(255,255,255,.075) !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  color:#ede9fe !important;
+}
+
+body.overview-page .overview-shell {
+  width:min(1120px,calc(100vw - 32px));
+}
+body.overview-page .lovable-app-header h1 {
+  font-size:clamp(34px,4.4vw,52px) !important;
+  letter-spacing:-.065em;
+}
+body.overview-page .build-chip,
+body.overview-page .attention-pill,
+body.overview-page .tabs,
+body.overview-page .headline-card,
+body.overview-page .launch-card,
+body.overview-page .overview-panel.light,
+body.overview-page .guide-card,
+body.overview-page .action-card,
+body.overview-page .source-snapshot-card {
+  box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px -12px rgba(40,30,20,.08) !important;
+}
+body.overview-page .lovable-topbook,
+body.overview-page .overview-panel:not(.light) {
+  border-radius:28px;
+  background:
+    radial-gradient(560px 230px at 18% 0%,rgba(34,211,238,.16),transparent 58%),
+    radial-gradient(540px 240px at 100% 16%,rgba(167,139,250,.16),transparent 64%),
+    linear-gradient(135deg,#11162b,#0b1024) !important;
+  box-shadow:0 24px 76px rgba(0,0,0,.27),inset 0 1px 0 rgba(255,255,255,.07) !important;
+}
+
+@media (max-width:760px) {
+  .shadow-theme .app-nav { width:100%; border-radius:22px; position:static; }
+  .shadow-theme .app-nav a { flex:1 1 145px; justify-content:center; }
+}

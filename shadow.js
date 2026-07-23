@@ -50,6 +50,24 @@ function pricedCounts(rows, field) {
   }
   return Object.entries(counts).map(([value, priced_n]) => ({ value, priced_n })).sort((a, b) => b.priced_n - a.priced_n);
 }
+function pricedCountsBy(rows, keyFn) {
+  const counts = {};
+  for (const row of rows || []) {
+    const key = String(keyFn(row) || "UNKNOWN");
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  return Object.entries(counts)
+    .map(([value, priced_n]) => ({ value, priced_n }))
+    .sort((a, b) => b.priced_n - a.priced_n || a.value.localeCompare(b.value));
+}
+function sourceKey(row) {
+  return row?.source_provider
+    || row?.source
+    || row?.publisher
+    || row?.provider
+    || shortSource(row?.catalyst_url)
+    || "UNKNOWN";
+}
 function filteredLadder(rows) {
   return FORWARD_HORIZONS.map((h) => {
     const values = (rows || []).map((row) => returnValue(row, h)).filter(hasValue).map(Number);
@@ -129,6 +147,7 @@ function shadowForFilter(shadow) {
     by_rule: pricedCounts(priced, "rule_id"),
     by_catalyst: pricedCounts(priced, "catalyst_type"),
     by_direction: pricedCounts(priced, "direction"),
+    by_source: pricedCountsBy(priced, sourceKey),
     recent_priced: rows,
     _basis: "visible recent slice",
     _visible_n: rows.length,
@@ -532,6 +551,24 @@ function renderGroups(shadow) {
   $("shadow-by-direction").innerHTML = table(["Direction", "priced n", "Research status"], shadow.by_direction || [], (r) => `
     <tr><td>${safe(r.value)}</td><td class="mono">${num(r.priced_n)}</td><td>priced marks only · no real fills</td></tr>`, "No priced SHADOW rows by direction yet.");
 }
+function renderSourceBreakdown(shadow) {
+  const visiblePriced = rowsForDiagnostics(shadow).filter(_isPricedLocal);
+  const rows = (shadow.by_source && shadow.by_source.length ? shadow.by_source : pricedCountsBy(visiblePriced, sourceKey)).slice(0, 12);
+  if (!rows.length) {
+    $("shadow-by-source").innerHTML = `<div class="empty">No priced source/provider rows exposed for this SHADOW slice yet.</div>`;
+    return;
+  }
+  const max = Math.max(...rows.map((r) => Number(r.priced_n || r.n || 0)), 1);
+  $("shadow-by-source").innerHTML = `
+    <div class="source-rank-list">
+      ${rows.map((r) => {
+        const n = Number(r.priced_n || r.n || 0);
+        const label = r.value || r.key || "UNKNOWN";
+        return barRow(`${safe(label)} · priced n=${num(n)}`, n, max, `n=${num(n)}`, "muted", "shadow");
+      }).join("")}
+    </div>
+    <div class="small section-note">Counts are deduped priced observations only. Pending/unpriced rows stay diagnostic and do not count as evidence.</div>`;
+}
 function renderPending(shadow) {
   const rows = pendingRows(shadow).slice().sort((a, b) => new Date(b.decision_ts || 0) - new Date(a.decision_ts || 0));
   $("pending-marks").innerHTML = table(["Symbol", "Dir", "Latest mark", "Waiting on"], rows.slice(0, 10), (r) => {
@@ -594,7 +631,7 @@ function renderAll() {
   renderResearchCompleteness(shadow);
   renderForwardReturns(shadow); renderEquity(shadow); renderLadder(shadow);
   renderMfeMaeDiagnostics(shadow); renderBracketHoldDiagnostics(shadow);
-  renderGroups(shadow); renderPending(shadow); renderShadowStatus(shadow);
+  renderGroups(shadow); renderSourceBreakdown(shadow); renderPending(shadow); renderShadowStatus(shadow);
   renderDecisionFeed(shadow);
   $("refresh-status").className = "status-pill ok";
   const filterText = state.filter === "ALL" ? "" : ` · ${catalystDisplay(state.filter)}`;
@@ -612,7 +649,7 @@ function showError(error) {
   const msg = `SHADOW cockpit is fail-closed: ${error.message}`;
   $("refresh-status").className = "status-pill bad";
   $("refresh-status").innerHTML = `<strong>Blocked</strong> · ${new Date().toLocaleTimeString()}`;
-  ["data-contract-state", "real-metrics", "forward-summary", "forward-table", "pnl-bars", "win-gauges", "equity-curve", "research-completeness", "shadow-horizon-ladder", "mfe-mae-diagnostics", "bracket-hold-diagnostics", "shadow-by-rule", "shadow-by-catalyst", "shadow-by-direction", "pending-marks", "decision-feed", "shadow-status"].forEach((id) => { if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`; });
+  ["data-contract-state", "real-metrics", "forward-summary", "forward-table", "pnl-bars", "win-gauges", "equity-curve", "research-completeness", "shadow-horizon-ladder", "mfe-mae-diagnostics", "bracket-hold-diagnostics", "shadow-by-rule", "shadow-by-catalyst", "shadow-by-direction", "shadow-by-source", "pending-marks", "decision-feed", "shadow-status"].forEach((id) => { if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`; });
   if ($("security-state")) $("security-state").innerHTML = `<div class="empty">${esc(msg)} Security/RLS status is unavailable until the backend responds.</div>`;
 }
 async function load() {
