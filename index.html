@@ -911,7 +911,15 @@ function renderCatalysts(data){
     const shadowN = shadowMatches.reduce((sum,row)=>sum+Number(row.priced_n||row.n||0),0);
     const expectancy = realN ? realNet / realN : null;
     const status = realN || shadowN ? "observed" : "DATA UNAVAILABLE";
-    return { ...lane, realN, realNet, winRate, shadowN, expectancy, status };
+    const cleanN = Math.max(realN, shadowN);
+    const completeness = realN >= 30
+      ? "RULE-ELIGIBLE REAL"
+      : shadowN >= 30
+        ? "RESEARCH n≥30"
+        : cleanN > 0
+          ? `EARLY SAMPLE n=${cleanN}/30`
+          : "NO DATA";
+    return { ...lane, realN, realNet, winRate, shadowN, expectancy, status, cleanN, completeness };
   });
   const max = Math.max(...laneRows.map((r)=>Math.abs(r.expectancy ?? r.realNet) || r.realN || r.shadowN),1);
   $("catalystBars").innerHTML = laneRows.map((r)=>{
@@ -921,10 +929,10 @@ function renderCatalysts(data){
     const neg = Number(metric || 0) < 0 ? " neg" : "";
     const statusIcon = r.status === "observed" ? "✅" : "⚠️";
     const text = r.realN
-      ? `REAL n=${num(r.realN)} · win ${Number(r.winRate||0).toFixed(1)}% · expectancy ${money(r.expectancy)} · SHADOW priced n=${num(r.shadowN)}`
+      ? `${r.completeness} · REAL n=${num(r.realN)} · win ${Number(r.winRate||0).toFixed(1)}% · expectancy ${money(r.expectancy)} · SHADOW priced n=${num(r.shadowN)}`
       : r.shadowN
-        ? `REAL n=0 · SHADOW priced n=${num(r.shadowN)} · expectancy DATA UNAVAILABLE`
-        : `REAL n=0 · SHADOW priced n=0 · DATA UNAVAILABLE`;
+        ? `${r.completeness} · REAL n=0 · SHADOW priced n=${num(r.shadowN)} · expectancy DATA UNAVAILABLE`
+        : `${r.completeness} · REAL n=0 · SHADOW priced n=0 · DATA UNAVAILABLE`;
     return `<div class="bar"><div class="bar-label" title="${esc(r.label)}">${statusIcon} ${esc(r.label)}</div><div class="bar-track"><div class="bar-fill${neg}" style="width:${width}%"></div></div><div class="bar-value">${esc(text)}</div></div>`;
   }).join("");
 }
