@@ -151,6 +151,59 @@ function bestHorizon(ladder) {
   if (!ladder || !ladder.length) return null;
   return ladder.slice().sort((a, b) => Number(b.avg_direction_adjusted_return_pct || 0) - Number(a.avg_direction_adjusted_return_pct || 0))[0];
 }
+function guardHorizon(summary, name = "eod") {
+  return horizonByName(summary, name) || (summary.horizon_ladder || []).find((row) => Number(row.priced_n || 0) > 0) || null;
+}
+function confidenceVerdict(row) {
+  const n = Number(row?.eodN || 0);
+  const avg = Number(row?.eodAvg || 0);
+  if (n < 30) return { tone: "warn", text: "INSUFFICIENT EVIDENCE", next: `Need ${num(Math.max(0, 30 - n))} more clean EOD marks for this source-specific slice.` };
+  if (avg <= 0) return { tone: "negative", text: "NO PROVEN EDGE", next: "Sample is rule-eligible, but expectancy is not positive." };
+  return { tone: "warn", text: "EARLY CANDIDATE — NOT PROVEN", next: "n≥30 and positive average; still research-only until costs, FDR/sensitivity, and live validation confirm it." };
+}
+function renderConfidenceGuard(shadow) {
+  const detail = state.raw?.by_catalyst_detail || {};
+  const source = Object.keys(detail).length ? detail : Object.fromEntries((shadow.by_catalyst || []).map((row) => [row.value, { ...shadow, priced_n: row.priced_n }]));
+  const rows = Object.entries(source).map(([key, summary]) => {
+    const eod = guardHorizon(summary, "eod");
+    const best = bestHorizon(summary.horizon_ladder);
+    const eodN = Number(eod?.priced_n || 0);
+    const eodAvg = Number(eod?.avg_direction_adjusted_return_pct || 0);
+    const hit = Number(eod?.hit_rate || 0);
+    const verdict = confidenceVerdict({ eodN, eodAvg });
+    return { key, summary, eod, best, eodN, eodAvg, hit, verdict };
+  }).sort((a, b) => a.eodN - b.eodN || String(a.key).localeCompare(String(b.key)));
+
+  const overallEod = horizonByName(shadow, "eod") || bestHorizon(shadow.horizon_ladder);
+  const under = rows.filter((row) => row.eodN < 30).length;
+  const noEdge = rows.filter((row) => row.eodN >= 30 && row.eodAvg <= 0).length;
+  const candidates = rows.filter((row) => row.eodN >= 30 && row.eodAvg > 0).length;
+  const summaryCards = [
+    metric("Overall EOD sample", overallEod ? num(overallEod.priced_n) : "DATA UNAVAILABLE", overallEod?.priced_n || 0, overallEod ? `${pct3(overallEod.avg_direction_adjusted_return_pct)} avg · hit ${pct(overallEod.hit_rate)}` : "No trusted EOD aggregate"),
+    metric("Below n≥30", num(under), under, "source-specific EOD slices still too small", under ? "negative" : "positive"),
+    metric("No proven edge", num(noEdge), noEdge, "n≥30 slices with non-positive expectancy", noEdge ? "negative" : "muted"),
+    metric("Early candidates", num(candidates), candidates, "positive n≥30 slices; still research-only", candidates ? "muted" : "muted"),
+  ].join("");
+
+  $("confidence-guard").innerHTML = `
+    <div class="research-banner section-note">
+      <span>NO PROVEN EDGE</span>
+      <span>SHADOW is a measuring system. It can point to candidates, but it cannot approve real capital.</span>
+    </div>
+    <div class="grid four section-gap">${summaryCards}</div>
+    ${table(["Catalyst/source", "Priced n", "EOD n", "EOD avg", "Hit", "Best horizon", "Verdict", "Next evidence needed"], rows, (row) => `
+      <tr>
+        <td><strong>${safe(catalystDisplay(row.key))}</strong></td>
+        <td class="mono">${num(row.summary.priced_n)}</td>
+        <td class="mono ${row.eodN < 30 ? "negative" : "positive"}">${num(row.eodN)}</td>
+        <td class="mono ${cls(row.eodAvg)}">${pct3(row.eodAvg)}</td>
+        <td class="mono">${pct(row.hit)}</td>
+        <td>${safe(row.best?.horizon || "—")} <span class="mono ${cls(row.best?.avg_direction_adjusted_return_pct)}">${row.best ? pct3(row.best.avg_direction_adjusted_return_pct) : "—"}</span></td>
+        <td><span class="chip ${row.verdict.tone === "negative" ? "warn" : row.verdict.tone}">${safe(row.verdict.text)}</span></td>
+        <td>${safe(row.verdict.next)}</td>
+      </tr>`, "No by-catalyst confidence evidence exposed by the backend.")}
+  `;
+}
 function rowPnl(r) { const mark = latestReturn(r); return mark ? hypotheticalPnl(mark.value) : null; }
 function researchCurve(rows) {
   return rows.slice().sort((a, b) => new Date(a.decision_ts || 0) - new Date(b.decision_ts || 0)).map((r, i, arr) => {
@@ -394,6 +447,7 @@ function renderAll() {
   setupFilter(state.raw || {});
   setupScenarioControls();
   renderHero(shadow); renderMetrics(shadow); renderPnlBars(shadow); renderGauges(shadow);
+  renderConfidenceGuard(shadow);
   renderForwardReturns(shadow); renderEquity(shadow); renderLadder(shadow); renderGroups(shadow); renderPending(shadow); renderShadowStatus(shadow);
   renderDecisionFeed(shadow);
   $("refresh-status").className = "status-pill ok";
