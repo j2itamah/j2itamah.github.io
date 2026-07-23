@@ -24,7 +24,11 @@ function deployedValue(row) {
 }
 function unavailable(label = "DATA UNAVAILABLE") { return `<span class="pending-capture">${esc(label)}</span>`; }
 function valueOrUnavailable(value, formatter = safe) {
-  return value === null || value === undefined || value === "" ? unavailable() : formatter(value);
+  if (value === null || value === undefined || value === "") return unavailable();
+  if (typeof value === "object") {
+    try { return safe(JSON.stringify(value)); } catch { return unavailable(); }
+  }
+  return formatter(value);
 }
 function timestampOrUnavailable(value) { return value ? when(value) : unavailable(); }
 function moneyOrUnavailable(value) { return value === null || value === undefined || value === "" ? unavailable() : money(value); }
