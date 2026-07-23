@@ -136,6 +136,8 @@
       <a href="./real.html#ndax">🛑 NDAX REAL</a>
       <a href="./shadow.html">🔬 SHADOW RESEARCH</a>
       <a href="./journal.html">📓 Daily journal</a>
+      <a href="./sources.html">🛰️ Sources</a>
+      <a href="./execution.html">⚙️ Execution</a>
     </nav>
 
     <section class="charts" aria-label="Overview charts">
@@ -196,7 +198,7 @@
   </main>
 
 <script>
-const API_BASE = "https://news-trading-system-production-b13f.up.railway.app";
+const API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";
 let DATA = null;
 const $ = (id) => document.getElementById(id);
 const money = (v) => new Intl.NumberFormat("en-US", { style:"currency", currency:"USD" }).format(Number(v || 0));

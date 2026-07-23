@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sources & Coverage · QuantPulse</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./cockpit.css" />
+</head>
+<body class="real-theme" data-page="sources">
+  <main class="shell">
+    <a class="backlink" href="./index.html">← Launcher · IBKR vs SHADOW</a>
+    <section class="topbar">
+      <div>
+        <div class="eyebrow">SOURCES & COVERAGE · fail-closed</div>
+        <h1>Source health, freshness, and gaps</h1>
+        <p class="subtitle">Every expected source gets a card. If the backend cannot prove coverage, this page says DATA UNAVAILABLE instead of pretending it is fine.</p>
+      </div>
+      <div class="status-actions">
+        <div class="status-pill" id="generated-at">Loading…</div>
+        <button class="refresh-button" id="manual-refresh" type="button">Refresh now</button>
+      </div>
+    </section>
+    <div id="insight-nav"></div>
+
+    <section class="panel section-gap">
+      <div class="panel-header">
+        <h2 class="panel-title">Monitor state <span class="info-tip" tabindex="0" role="button" data-help="Freshness and health come from the live backend. If a source has no trusted timestamp or rows, it is marked stale or unavailable.">?</span></h2>
+        <div id="freshness" class="status-stack"></div>
+      </div>
+      <div id="source-summary" class="grid three"></div>
+    </section>
+
+    <section class="panel section-gap"><div class="panel-header"><h2 class="panel-title">Visible warnings</h2><span class="badge warn">no silent failures</span></div><div id="source-warnings"></div></section>
+    <section class="panel section-gap"><div class="panel-header"><h2 class="panel-title">What needs attention</h2><span class="badge warn">action list</span></div><div id="source-actions"></div></section>
+    <section class="panel section-gap"><div class="panel-header"><h2 class="panel-title">Coverage completeness</h2><span class="badge info">expected vs observed</span></div><div id="coverage-completeness"></div></section>
+    <section class="panel section-gap"><div class="panel-header"><h2 class="panel-title">Source cards</h2><span class="badge info">expected providers</span></div><div id="source-cards" class="grid three"></div></section>
+    <section class="panel section-gap"><div class="panel-header"><h2 class="panel-title">Observed provider breakdown</h2><span class="badge real">from live rows</span></div><div id="observed-sources"></div></section>
+    <section class="panel section-gap"><div class="panel-header"><h2 class="panel-title">Recent source events</h2><span class="badge info">latest 25</span></div><div id="recent-source-events"></div></section>
+  </main>
+  <script>window.API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";</script>
+  <script src="./cockpit-common.js"></script>
+  <script src="./insights.js"></script>
+</body>
+</html>
