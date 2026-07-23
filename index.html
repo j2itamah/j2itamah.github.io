@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Spline+Sans:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./cockpit.css?v=20260723-main-exact-pass" />
+  <link rel="stylesheet" href="./cockpit.css?v=20260723-accessibility-pass" />
   <style>
     body {
       background:
@@ -769,10 +769,11 @@
       .lovable-landing .overview-hero h1 { font-size: clamp(38px, 15vw, 58px); }
     }
   </style>
-  <link rel="stylesheet" href="./lovable-exact.css?v=20260723-main-exact-pass" />
+  <link rel="stylesheet" href="./lovable-exact.css?v=20260723-accessibility-pass" />
 </head>
 <body class="overview-page">
-  <main class="overview-shell lovable-landing">
+  <a class="skip-link" href="#main-content">Skip to dashboard content</a>
+  <main class="overview-shell lovable-landing" id="main-content">
     <header class="lovable-app-header" aria-label="Trading Analyst app header">
       <div class="app-title-group">
         <div class="app-title-line">
