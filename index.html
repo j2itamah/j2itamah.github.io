@@ -1191,6 +1191,20 @@
     function warningItem(text, level = "warn", raw = "") {
       return `<div class="warning-item ${level}">${esc(text)}${raw ? `<span class="raw-code">raw: ${esc(raw)}</span>` : ""}</div>`;
     }
+    function dashboardHref(href) {
+      const routes = {
+        "/": "./index.html",
+        "/overview": "./index.html",
+        "/real": "./real.html",
+        "/ibkr": "./real.html",
+        "/shadow": "./shadow.html",
+        "/journal": "./journal.html",
+        "/catalyst": "./catalyst.html",
+        "/sources": "./sources.html",
+        "/execution": "./execution.html",
+      };
+      return routes[href] || href || "./index.html";
+    }
     function operatingCard(label, value, sub, level = "warn") {
       return `
         <div class="operating-card ${level}">
@@ -1862,7 +1876,7 @@
     }
     function actionCard({ href, tone = "info", kicker, state, title, copy, metricLabel, metricValue }) {
       return `
-        <a class="action-card ${tone}" href="${esc(href)}">
+        <a class="action-card ${tone}" href="${esc(dashboardHref(href))}">
           <div class="action-kicker">${esc(kicker)}<span class="action-state">${esc(state)}</span></div>
           <div class="action-title">${esc(title)}</div>
           <div class="action-copy">${esc(copy)}</div>
