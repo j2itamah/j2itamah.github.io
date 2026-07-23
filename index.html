@@ -61,6 +61,15 @@
     .selector a:focus-visible{outline:3px solid rgba(37,99,235,.35);outline-offset:3px}
     .charts{order:10;display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
     .spark{height:190px;width:100%;display:block}
+    .chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:10px}
+    .chart-head h2{margin-bottom:2px}
+    .range-tabs{display:inline-flex;gap:6px;padding:5px;border:1px solid rgba(226,232,240,.12);border-radius:999px;background:rgba(7,17,31,.36)}
+    .range-button{appearance:none;border:0;border-radius:999px;padding:7px 10px;background:transparent;color:#aab8cf;font:inherit;font-size:.75rem;font-weight:850;cursor:pointer}
+    .range-button.active{color:#e0f2fe;background:rgba(96,165,250,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+    .range-button:focus-visible{outline:3px solid rgba(96,165,250,.35);outline-offset:2px}
+    .chart-legend{display:flex;gap:12px;flex-wrap:wrap;color:#aab8cf;font-size:.78rem;margin-top:8px}
+    .legend-dot{display:inline-block;width:9px;height:9px;border-radius:999px;margin-right:5px}
+    .legend-dot.gross{background:#60a5fa}.legend-dot.net{background:#34d399}
     .bar{display:grid;grid-template-columns:126px 1fr 96px;gap:10px;align-items:center;margin:10px 0;font-size:.84rem}
     .bar-track{height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden}
     .bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#60a5fa,#22c55e);min-width:3px}
@@ -217,7 +226,17 @@
 
     <section class="charts" aria-label="Overview charts">
       <div class="panel">
-        <h2>Today’s REAL P&L curve</h2>
+        <div class="chart-head">
+          <div>
+            <h2>REAL P&L curve</h2>
+            <div class="headline-sub" id="curveCaption">Gross and net-after-fees · USD</div>
+          </div>
+          <div class="range-tabs" aria-label="P&L curve range">
+            <button class="range-button active" type="button" data-range="day">Daily</button>
+            <button class="range-button" type="button" data-range="week">Weekly</button>
+            <button class="range-button" type="button" data-range="all">All-time</button>
+          </div>
+        </div>
         <div id="todayCurve"></div>
       </div>
       <div class="panel">
@@ -277,6 +296,7 @@
 <script>
 const API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";
 let DATA = null;
+let CURVE_RANGE = "day";
 const $ = (id) => document.getElementById(id);
 const money = (v) => new Intl.NumberFormat("en-US", { style:"currency", currency:"USD" }).format(Number(v || 0));
 const num = (v) => new Intl.NumberFormat("en-US").format(Number(v || 0));
@@ -305,6 +325,17 @@ function capitalValue(row){
 function rowsToday(rows, timeField){
   const key = todayKey();
   return (rows || []).filter((row) => localDate(row?.[timeField] || row?.exit_ts || row?.entry_fill_ts || row?.decision_ts) === key);
+}
+function rowsForCurve(rows){
+  const sorted = (rows || []).filter((row) => row?.exit_ts || row?.entry_fill_ts || row?.decision_ts)
+    .slice().sort((a,b)=>new Date(a.exit_ts || a.entry_fill_ts || a.decision_ts || 0)-new Date(b.exit_ts || b.entry_fill_ts || b.decision_ts || 0));
+  if(CURVE_RANGE === "all") return sorted;
+  const now = Date.now();
+  const windowMs = CURVE_RANGE === "week" ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+  return sorted.filter((row) => {
+    const t = new Date(row.exit_ts || row.entry_fill_ts || row.decision_ts || 0).getTime();
+    return Number.isFinite(t) && now - t <= windowMs;
+  });
 }
 function statusLabel(kind, text){
   const icons = { ok:"✅", warn:"⚠️", bad:"🛑", info:"ℹ️" };
@@ -399,28 +430,45 @@ function renderHeadlines(data){
   $("todayDrag").className = "headline-value " + (dragPct == null ? "flat" : dragPct > 30 ? "down" : "flat");
   $("todayDragSub").textContent = `${money(commissions)} commissions · ${money(gross)} gross`;
 }
-function lineSvg(points){
-  if(!points.length) return `<div class="warning">ℹ️ DATA UNAVAILABLE: no closed REAL trades today for a curve.</div>`;
-  const w=620,h=190,p=24;
-  const vals=points.map(p=>p.v), min=Math.min(0,...vals), max=Math.max(0,...vals), span=Math.max(1,max-min);
+function lineSvg(points, label){
+  if(!points.length) return `<div class="warning">ℹ️ DATA UNAVAILABLE: no closed REAL trades in this range for a curve.</div>`;
+  const w=620,h=210,p=28;
+  const vals=points.flatMap(p=>[p.gross,p.net]), min=Math.min(0,...vals), max=Math.max(0,...vals), span=Math.max(1,max-min);
   const x=i=>p+(points.length===1?0:i/(points.length-1)*(w-p*2));
   const y=v=>p+(max-v)/span*(h-p*2);
-  const path=points.map((pt,i)=>`${i?"L":"M"} ${x(i).toFixed(1)} ${y(pt.v).toFixed(1)}`).join(" ");
-  const stroke=points[points.length-1].v>=0?"#16a34a":"#dc2626";
-  return `<svg class="spark" viewBox="0 0 ${w} ${h}" role="img" aria-label="Today REAL net P&L curve">
+  const pathFor=(key)=>points.map((pt,i)=>`${i?"L":"M"} ${x(i).toFixed(1)} ${y(pt[key]).toFixed(1)}`).join(" ");
+  const grossLast = points[points.length-1].gross;
+  const netLast = points[points.length-1].net;
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(label)} REAL gross and net P&L curve in USD">
     <line x1="${p}" x2="${w-p}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" stroke="#cbd5e1" stroke-dasharray="4 5"/>
-    <path d="${path}" fill="none" stroke="${stroke}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${pathFor("gross")}" fill="none" stroke="#60a5fa" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${pathFor("net")}" fill="none" stroke="${netLast >= 0 ? "#34d399" : "#f87171"}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
     <text x="${p}" y="16" fill="#64748b" font-size="12">${money(max)}</text>
     <text x="${p}" y="${h-6}" fill="#64748b" font-size="12">${money(min)}</text>
-    <text x="${w-p}" y="${h-6}" text-anchor="end" fill="#64748b" font-size="12">n=${points.length}</text>
-  </svg>`;
+    <text x="${w-p}" y="16" text-anchor="end" fill="#93c5fd" font-size="12">gross ${money(grossLast)}</text>
+    <text x="${w-p}" y="${h-6}" text-anchor="end" fill="${netLast >= 0 ? "#86efac" : "#fecdd3"}" font-size="12">net ${money(netLast)} · n=${points.length}</text>
+  </svg>
+  <div class="chart-legend">
+    <span><span class="legend-dot gross"></span>Gross P&L before fees</span>
+    <span><span class="legend-dot net"></span>Net P&L after commissions</span>
+    <span>USD · ${esc(label)} · closed n=${num(points.length)}</span>
+  </div>`;
 }
 function renderCurve(data){
-  const rows = rowsToday((data?.real?.recent_costed_closed || data?.real?.recent_closed || []), "exit_ts")
-    .slice().sort((a,b)=>new Date(a.exit_ts||0)-new Date(b.exit_ts||0));
-  let total = 0;
-  const points = rows.map((row) => ({ label: row.symbol, v: (total += realNetValue(row)) }));
-  $("todayCurve").innerHTML = lineSvg(points);
+  const allRows = data?.real?.recent_costed_closed || data?.real?.recent_closed || [];
+  const rows = rowsForCurve(allRows);
+  let grossTotal = 0, netTotal = 0;
+  const points = rows.map((row) => {
+    grossTotal += grossValue(row);
+    netTotal += realNetValue(row);
+    return { label: row.symbol, gross: grossTotal, net: netTotal };
+  });
+  const label = CURVE_RANGE === "day" ? "Daily" : CURVE_RANGE === "week" ? "Weekly" : "All-time visible";
+  $("curveCaption").textContent = `${label}: gross vs net-after-fees · USD · n=${num(points.length)}`;
+  $("todayCurve").innerHTML = lineSvg(points, label);
+  document.querySelectorAll("[data-range]").forEach((button) => {
+    button.classList.toggle("active", button.getAttribute("data-range") === CURVE_RANGE);
+  });
 }
 function renderCatalysts(data){
   const rows = [];
@@ -497,6 +545,12 @@ async function load(){
   }
 }
 routeHash();
+document.querySelectorAll("[data-range]").forEach((button) => {
+  button.addEventListener("click", () => {
+    CURVE_RANGE = button.getAttribute("data-range") || "day";
+    renderCurve(DATA);
+  });
+});
 load();
 setInterval(load, 30000);
 window.addEventListener("hashchange", routeHash);
