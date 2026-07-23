@@ -17,7 +17,7 @@
         <div class="eyebrow">SHADOW / RESEARCH · agent_shadow_trades</div>
         <h1>Shadow Research Cockpit</h1>
         <p class="subtitle">
-          Research-only forward marks from <code>agent_shadow_trades</code>. This page uses the same cockpit shape as IBKR / REAL, but every dollar is a fixed $10K hypothetical test size from observed returns — not real cash, not broker equity, and not executable P&L.
+          Research-only forward marks from <code>agent_shadow_trades</code>. Percentage returns are the truth here. Dollar values, when shown, are explicitly labeled hypothetical sizing scenarios — not real cash, not broker equity, and not executable P&L.
         </p>
       </div>
       <div class="status-pill" id="refresh-status">Loading…</div>
@@ -36,7 +36,7 @@
 
     <section class="hero-strip">
       <div class="hero-card primary">
-        <div class="metric-label">Modeled SHADOW P/L</div>
+        <div class="metric-label">Primary research return</div>
         <div class="metric-value" id="hero-net">—</div>
         <div class="metric-sub" id="hero-net-sub">—</div>
       </div>
@@ -54,6 +54,22 @@
         <div class="metric-label">Hit rate</div>
         <div class="metric-value" id="hero-win">—</div>
         <div class="metric-sub" id="hero-win-sub">—</div>
+      </div>
+    </section>
+
+    <section class="panel section-gap">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Hypothetical sizing scenario</h2>
+          <div class="filter-copy">Returns stay primary. This only translates observed percentage moves into comparable “what if” dollars.</div>
+        </div>
+        <span class="badge warn">HYPOTHETICAL SIZING — RESEARCH ONLY</span>
+      </div>
+      <div class="filter-pills" id="scenario-controls" aria-label="Hypothetical notional selector">
+        <button class="filter-pill shadow" type="button" data-scenario-notional="500">$500</button>
+        <button class="filter-pill shadow active" type="button" data-scenario-notional="1000">$1,000</button>
+        <button class="filter-pill shadow" type="button" data-scenario-notional="2500">$2,500</button>
+        <label class="custom-scenario">Custom <input id="custom-notional" type="number" min="1" step="50" placeholder="$" aria-label="Custom hypothetical notional" /></label>
       </div>
     </section>
 
@@ -87,7 +103,7 @@
 
     <section class="grid two section-gap">
       <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">Research P/L composition</h2><span class="badge shadow">$10K hypothetical</span></div>
+        <div class="panel-header"><h2 class="panel-title">Scenario P/L composition</h2><span class="badge warn">HYPOTHETICAL SIZING — RESEARCH ONLY</span></div>
         <div id="pnl-bars"></div>
       </div>
       <div class="panel">
@@ -134,7 +150,7 @@
     </section>
 
     <div class="footer">
-      SHADOW cockpit reads only <code>public.agent_shadow_trades</code> via the verified backend API. It uses observed forward marks only. Dollar values are fixed-size research translations, not real fills or cash equity.
+      SHADOW cockpit reads only <code>public.agent_shadow_trades</code> via the verified backend API. It uses observed forward marks only. Percentage returns are primary; dollar values are labeled hypothetical sizing scenarios, not real fills or cash equity.
     </div>
   </main>
   <script>window.API_BASE = "https://news-trading-system-production-b13f.up.railway.app";</script>

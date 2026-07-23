@@ -1,8 +1,7 @@
 /* SHADOW / RESEARCH cockpit — same shape as IBKR / REAL, but research-only.
- * Reads ONLY data.shadow (public.agent_shadow_trades). Dollar values are fixed
- * $10K hypothetical translations from observed forward returns, not real fills. */
-const state = { lastLoadedAt: null, filter: "ALL", raw: null };
-const RESEARCH_NOTIONAL = 10000;
+ * Reads ONLY data.shadow (public.agent_shadow_trades). Percentage returns are
+ * primary; dollar values are explicitly hypothetical sizing scenarios. */
+const state = { lastLoadedAt: null, filter: "ALL", raw: null, scenarioNotional: 1000 };
 const FORWARD_HORIZONS = ["5m", "15m", "1h", "eod", "1d", "3d", "5d"];
 
 function hasValue(v) { return v !== null && v !== undefined && v !== ""; }
@@ -31,8 +30,10 @@ function latestReturn(r) {
   }
   return null;
 }
-function hypotheticalPnl(returnPct, notional = RESEARCH_NOTIONAL) { return Number(returnPct || 0) * notional / 100; }
-function impliedQuantity(row, notional = RESEARCH_NOTIONAL) {
+function researchNotional() { return Math.max(1, Number(state.scenarioNotional || 1000)); }
+function scenarioLabel() { return `${money(researchNotional())} hypothetical`; }
+function hypotheticalPnl(returnPct, notional = researchNotional()) { return Number(returnPct || 0) * notional / 100; }
+function impliedQuantity(row, notional = researchNotional()) {
   const entry = Number(row?.entry_reference_price || 0);
   return entry ? notional / entry : null;
 }
@@ -107,6 +108,34 @@ function setupFilter(shadow) {
     });
   });
 }
+function setupScenarioControls() {
+  const controls = $("scenario-controls");
+  if (!controls) return;
+  controls.querySelectorAll("[data-scenario-notional]").forEach((button) => {
+    const value = Number(button.getAttribute("data-scenario-notional"));
+    button.classList.toggle("active", value === researchNotional());
+    if (!button.dataset.bound) {
+      button.dataset.bound = "1";
+      button.addEventListener("click", () => {
+        state.scenarioNotional = Number(button.getAttribute("data-scenario-notional"));
+        const custom = $("custom-notional");
+        if (custom) custom.value = "";
+        renderAll();
+      });
+    }
+  });
+  const custom = $("custom-notional");
+  if (custom && !custom.dataset.bound) {
+    custom.dataset.bound = "1";
+    custom.addEventListener("change", () => {
+      const value = Number(custom.value);
+      if (value > 0) {
+        state.scenarioNotional = value;
+        renderAll();
+      }
+    });
+  }
+}
 function eodStats(shadow) {
   const eod = horizonByName(shadow, "eod") || bestHorizon(shadow.horizon_ladder);
   if (!eod) return null;
@@ -138,8 +167,8 @@ function renderHero(shadow) {
   $("hero-priced-sub").textContent = visibleBasis ? "current filter uses recent rows only" : "priced evidence, not total rows";
   $("hero-pending-label").textContent = visibleBasis ? "Visible unpriced rows" : "Unpriced / diagnostic";
   $("hero-pending-sub").textContent = visibleBasis ? "not yet priced in visible feed" : "not used as priced evidence";
-  $("hero-net").innerHTML = eod ? `<span class="${cls(eod.totalPnl)}">${money(eod.totalPnl)}</span>` : "—";
-  $("hero-net-sub").textContent = eod ? `${basisLabel(shadow)} · ${money(eod.avgPnl)} avg per ${money(RESEARCH_NOTIONAL)} idea · ${safe(eod.horizon || "EOD")} n=${num(eod.n)}` : "waiting for priced EOD horizon";
+  $("hero-net").innerHTML = eod ? `<span class="${cls(eod.avgReturn)}">${pct3(eod.avgReturn)}</span>` : "—";
+  $("hero-net-sub").textContent = eod ? `${basisLabel(shadow)} · direction-adjusted avg at ${safe(eod.horizon || "EOD")} · n=${num(eod.n)} · scenario ${money(eod.totalPnl)} total` : "waiting for priced EOD horizon";
   $("hero-real-n").textContent = num(shadow.priced_n);
   $("hero-open-n").textContent = num(shadow.pending_or_unpriced_n);
   $("hero-win").textContent = eod ? pct(eod.hitRate) : "—";
@@ -149,12 +178,12 @@ function renderMetrics(shadow) {
   const eod = eodStats(shadow);
   const best = bestHorizon(shadow.horizon_ladder);
   $("real-metrics").innerHTML = [
-    metric("Modeled P/L basis", eod ? `<span class="${cls(eod.totalPnl)}">${money(eod.totalPnl)}</span>` : "—", eod?.n || 0, `${basisLabel(shadow)} · ${money(RESEARCH_NOTIONAL)} test size · not real cash`),
-    metric("Avg per trade", eod ? `<span class="${cls(eod.avgPnl)}">${money(eod.avgPnl)}</span>` : "—", eod?.n || 0, eod ? `${pct3(eod.avgReturn)} avg direction-adjusted return` : "no EOD average yet"),
-    metric("Hypothetical size", money(RESEARCH_NOTIONAL), shadow.priced_n, "Every SHADOW idea is modeled as the same test size", "muted"),
+    metric("EOD avg return", eod ? `<span class="${cls(eod.avgReturn)}">${pct3(eod.avgReturn)}</span>` : "—", eod?.n || 0, `${basisLabel(shadow)} · primary research result`),
+    metric("Best horizon return", best ? `<span class="${cls(best.avg_direction_adjusted_return_pct)}">${safe(best.horizon)} ${pct3(best.avg_direction_adjusted_return_pct)}</span>` : "—", best?.priced_n || 0, "best average observed return"),
+    metric("Scenario net", eod ? `<span class="${cls(eod.totalPnl)}">${money(eod.totalPnl)}</span>` : "—", eod?.n || 0, `${scenarioLabel()} per idea · HYPOTHETICAL SIZING — RESEARCH ONLY`),
     metric("Hit rate", eod ? pct(eod.hitRate) : "—", eod?.n || 0, eod ? `${num(eod.winners)} wins / ${num(eod.losses)} losses` : "no EOD hit rate yet"),
     metric("Priced observations", num(shadow.priced_n), shadow.priced_n, `${num(shadow.pending_or_unpriced_n)} unpriced / pending excluded`),
-    metric("Best horizon", best ? `${safe(best.horizon)} ${pct3(best.avg_direction_adjusted_return_pct)}` : "—", best?.priced_n || 0, "best average observed return"),
+    metric("Scenario size", money(researchNotional()), shadow.priced_n, "not real cash/equity; only a sizing experiment", "muted"),
   ].join("");
 }
 function renderPnlBars(shadow) {
@@ -164,8 +193,8 @@ function renderPnlBars(shadow) {
   const zero = 0;
   const maxAbs = Math.max(Math.abs(total || 0), Math.abs(avg || 0), 1);
   $("pnl-bars").innerHTML = [
-    barRow(`Modeled P/L (${basisLabel(shadow)})`, total || 0, maxAbs, eod ? money(total) : "—", eod ? cls(total) : "muted", "shadow"),
-    barRow("Average per idea", avg || 0, maxAbs, eod ? money(avg) : "—", eod ? cls(avg) : "muted", "shadow"),
+    barRow(`Scenario total (${scenarioLabel()})`, total || 0, maxAbs, eod ? money(total) : "—", eod ? cls(total) : "muted", "shadow"),
+    barRow("Scenario average per idea", avg || 0, maxAbs, eod ? money(avg) : "—", eod ? cls(avg) : "muted", "shadow"),
     barRow("Real cash/equity", zero, maxAbs, "$0", "muted", "shadow"),
   ].join("");
 }
@@ -251,7 +280,7 @@ function renderForwardReturns(shadow) {
       <td><strong>${safe(r.symbol)}</strong><div class="small">${safe(r.headline)}</div></td>
       <td>${catalystLabel(r)}</td>
       <td>${safe(r.direction)}</td>
-      <td class="mono">${money(RESEARCH_NOTIONAL)}</td>
+      <td class="mono">${money(researchNotional())}</td>
       <td class="mono">${impliedQuantity(r) == null ? "—" : Number(impliedQuantity(r)).toFixed(2)}</td>
       <td class="mono">${safe(r.entry_reference_price)}</td>
       <td class="mono ${pnl == null ? "muted" : cls(pnl)}">${pnl == null ? "pending" : money(pnl)}</td>
@@ -329,14 +358,14 @@ function renderDecisionFeed(shadow) {
     const pnl = rowPnl(r);
     const latest = latestReturn(r);
     const qty = impliedQuantity(r);
-    const returnOnTest = pnl == null ? null : pnl / RESEARCH_NOTIONAL * 100;
+    const returnOnTest = latest?.value ?? (pnl == null ? null : pnl / researchNotional() * 100);
     return `<article class="decision-card">
       <div class="decision-top">
         <div><div class="decision-title">${safe(r.symbol)} · ${safe(r.direction)} · ${catalystLabel(r)}</div><div class="small">${safe(r.headline)} · ${populationLabel(r)}</div></div>
-        <div class="mono ${cls(pnl)}">${money(pnl)}</div>
+        <div class="mono ${latest ? cls(latest.value) : "muted"}">${latest ? pct3(latest.value) : "—"}</div>
       </div>
-      <div class="small section-gap">${money(RESEARCH_NOTIONAL)} hypothetical test size · implied qty ${qty == null ? "—" : qty.toFixed(2)} · ${safe(latest?.horizon || "mark")} return ${latest ? pct3(latest.value) : "—"}. Research only — no broker fill.</div>
-      <div class="decision-meta"><span class="chip">rule ${safe(r.rule_id)}</span><span class="chip">test size ${money(RESEARCH_NOTIONAL)}</span><span class="chip">return on test ${returnOnTest == null ? "—" : pct3(returnOnTest)}</span>${returnGrid(r)}<span class="chip">entry ${safe(r.entry_reference_price)}</span><span class="chip">${safe(r.status || "COMPLETE")}</span></div>
+      <div class="small section-gap">${safe(latest?.horizon || "mark")} direction-adjusted return ${latest ? pct3(latest.value) : "—"} · scenario P/L ${pnl == null ? "pending" : money(pnl)} on ${scenarioLabel()} · implied qty ${qty == null ? "—" : qty.toFixed(2)}. Research only — no broker fill.</div>
+      <div class="decision-meta"><span class="chip">rule ${safe(r.rule_id)}</span><span class="chip">scenario ${money(researchNotional())}</span><span class="chip">primary return ${returnOnTest == null ? "—" : pct3(returnOnTest)}</span>${returnGrid(r)}<span class="chip">entry ${safe(r.entry_reference_price)}</span><span class="chip">${safe(r.status || "COMPLETE")}</span></div>
     </article>`;
   }).join("");
 }
@@ -352,7 +381,7 @@ function renderShadowStatus(shadow) {
     : Number((state.raw?.by_catalyst || []).find((row) => String(row.value) === state.filter)?.priced_n || shadow.priced_n || 0);
   const visiblePriced = rows.filter(_isPricedLocal).length;
   $("shadow-status").innerHTML = `
-    <div class="metric" style="margin-bottom:12px"><div class="metric-label">Research contract</div><div class="metric-value muted">SHADOW</div><div class="metric-sub">not executable · no real cash/equity · no broker fills</div></div>
+    <div class="metric" style="margin-bottom:12px"><div class="metric-label">Research contract</div><div class="metric-value muted">SHADOW</div><div class="metric-sub">not executable · no real cash/equity · no broker fills · percentages first</div></div>
     <div class="small section-note">
       Accuracy note: backend aggregate priced evidence is n=${num(aggregatePriced)}${state.filter === "ALL" ? "" : `; selected ${catalystDisplay(state.filter)} aggregate is n=${num(selectedAggregate)}`}, but this static page currently receives ${num(rows.length)} recent rows for tables, curves, and the observation feed.
       ${hasCatalystDetail ? "Catalyst filters use backend aggregate detail." : "Catalyst filters use the visible recent slice until the backend exposes per-catalyst aggregate detail."}
@@ -363,6 +392,7 @@ function renderShadowStatus(shadow) {
 function renderAll() {
   const shadow = shadowForFilter(state.raw || {});
   setupFilter(state.raw || {});
+  setupScenarioControls();
   renderHero(shadow); renderMetrics(shadow); renderPnlBars(shadow); renderGauges(shadow);
   renderForwardReturns(shadow); renderEquity(shadow); renderLadder(shadow); renderGroups(shadow); renderPending(shadow); renderShadowStatus(shadow);
   renderDecisionFeed(shadow);
@@ -383,6 +413,7 @@ function showError(error) {
   $("refresh-status").className = "status-pill bad";
   $("refresh-status").innerHTML = `<strong>Blocked</strong> · ${new Date().toLocaleTimeString()}`;
   ["real-metrics", "forward-summary", "forward-table", "pnl-bars", "win-gauges", "equity-curve", "shadow-horizon-ladder", "shadow-by-rule", "shadow-by-catalyst", "shadow-by-direction", "pending-marks", "decision-feed", "shadow-status"].forEach((id) => { if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`; });
+  if ($("security-state")) $("security-state").innerHTML = `<div class="empty">${esc(msg)} Security/RLS status is unavailable until the backend responds.</div>`;
 }
 async function load() {
   try {
