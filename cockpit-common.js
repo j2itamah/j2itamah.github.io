@@ -38,6 +38,31 @@ function catalystDisplay(value) {
   };
   return labels[raw] || raw.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
+function readableCode(value) {
+  const raw = String(value || "DATA_UNAVAILABLE").trim();
+  const labels = {
+    DATA_UNAVAILABLE: "Data unavailable",
+    WARN: "Watch — backend reported warning",
+    VERIFIED: "Verified",
+    VERIFIED_PARTIAL: "Verified partial",
+    RESEARCH_PRICED_ONLY: "Research priced-only",
+    DERIVED_FROM_DASHBOARD_ROWS: "Derived from live dashboard rows",
+    SOURCE_OBSERVABILITY_SCHEMA_PENDING_DERIVED_FROM_DASHBOARD_ROWS: "Source monitor pending; derived from live rows",
+    DATA_UNAVAILABLE_EXPECTED_SOURCE_MISSING: "Expected source missing",
+    NO_ROWS_IN_DASHBOARD_WINDOW: "Zero rows in dashboard window",
+    LIVE_AGENT_DASHBOARD_V1: "Live-agent dashboard v1",
+    SOURCE_OBSERVABILITY_DERIVED_V1: "Source observability derived v1",
+    EXECUTION_QUALITY_V1: "Execution quality v1",
+  };
+  const key = raw.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  return labels[key] || raw.replaceAll("_", " ").replaceAll("-", " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+function rawCodeDetail(value) {
+  if (value === null || value === undefined || value === "") return "";
+  const raw = String(value);
+  const readable = readableCode(raw);
+  return readable === raw ? "" : `raw: ${esc(raw)}`;
+}
 function catalystTypesFrom(...lists) {
   const preferred = ["filing", "crypto_news", "trading_halt", "news", "macro"];
   const found = new Set();
@@ -108,6 +133,14 @@ function renderDataContractPanel(id, dataset, topData, expected = {}) {
   const state = dataContractState(dataset, topData, expected);
   const sourceTs = dataset?.source_updated_at;
   const quality = dataset?.data_quality_status || "DATA UNAVAILABLE";
+  const schema = dataset?.schema_version || "DATA UNAVAILABLE";
+  const qualityReadable = readableCode(quality);
+  const schemaReadable = readableCode(schema);
+  const qualityDetail = [
+    rawCodeDetail(schema),
+    rawCodeDetail(quality),
+    state.missing.length ? `missing: ${state.missing.join(", ")}` : (state.qualityOk ? "quality state is clean" : "quality state requires attention"),
+  ].filter(Boolean).join(" · ");
   const expectedLine = [
     expected.population ? `expected population ${expected.population}` : null,
     expected.venue ? `expected venue ${expected.venue}` : null,
@@ -121,7 +154,7 @@ function renderDataContractPanel(id, dataset, topData, expected = {}) {
     <div class="grid three section-gap">
       ${metric("Generated at", dataset?.generated_at ? when(dataset.generated_at) : "DATA UNAVAILABLE", undefined, `top generated_at ${topData?.generated_at ? when(topData.generated_at) : "DATA UNAVAILABLE"}`, dataset?.generated_at ? "positive" : "negative")}
       ${metric("Source updated", sourceTs ? when(sourceTs) : "DATA UNAVAILABLE", undefined, state.sourceAgeMin == null ? "source freshness unavailable" : `${Math.max(0, state.sourceAgeMin).toFixed(1)}m before generated_at`, state.stale ? "negative" : sourceTs ? "positive" : "negative")}
-      ${metric("Schema / quality", `${safe(dataset?.schema_version || "DATA UNAVAILABLE")} · ${safe(quality)}`, undefined, state.missing.length ? `missing: ${state.missing.join(", ")}` : (state.qualityOk ? "quality state is clean" : "quality state requires attention"), state.missing.length || !state.qualityOk ? "negative" : "positive")}
+      ${metric("Schema / quality", `${safe(schemaReadable)} · ${safe(qualityReadable)}`, undefined, qualityDetail, state.missing.length || !state.qualityOk ? "negative" : "positive")}
       ${metric("Population", safe(dataset?.population || "DATA UNAVAILABLE"), undefined, expected.population ? `expected ${safe(expected.population)}` : "no expected population supplied", state.populationOk ? "positive" : "negative")}
       ${metric("Venue", safe(dataset?.venue || "DATA UNAVAILABLE"), undefined, expected.venue ? `expected ${safe(expected.venue)}` : "no expected venue supplied", state.venueOk ? "positive" : "negative")}
       ${metric("Local date", safe(dataset?.local_trading_date || "DATA UNAVAILABLE"), undefined, expectedLine || "backend contract evidence", dataset?.local_trading_date ? "positive" : "negative")}
