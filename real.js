@@ -13,10 +13,90 @@ function commissionValue(row) {
   return typeof value === "number" ? Number(value) : Number(value?.total ?? value?.cad ?? 0);
 }
 function quantityValue(row) { return Number(row?.quantity ?? row?.qty ?? 0); }
+function hasQuantity(row) {
+  return ["quantity", "qty", "filled_qty", "shares", "units"].some((key) => row?.[key] !== null && row?.[key] !== undefined && row?.[key] !== "");
+}
+function quantityText(row) { return hasQuantity(row) ? num(quantityValue(row)) : "DATA UNAVAILABLE"; }
 function deployedValue(row) {
   const qty = Math.abs(quantityValue(row));
   const entry = Number(row?.entry_price ?? 0);
   return qty && entry ? qty * entry : 0;
+}
+function unavailable(label = "DATA UNAVAILABLE") { return `<span class="pending-capture">${esc(label)}</span>`; }
+function valueOrUnavailable(value, formatter = safe) {
+  return value === null || value === undefined || value === "" ? unavailable() : formatter(value);
+}
+function timestampOrUnavailable(value) { return value ? when(value) : unavailable(); }
+function moneyOrUnavailable(value) { return value === null || value === undefined || value === "" ? unavailable() : money(value); }
+function normalizedMoneyOrUnavailable(value, normalizedValue) {
+  if (value === null || value === undefined || value === "") return unavailable();
+  return money(normalizedValue);
+}
+function localTradingDate(row) {
+  const ts = row?.entry_fill_ts || row?.decision_ts || row?.exit_ts || row?.decision_reference_ts;
+  if (!ts) return unavailable();
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Edmonton", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(ts));
+  } catch { return safe(ts); }
+}
+function secondsText(value) {
+  if (value === null || value === undefined || value === "") return unavailable();
+  const n = Number(value);
+  if (!Number.isFinite(n)) return safe(value);
+  if (Math.abs(n) >= 3600) return `${(n / 3600).toFixed(2)}h`;
+  if (Math.abs(n) >= 60) return `${(n / 60).toFixed(1)}m`;
+  return `${n.toFixed(1)}s`;
+}
+function priceReturnPct(row) {
+  const entry = Number(row?.entry_price);
+  const exit = Number(row?.exit_price);
+  if (!Number.isFinite(entry) || !Number.isFinite(exit) || entry === 0) return null;
+  const dir = String(row?.direction || "").toUpperCase();
+  const raw = ((exit - entry) / entry) * 100;
+  return dir === "SHORT" ? -raw : raw;
+}
+function capitalReturnPct(row) {
+  const deployed = deployedValue(row);
+  const net = netValue(row);
+  return deployed ? (net / deployed) * 100 : null;
+}
+function tpContradiction(row) {
+  if (String(row?.exit_reason || "").toUpperCase() !== "TP") return "";
+  const entry = Number(row?.entry_price);
+  const exit = Number(row?.exit_price);
+  if (!Number.isFinite(entry) || !Number.isFinite(exit)) return "";
+  const dir = String(row?.direction || "").toUpperCase();
+  if (dir === "LONG" && exit < entry) return "TP contradiction: LONG take-profit exit is below entry. Check bracket/fill evidence before trusting this row.";
+  if (dir === "SHORT" && exit > entry) return "TP contradiction: SHORT take-profit exit is above entry. Check bracket/fill evidence before trusting this row.";
+  return "";
+}
+function sourceLink(row) {
+  const url = row?.catalyst_url || row?.source_url || row?.url;
+  if (!url) return unavailable();
+  const label = row?.catalyst_accession || row?.source || row?.publisher || "Open source";
+  return `<a class="source-link" href="${esc(url)}" target="_blank" rel="noreferrer">${safe(label)}</a>`;
+}
+function evidenceItem(label, value, className = "") {
+  return `<div class="evidence-item ${className}">
+    <span>${esc(label)}</span>
+    <strong>${value}</strong>
+  </div>`;
+}
+function evidencePanel(title, items, tone = "") {
+  return `<section class="evidence-panel ${tone}">
+    <h4>${esc(title)}</h4>
+    <div class="evidence-list">${items.join("")}</div>
+  </section>`;
+}
+function qualityFlagChips(flags) {
+  if (!flags || typeof flags !== "object") return unavailable();
+  const entries = Object.entries(flags).slice(0, 24);
+  if (!entries.length) return unavailable();
+  return `<div class="flag-cloud">${entries.map(([key, value]) => {
+    const good = value === true || String(value).toUpperCase().includes("VALID") || String(value).toUpperCase().includes("COMPLETE") || String(value).toUpperCase().includes("COSTED");
+    const text = typeof value === "boolean" ? (value ? "yes" : "no") : value;
+    return `<span class="flag-chip ${good ? "ok" : "warn"}">${safe(key)}: ${safe(text)}</span>`;
+  }).join("")}</div>`;
 }
 function realRowKey(row) {
   return row?.event_id || `${row?.symbol || ""}|${row?.entry_fill_ts || ""}|${row?.entry_price || ""}`;
@@ -286,28 +366,73 @@ function renderDecisionFeed(real) {
     const isCosted = r.net_pnl !== null && r.net_pnl !== undefined;
     const net = Number(r.net_pnl || 0);
     const deployed = deployedValue(r);
-    const returnOnCapital = isClosed && isCosted && deployed ? net / deployed * 100 : null;
-    return `<article class="decision-card">
+    const roc = isClosed && isCosted ? capitalReturnPct(r) : null;
+    const priceReturn = isClosed ? priceReturnPct(r) : null;
+    const contradiction = tpContradiction(r);
+    const catalystPublished = r.catalyst_ts || r.source_published_at || r.published_at || r.provider_ts;
+    return `<article class="decision-card trade-evidence-card">
         <div class="decision-top">
           <div>
             <div class="decision-title">${safe(r.symbol)} · ${safe(r.direction)} · ${catalystLabel(r)}</div>
-            <div class="small">${populationLabel(r)} · ${safe(r.headline)}</div>
+            <div class="small">${populationLabel(r)} · local trading date ${localTradingDate(r)} · ${safe(r.headline)}</div>
           </div>
           <div class="mono ${isClosed && isCosted ? cls(net) : "muted"}">${isClosed ? (isCosted ? money(net) : "COST PENDING") : "OPEN"}</div>
         </div>
-        <div class="small section-gap">${safe(r.reason, "No reason text captured.")}</div>
-        <div class="decision-meta">
-          <span class="chip">rule ${safe(r.rule_id)}</span>
-          <span class="chip">basis ${safe(r.direction_basis)}</span>
-          <span class="chip">qty ${num(quantityValue(r))}</span>
-          <span class="chip">capital used ${deployed ? money(deployed) : "—"}</span>
-          <span class="chip">return on capital ${returnOnCapital == null ? "—" : pct3(returnOnCapital)}</span>
-          <span class="chip">entry ${maybeMoney(r.entry_price)} · ${when(r.entry_fill_ts)}</span>
-          <span class="chip">${isClosed ? `exit ${maybeMoney(r.exit_price)} · ${safe(r.exit_reason)}` : "exit pending"}</span>
-          <span class="chip">MFE ${r.mfe_pct == null ? "—" : pct(r.mfe_pct)}</span>
-          <span class="chip">MAE ${r.mae_pct == null ? "—" : pct(r.mae_pct)}</span>
-          <span class="chip">hold ${safe(r.hold_duration_min)}m</span>
+        ${contradiction ? `<div class="warning-row boundary-error">${esc(contradiction)}</div>` : ""}
+        <div class="trade-evidence-grid">
+          ${evidencePanel("Money + venue", [
+            evidenceItem("Venue", safe(r.venue)),
+            evidenceItem("Money status", safe(r.money_status)),
+            evidenceItem("Validation", safe(r.validation_state)),
+            evidenceItem("Local trading date", localTradingDate(r)),
+            evidenceItem("Quantity", quantityText(r), hasQuantity(r) ? "" : "warn"),
+            evidenceItem("Entry notional", deployed ? money(deployed) : unavailable()),
+          ], "real")}
+          ${evidencePanel("Entry / exit / P&L", [
+            evidenceItem("Entry fill", `${moneyOrUnavailable(r.entry_price)} · ${timestampOrUnavailable(r.entry_fill_ts)}`),
+            evidenceItem("Exit fill", isClosed ? `${moneyOrUnavailable(r.exit_price)} · ${timestampOrUnavailable(r.exit_ts)}` : unavailable("OPEN")),
+            evidenceItem("Exit reason", isClosed ? safe(r.exit_reason) : unavailable("OPEN")),
+            evidenceItem("Gross P&L", moneyOrUnavailable(r.gross_pnl), cls(grossValue(r))),
+            evidenceItem("Commissions", normalizedMoneyOrUnavailable(r.commissions ?? r.commissions_cad ?? r._commissions, commissionValue(r)), "negative"),
+            evidenceItem("Net P&L", moneyOrUnavailable(r.net_pnl), cls(net)),
+            evidenceItem("Price return", priceReturn == null ? unavailable() : pct3(priceReturn), priceReturn == null ? "warn" : cls(priceReturn)),
+            evidenceItem("Net return on capital", roc == null ? unavailable() : pct3(roc), roc == null ? "warn" : cls(roc)),
+            evidenceItem("MFE / MAE", `${r.mfe_pct == null ? unavailable() : pct(r.mfe_pct)} / ${r.mae_pct == null ? unavailable() : pct(r.mae_pct)}`),
+          ], "real")}
+          ${evidencePanel("Catalyst + source", [
+            evidenceItem("Catalyst", catalystLabel(r)),
+            evidenceItem("Headline", safe(r.headline)),
+            evidenceItem("Source", sourceLink(r)),
+            evidenceItem("Catalyst publication time", timestampOrUnavailable(catalystPublished)),
+            evidenceItem("Decision time", timestampOrUnavailable(r.decision_ts)),
+            evidenceItem("Decision reference", `${moneyOrUnavailable(r.decision_reference_price)} · ${timestampOrUnavailable(r.decision_reference_ts)}`),
+          ])}
+          ${evidencePanel("Rule + why", [
+            evidenceItem("Rule ID", safe(r.rule_id)),
+            evidenceItem("Direction basis", safe(r.direction_basis)),
+            evidenceItem("Why", safe(r.reason, "No reason text captured.")),
+            evidenceItem("Catalyst rank", valueOrUnavailable(r.catalyst_rank, safe)),
+            evidenceItem("Catalyst strength", valueOrUnavailable(r.catalyst_strength, safe)),
+          ])}
+          ${evidencePanel("Latency", [
+            evidenceItem("Catalyst → decision", secondsText(r.latency_catalyst_to_decision_s ?? r.news_to_decision_s)),
+            evidenceItem("Decision → order", secondsText(r.decision_to_order_s)),
+            evidenceItem("Order → fill", secondsText(r.order_to_fill_s)),
+            evidenceItem("Decision → fill", secondsText(r.latency_decision_to_fill_s)),
+            evidenceItem("Hold time", r.hold_duration_min == null ? unavailable() : `${Number(r.hold_duration_min).toFixed(1)}m`),
+          ])}
+          ${evidencePanel("Bracket proof", [
+            evidenceItem("Parent order ID", valueOrUnavailable(r.parent_order_id || r.parent_order_ref, safe), "warn"),
+            evidenceItem("TP order ID", valueOrUnavailable(r.tp_order_id || r.take_profit_order_id, safe), "warn"),
+            evidenceItem("SL order ID", valueOrUnavailable(r.sl_order_id || r.stop_loss_order_id, safe), "warn"),
+            evidenceItem("Initial bracket", valueOrUnavailable(r.initial_bracket_proof || r.bracket_initial_state, safe), "warn"),
+            evidenceItem("Fill-adjusted bracket", valueOrUnavailable(r.fill_adjusted_bracket_proof || r.bracket_adjusted_state, safe), "warn"),
+          ], "warn")}
         </div>
+        <details class="quality-details">
+          <summary>Data-quality flags</summary>
+          ${qualityFlagChips(r.quality_flags)}
+        </details>
       </article>`;
   }).join("");
 }
