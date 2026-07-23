@@ -97,7 +97,7 @@ function dataContractState(dataset, topData, expected = {}) {
   const populationOk = !expected.population || dataset?.population === expected.population;
   const venueOk = !expected.venue || dataset?.venue === expected.venue;
   const qualityText = String(dataset?.data_quality_status || "").toUpperCase();
-  const qualityOk = Boolean(qualityText) && !/(WARN|FAIL|ERROR|UNAVAILABLE|UNKNOWN|STALE|PARTIAL)/.test(qualityText);
+  const qualityOk = Boolean(qualityText) && !/(WARN|FAIL|ERROR|UNAVAILABLE|UNKNOWN|STALE|PARTIAL|DERIVED)/.test(qualityText);
   const ok = missing.length === 0 && !stale && populationOk && venueOk && qualityOk;
   return { required, missing, sourceAgeMin, stale, populationOk, venueOk, qualityOk, ok };
 }

@@ -181,6 +181,11 @@
       `<span class="badge ${derived.visibleWarning ? "warn" : "real"}">Source status · ${htmlSafe(readableCode(src.data_quality_status || src.status || "UNKNOWN"))}</span>`,
       `<span class="badge info">schema ${htmlSafe(readableCode(src.schema_version || "DATA_UNAVAILABLE"))}</span>`,
     ].join("");
+    renderDataContractPanel("data-contract-state", src, data, {
+      population: "MIXED_REAL_SHADOW",
+      venue: "MIXED",
+      table: "source_observability_derived_v1 / dashboard rows",
+    });
     byId("source-summary").innerHTML = [
       metricCard("Events today", number(src.event_n), "live source events found today"),
       metricCard("Expected sources observed", `${number(derived.observedExpectedN)} / ${number(derived.expectedN)}`, `${coveragePct == null ? "DATA UNAVAILABLE" : percent(coveragePct)} expected-source coverage`),
@@ -347,6 +352,11 @@
       `<span class="badge ${eq?.data_quality_status === "VERIFIED_PARTIAL" ? "real" : "warn"}">Execution status · ${htmlSafe(eq?.data_quality_status || eq?.status || "DATA UNAVAILABLE")}</span>`,
       `<span class="badge info">schema ${htmlSafe(eq?.schema_version || "DATA_UNAVAILABLE")}</span>`,
     ].join("");
+    renderDataContractPanel("data-contract-state", eq || {}, data, {
+      population: "REAL",
+      venue: "IBKR/PAPER",
+      table: "execution_quality_v1 / public.agent_trades projection",
+    });
     const closed = Number(real.closed_n || 0);
     const gross = Number(real.gross_pnl || 0);
     const fees = Number(real.commissions || 0);
