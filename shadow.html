@@ -86,6 +86,17 @@
     <section class="panel section-gap">
       <div class="panel-header">
         <div>
+          <h2 class="panel-title">Research completeness</h2>
+          <div class="filter-copy">Complete, pending, missed, quarantined, and ambiguous counts stay separate so research quality is visible.</div>
+        </div>
+        <span class="badge shadow">priced-only evidence</span>
+      </div>
+      <div id="research-completeness"><div class="loading">Loading completeness buckets…</div></div>
+    </section>
+
+    <section class="panel section-gap">
+      <div class="panel-header">
+        <div>
           <h2 class="panel-title">Hypothetical sizing scenario</h2>
           <div class="filter-copy">Returns stay primary. This only translates observed percentage moves into comparable “what if” dollars.</div>
         </div>
@@ -124,6 +135,17 @@
       <div class="panel">
         <div class="panel-header"><h2 class="panel-title">Horizon ladder</h2><span class="badge shadow">filtered priced n</span></div>
         <div id="shadow-horizon-ladder"></div>
+      </div>
+    </section>
+
+    <section class="grid two section-gap">
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">MFE / MAE distribution</h2><span class="badge shadow">excursion marks</span></div>
+        <div id="mfe-mae-diagnostics"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">TP/SL + hold diagnostics</h2><span class="badge warn">capture status shown</span></div>
+        <div id="bracket-hold-diagnostics"></div>
       </div>
     </section>
 
@@ -181,6 +203,6 @@
   </main>
   <script>window.API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";</script>
   <script src="./cockpit-common.js"></script>
-  <script src="./shadow.js?v=20260723-confidence"></script>
+  <script src="./shadow.js?v=20260723-research-diagnostics"></script>
 </body>
 </html>

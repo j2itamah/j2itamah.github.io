@@ -62,6 +62,49 @@ function filteredLadder(rows) {
     };
   });
 }
+function rowsForDiagnostics(shadow) {
+  return visibleRows(shadow).filter((row) => rowMatchesFilter(row));
+}
+function valueList(rows, field) {
+  return (rows || []).map((row) => row?.[field]).filter(hasValue).map(Number).filter((value) => Number.isFinite(value));
+}
+function quantiles(values) {
+  const arr = values.slice().sort((a, b) => a - b);
+  if (!arr.length) return null;
+  const pick = (p) => arr[Math.min(arr.length - 1, Math.max(0, Math.round((arr.length - 1) * p)))];
+  return { n: arr.length, min: arr[0], p25: pick(0.25), median: pick(0.5), p75: pick(0.75), max: arr[arr.length - 1] };
+}
+function statusBucket(row) {
+  const validation = String(row?.validation_state || "").toUpperCase();
+  const status = String(row?.status || "").toUpperCase();
+  const outcome = String(row?.outcome || "").toUpperCase();
+  const flagText = Object.values(row?.quality_flags || {}).map(String).join(" ").toUpperCase();
+  if (validation.includes("QUARANTINE") || status.includes("QUARANTINE")) return "quarantined";
+  if (validation.includes("AMBIG") || status.includes("AMBIG")) return "ambiguous";
+  if (outcome.includes("MISSED") || status.includes("MISSED") || flagText.includes("MISSED")) return "missed";
+  if (isCompleteObservation(row)) return "complete";
+  return "pending";
+}
+function countBuckets(rows) {
+  const buckets = { complete: 0, pending: 0, missed: 0, quarantined: 0, ambiguous: 0 };
+  for (const row of rows || []) buckets[statusBucket(row)] = (buckets[statusBucket(row)] || 0) + 1;
+  return buckets;
+}
+function horizonResultRows(rows) {
+  const out = [];
+  for (const row of rows || []) {
+    for (const [horizon, result] of Object.entries(row?.horizon_results || {})) out.push({ row, horizon, result: result || {} });
+  }
+  return out;
+}
+function groupedCounts(rows, keyFn) {
+  const counts = {};
+  for (const row of rows || []) {
+    const key = String(keyFn(row) || "UNKNOWN");
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  return Object.entries(counts).map(([key, n]) => ({ key, n })).sort((a, b) => b.n - a.n || a.key.localeCompare(b.key));
+}
 function visibleSliceLabel(shadow) {
   return `${num((shadow.recent_priced || []).length)} recent rows visible`;
 }
@@ -204,6 +247,32 @@ function renderConfidenceGuard(shadow) {
       </tr>`, "No by-catalyst confidence evidence exposed by the backend.")}
   `;
 }
+function renderResearchCompleteness(shadow) {
+  const rows = rowsForDiagnostics(shadow);
+  const buckets = countBuckets(rows);
+  const priced = rows.filter(_isPricedLocal).length;
+  const total = rows.length;
+  const completeness = total ? priced * 100 / total : null;
+  const sources = groupedCounts(rows, (row) => row.source_provider || shortSource(row.catalyst_url)).slice(0, 8);
+  const catalysts = groupedCounts(rows, (row) => catalystDisplay(catalystKey(row))).slice(0, 8);
+  $("research-completeness").innerHTML = `
+    <div class="grid three">
+      ${metric("Observation rows", num(total), total, "deduped visible live rows")}
+      ${metric("Data completeness", completeness === null ? "DATA UNAVAILABLE" : `<span class="${completeness >= 80 ? "positive" : completeness >= 50 ? "muted" : "negative"}">${pct(completeness)}</span>`, priced, `${num(priced)} priced / ${num(total)} visible rows`)}
+      ${metric("Clean COMPLETE", num(buckets.complete), buckets.complete, "complete rows used in complete-observation panels", buckets.complete ? "positive" : "muted")}
+    </div>
+    <div class="grid five section-gap">
+      ${metric("Pending", num(buckets.pending), buckets.pending, "waiting on later marks", buckets.pending ? "muted" : "positive")}
+      ${metric("MISSED", num(buckets.missed), buckets.missed, "capture failed or horizon missed", buckets.missed ? "negative" : "positive")}
+      ${metric("Quarantined", num(buckets.quarantined), buckets.quarantined, "excluded from evidence", buckets.quarantined ? "negative" : "positive")}
+      ${metric("Ambiguous", num(buckets.ambiguous), buckets.ambiguous, "needs manual/contract resolution", buckets.ambiguous ? "negative" : "positive")}
+      ${metric("Global diagnostic rows", num(state.raw?.total_rows_diagnostic || shadow.total_rows_diagnostic || 0), state.raw?.total_rows_diagnostic || shadow.total_rows_diagnostic || 0, "backend total; not all are evidence")}
+    </div>
+    <div class="grid two section-gap">
+      ${table(["Catalyst type", "Rows"], catalysts, (row) => `<tr><td>${safe(row.key)}</td><td class="mono">${num(row.n)}</td></tr>`, "No catalyst rows exposed.")}
+      ${table(["Source", "Rows"], sources, (row) => `<tr><td>${safe(row.key)}</td><td class="mono">${num(row.n)}</td></tr>`, "No source rows exposed.")}
+    </div>`;
+}
 function rowPnl(r) { const mark = latestReturn(r); return mark ? hypotheticalPnl(mark.value) : null; }
 function researchCurve(rows) {
   return rows.slice().sort((a, b) => new Date(a.decision_ts || 0) - new Date(b.decision_ts || 0)).map((r, i, arr) => {
@@ -281,6 +350,77 @@ function renderLadder(shadow) {
       <div class="small">priced n=${num(r.priced_n)} · hit rate ${hitText}</div>
     </div>`;
   }).join("")}</div>`;
+}
+function distributionBlock(label, q, tone = "shadow") {
+  if (!q) return `<div class="metric"><div class="metric-label">${esc(label)}</div><div class="metric-value muted">DATA UNAVAILABLE</div><div class="metric-sub">No live field exposed for this distribution.</div></div>`;
+  const maxAbs = Math.max(Math.abs(q.min), Math.abs(q.max), 0.01);
+  return `<div class="metric">
+    <div class="metric-label">${esc(label)}<span class="n-tag">n=${num(q.n)}</span></div>
+    <div class="metric-value ${cls(q.median)}">${pct3(q.median)}</div>
+    <div class="metric-sub">median; min / p25 / p50 / p75 / max below</div>
+    <div class="section-gap">
+      ${barRow("min", q.min, maxAbs, pct3(q.min), cls(q.min), tone)}
+      ${barRow("p25", q.p25, maxAbs, pct3(q.p25), cls(q.p25), tone)}
+      ${barRow("median", q.median, maxAbs, pct3(q.median), cls(q.median), tone)}
+      ${barRow("p75", q.p75, maxAbs, pct3(q.p75), cls(q.p75), tone)}
+      ${barRow("max", q.max, maxAbs, pct3(q.max), cls(q.max), tone)}
+    </div>
+  </div>`;
+}
+function pctFraction3(v) {
+  return hasValue(v) ? pct3(Number(v) * 100) : "—";
+}
+function renderMfeMaeDiagnostics(shadow) {
+  const rows = rowsForDiagnostics(shadow);
+  const longRows = rows.filter((row) => String(row.direction || "").toUpperCase() === "LONG");
+  const shortRows = rows.filter((row) => String(row.direction || "").toUpperCase() === "SHORT");
+  const sourceNotes = groupedCounts(rows, (row) => row?.quality_flags?.mfe_mae || row?.excursion_source || "EXCURSION_SOURCE_UNSPECIFIED").slice(0, 4);
+  $("mfe-mae-diagnostics").innerHTML = `
+    <div class="small section-note">Uses backend-exposed <code>mfe_pct</code>/<code>mae_pct</code>. If path replay is not complete, this remains research evidence only.</div>
+    <div class="grid two section-gap">
+      ${distributionBlock("MFE distribution", quantiles(valueList(rows, "mfe_pct")))}
+      ${distributionBlock("MAE distribution", quantiles(valueList(rows, "mae_pct")))}
+      ${distributionBlock("LONG MFE", quantiles(valueList(longRows, "mfe_pct")))}
+      ${distributionBlock("SHORT MFE", quantiles(valueList(shortRows, "mfe_pct")))}
+    </div>
+    <div class="section-gap">${table(["Excursion quality", "Rows"], sourceNotes, (row) => `<tr><td>${safe(row.key)}</td><td class="mono">${num(row.n)}</td></tr>`, "No excursion quality notes exposed.")}</div>`;
+}
+function renderBracketHoldDiagnostics(shadow) {
+  const rows = rowsForDiagnostics(shadow);
+  const withTpSl = rows.filter((row) => hasValue(row.tp_pct) || hasValue(row.sl_pct));
+  const outcomes = groupedCounts(rows, (row) => row.outcome || row.sim_exit_reason || row.exit_reason || "CAPTURE_PENDING");
+  const horizonResults = horizonResultRows(rows);
+  const markOnly = horizonResults.filter((item) => String(item.result.exit_reason || item.result.status || "").toUpperCase().includes("MARK_ONLY")).length;
+  const missing = horizonResults.filter((item) => String(item.result.status || "").toUpperCase().includes("MISSING")).length;
+  const pending = horizonResults.filter((item) => String(item.result.status || "").toUpperCase().includes("PENDING")).length;
+  const earlyTpRows = rows.filter((row) => String(row.sim_exit_reason || row.exit_reason || row.outcome || "").toUpperCase().includes("TP"));
+  const timeoutRows = rows.filter((row) => String(row.sim_exit_reason || row.exit_reason || row.outcome || "").toUpperCase().includes("TIME"));
+  const tpPct = valueList(withTpSl, "tp_pct");
+  const slPct = valueList(withTpSl, "sl_pct");
+  const tpQ = quantiles(tpPct);
+  const slQ = quantiles(slPct);
+  const shakeRows = rows.filter((row) => {
+    const mae = Number(row.mae_pct);
+    const sl = Number(row.sl_pct);
+    const latest = latestReturn(row);
+    return Number.isFinite(mae) && Number.isFinite(sl) && mae >= sl * 100 && latest && latest.value > 0;
+  });
+  const max = Math.max(markOnly, missing, pending, earlyTpRows.length, timeoutRows.length, shakeRows.length, 1);
+  $("bracket-hold-diagnostics").innerHTML = `
+    <div class="grid two">
+      ${metric("TP/SL rows", num(withTpSl.length), withTpSl.length, withTpSl.length ? `TP median ${tpQ ? pctFraction3(tpQ.median) : "—"} · SL median ${slQ ? pctFraction3(slQ.median) : "—"}` : "TP/SL config not exposed")}
+      ${metric("Shakeout candidates", num(shakeRows.length), shakeRows.length, "MAE touched/beat SL threshold, later mark positive; research-only heuristic", shakeRows.length ? "warn" : "muted")}
+    </div>
+    <div class="section-gap">
+      ${barRow("Mark-only horizon results", markOnly, max, `n=${num(markOnly)}`, "muted", "shadow")}
+      ${barRow("Missing horizon results", missing, max, `n=${num(missing)}`, missing ? "negative" : "positive", "shadow")}
+      ${barRow("Pending horizon results", pending, max, `n=${num(pending)}`, "muted", "shadow")}
+      ${barRow("Early TP captured", earlyTpRows.length, max, `n=${num(earlyTpRows.length)}`, earlyTpRows.length ? "positive" : "muted", "shadow")}
+      ${barRow("Timeout/time-hold captured", timeoutRows.length, max, `n=${num(timeoutRows.length)}`, timeoutRows.length ? "positive" : "muted", "shadow")}
+      ${barRow("Shakeout rate", rows.length ? shakeRows.length * 100 / rows.length : 0, 100, rows.length ? `${pct(shakeRows.length * 100 / rows.length)} · n=${num(shakeRows.length)}` : "DATA UNAVAILABLE", shakeRows.length ? "warn" : "muted", "shadow")}
+    </div>
+    <div class="small section-note">TP/SL grid and early-TP vs time-hold are shown only from exposed outcome fields. If rows say MISSED/PENDING/MARK_ONLY, bracket replay is not complete yet.</div>
+    ${table(["Outcome / exit bucket", "Rows"], outcomes.slice(0, 8), (row) => `<tr><td>${safe(row.key)}</td><td class="mono">${num(row.n)}</td></tr>`, "No outcome buckets exposed yet.")}`;
 }
 function horizonLabel(horizon) { return horizon === "eod" ? "EOD" : horizon.toUpperCase(); }
 function horizonCaptureStatus(rows, horizon) {
@@ -448,7 +588,10 @@ function renderAll() {
   setupScenarioControls();
   renderHero(shadow); renderMetrics(shadow); renderPnlBars(shadow); renderGauges(shadow);
   renderConfidenceGuard(shadow);
-  renderForwardReturns(shadow); renderEquity(shadow); renderLadder(shadow); renderGroups(shadow); renderPending(shadow); renderShadowStatus(shadow);
+  renderResearchCompleteness(shadow);
+  renderForwardReturns(shadow); renderEquity(shadow); renderLadder(shadow);
+  renderMfeMaeDiagnostics(shadow); renderBracketHoldDiagnostics(shadow);
+  renderGroups(shadow); renderPending(shadow); renderShadowStatus(shadow);
   renderDecisionFeed(shadow);
   $("refresh-status").className = "status-pill ok";
   const filterText = state.filter === "ALL" ? "" : ` · ${catalystDisplay(state.filter)}`;
@@ -466,7 +609,7 @@ function showError(error) {
   const msg = `SHADOW cockpit is fail-closed: ${error.message}`;
   $("refresh-status").className = "status-pill bad";
   $("refresh-status").innerHTML = `<strong>Blocked</strong> · ${new Date().toLocaleTimeString()}`;
-  ["real-metrics", "forward-summary", "forward-table", "pnl-bars", "win-gauges", "equity-curve", "shadow-horizon-ladder", "shadow-by-rule", "shadow-by-catalyst", "shadow-by-direction", "pending-marks", "decision-feed", "shadow-status"].forEach((id) => { if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`; });
+  ["real-metrics", "forward-summary", "forward-table", "pnl-bars", "win-gauges", "equity-curve", "research-completeness", "shadow-horizon-ladder", "mfe-mae-diagnostics", "bracket-hold-diagnostics", "shadow-by-rule", "shadow-by-catalyst", "shadow-by-direction", "pending-marks", "decision-feed", "shadow-status"].forEach((id) => { if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`; });
   if ($("security-state")) $("security-state").innerHTML = `<div class="empty">${esc(msg)} Security/RLS status is unavailable until the backend responds.</div>`;
 }
 async function load() {
