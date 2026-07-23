@@ -192,7 +192,9 @@ function eodStats(shadow) {
 }
 function bestHorizon(ladder) {
   if (!ladder || !ladder.length) return null;
-  return ladder.slice().sort((a, b) => Number(b.avg_direction_adjusted_return_pct || 0) - Number(a.avg_direction_adjusted_return_pct || 0))[0];
+  const priced = ladder.filter((row) => Number(row.priced_n || row.n || 0) > 0);
+  if (!priced.length) return null;
+  return priced.slice().sort((a, b) => Number(b.avg_direction_adjusted_return_pct || 0) - Number(a.avg_direction_adjusted_return_pct || 0))[0];
 }
 function guardHorizon(summary, name = "eod") {
   return horizonByName(summary, name) || (summary.horizon_ladder || []).find((row) => Number(row.priced_n || 0) > 0) || null;
