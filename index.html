@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Spline+Sans:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./cockpit.css?v=20260723-lovable-main-shell" />
   <style>
     body {
@@ -769,33 +769,41 @@
       .lovable-landing .overview-hero h1 { font-size: clamp(38px, 15vw, 58px); }
     }
   </style>
-  <link rel="stylesheet" href="./lovable-exact.css?v=20260723-exact-port-2" />
+  <link rel="stylesheet" href="./lovable-exact.css?v=20260723-lovable-shell-v4" />
 </head>
 <body class="overview-page">
   <main class="overview-shell lovable-landing">
-    <section class="overview-hero">
-      <div class="lovable-logo" aria-hidden="true">
-        <svg viewBox="0 0 32 32" fill="none">
-          <path d="M16 4 28 28H4L16 4Z" fill="currentColor" opacity=".95"></path>
-          <path d="M16 11 22 24H10L16 11Z" fill="#f7c948"></path>
-        </svg>
-      </div>
-      <div class="eyebrow">Trading Analyst · live agent</div>
-      <h1>Trading <span class="accent">Analyst</span></h1>
-      <p class="subtitle">
-        One live build, two navigable books: IBKR / REAL executable trades vs SHADOW research observations.
-        Real money and research stay separated; missing evidence stays visible.
-      </p>
-      <div class="hero-top">
-        <div class="status-stack" aria-label="System status">
-          <span class="soft-pill" id="agentStatus">Agent: checking…</span>
-          <span class="soft-pill" id="ibkrStatus">IBKR: checking…</span>
-          <span class="soft-pill" id="ndaxStatus">NDAX: gated</span>
-          <span class="soft-pill" id="telegramStatus">Telegram: checking…</span>
-          <span class="soft-pill" id="ownerStatus">Owner: checking…</span>
+    <header class="lovable-app-header" aria-label="Trading Analyst app header">
+      <div class="app-title-group">
+        <div class="app-title-line">
+          <span class="live-dot" aria-hidden="true"></span>
+          <h1>Trading Analyst</h1>
+          <span class="app-version-chip">V2</span>
         </div>
+        <p>Live Trading Agent command center · verified REAL trades and SHADOW research stay separated.</p>
       </div>
+      <div class="app-header-actions">
+        <div class="app-updated">Backend API · <span id="appDataState">checking…</span></div>
+        <a class="refresh-button" href="./index.html">↻ Refresh</a>
+      </div>
+    </header>
 
+    <a class="attention-pill" href="./sources.html" aria-label="Open system health and source coverage">
+      <span class="attention-dot" aria-hidden="true"></span>
+      <span id="attentionText">Checking live safety state…</span>
+      <strong>Open source health →</strong>
+    </a>
+
+    <div class="build-state-bar" aria-label="Build and provider state">
+      <div class="build-chip"><span>Agent</span><strong id="agentStatus">checking…</strong></div>
+      <div class="build-chip"><span>IBKR</span><strong id="ibkrStatus">checking…</strong></div>
+      <div class="build-chip"><span>NDAX</span><strong id="ndaxStatus">gated</strong></div>
+      <div class="build-chip"><span>Telegram</span><strong id="telegramStatus">checking…</strong></div>
+      <div class="build-chip"><span>Owner</span><strong id="ownerStatus">checking…</strong></div>
+      <div class="build-chip"><span>Market</span><strong id="marketStatus">checking…</strong></div>
+    </div>
+
+    <section class="overview-hero">
       <nav class="tabs" aria-label="Population selector">
         <a class="tab-link" href="./real.html">✅ IBKR PAPER</a>
         <span class="tab-link" aria-disabled="true">⛔ NDAX REAL</span>
@@ -1996,10 +2004,12 @@
 
         $("agentStatus").className = `soft-pill ${realFresh.cls}`;
         $("agentStatus").textContent = `Agent data: ${realFresh.text}`;
+        $("appDataState").textContent = realFresh.text;
         $("ibkrStatus").className = `soft-pill ${real.open_n >= 0 ? "good" : "warn"}`;
         $("ibkrStatus").textContent = `IBKR paper: ${real.venue || "IBKR/PAPER"} · ${marketSession()}`;
         $("ndaxStatus").className = "soft-pill warn";
         $("ndaxStatus").textContent = "NDAX REAL: gated / not mixed into IBKR";
+        $("marketStatus").textContent = marketSession().replace("Equity market: ", "");
         const telegramReady = Boolean(security?.telegram_token_set && security?.telegram_chat_id_set);
         $("telegramStatus").className = `soft-pill ${telegramReady ? "good" : "warn"}`;
         $("telegramStatus").textContent = telegramReady ? "Telegram: alerts configured" : "Telegram: config unavailable";
@@ -2010,6 +2020,13 @@
           : attention.count
             ? `Codex handling: ${num(attention.count)} item(s)`
             : "Codex handling";
+        $("attentionText").textContent = attention.jonCount
+          ? `Jon action required: ${num(attention.jonCount)} visible item(s)`
+          : attention.count
+            ? `Codex is handling ${num(attention.count)} visible item(s)`
+            : "All clear — verified-only accounting is the public view";
+        document.querySelector(".attention-pill")?.classList.remove("good", "bad");
+        document.querySelector(".attention-pill")?.classList.add(attention.level === "bad" ? "bad" : attention.level === "good" ? "good" : "warn");
         renderOperatingStrip(data, security, real, shadow);
         renderCapitalAlert(data, real);
         renderAccountTruth(data, real);
@@ -2032,8 +2049,12 @@
       } catch (e) {
         $("agentStatus").className = "soft-pill bad";
         $("agentStatus").textContent = "Agent data: unavailable";
+        $("appDataState").textContent = "unavailable";
+        $("attentionText").textContent = `Public dashboard is fail-closed: ${e.message}`;
+        document.querySelector(".attention-pill")?.classList.add("bad");
         $("telegramStatus").className = "soft-pill bad";
         $("telegramStatus").textContent = "Telegram: unavailable";
+        $("marketStatus").textContent = marketSession().replace("Equity market: ", "");
         $("operatingStrip").innerHTML = [
           operatingCard("Safety", "DATA UNAVAILABLE", `Dashboard is fail-closed: ${e.message}`, "bad"),
           operatingCard("Broker", "DATA UNAVAILABLE", "No trusted live payload", "bad"),
