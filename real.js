@@ -202,6 +202,7 @@ function setupFilter(real) {
 function renderAll() {
   const real = realForFilter(state.raw || {});
   setupFilter(state.raw || {});
+  renderDataContractPanel("data-contract-state", state.raw || {}, state.topData || {}, { population: "REAL", venue: "IBKR/PAPER", table: "public.agent_trades" });
   renderHero(real); renderMetrics(real); renderPnlBars(real); renderGauges(real);
   renderEquity(real); renderGroups(real); renderOpenPositions(real);
   renderCryptoStatus(real); renderDecisionFeed(real); renderReconciliation(real);
@@ -455,7 +456,7 @@ function showError(error) {
   const msg = `IBKR/REAL cockpit is fail-closed: ${error.message}`;
   $("refresh-status").className = "status-pill bad";
   $("refresh-status").innerHTML = `<strong>Blocked</strong> · ${new Date().toLocaleTimeString()}`;
-  ["real-metrics", "pnl-bars", "win-gauges", "equity-curve", "real-by-rule", "real-by-catalyst",
+  ["data-contract-state", "real-metrics", "pnl-bars", "win-gauges", "equity-curve", "real-by-rule", "real-by-catalyst",
     "real-by-direction", "open-positions", "decision-feed", "crypto-status"].forEach((id) => {
     if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`;
   });
@@ -466,6 +467,7 @@ async function load() {
     const security = await fetchSecurity();
     const data = await fetchDashboard();
     state.raw = data.real || {};
+    state.topData = data || {};
     state.lastLoadedAt = new Date();
     renderAll();
     renderSecurity(data, security);

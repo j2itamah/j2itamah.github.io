@@ -586,6 +586,7 @@ function renderAll() {
   const shadow = shadowForFilter(state.raw || {});
   setupFilter(state.raw || {});
   setupScenarioControls();
+  renderDataContractPanel("data-contract-state", state.raw || {}, state.topData || {}, { population: "SHADOW_RESEARCH", venue: "SHADOW", table: "public.agent_shadow_trades" });
   renderHero(shadow); renderMetrics(shadow); renderPnlBars(shadow); renderGauges(shadow);
   renderConfidenceGuard(shadow);
   renderResearchCompleteness(shadow);
@@ -609,7 +610,7 @@ function showError(error) {
   const msg = `SHADOW cockpit is fail-closed: ${error.message}`;
   $("refresh-status").className = "status-pill bad";
   $("refresh-status").innerHTML = `<strong>Blocked</strong> · ${new Date().toLocaleTimeString()}`;
-  ["real-metrics", "forward-summary", "forward-table", "pnl-bars", "win-gauges", "equity-curve", "research-completeness", "shadow-horizon-ladder", "mfe-mae-diagnostics", "bracket-hold-diagnostics", "shadow-by-rule", "shadow-by-catalyst", "shadow-by-direction", "pending-marks", "decision-feed", "shadow-status"].forEach((id) => { if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`; });
+  ["data-contract-state", "real-metrics", "forward-summary", "forward-table", "pnl-bars", "win-gauges", "equity-curve", "research-completeness", "shadow-horizon-ladder", "mfe-mae-diagnostics", "bracket-hold-diagnostics", "shadow-by-rule", "shadow-by-catalyst", "shadow-by-direction", "pending-marks", "decision-feed", "shadow-status"].forEach((id) => { if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`; });
   if ($("security-state")) $("security-state").innerHTML = `<div class="empty">${esc(msg)} Security/RLS status is unavailable until the backend responds.</div>`;
 }
 async function load() {
@@ -617,6 +618,7 @@ async function load() {
     const security = await fetchSecurity();
     const data = await fetchDashboard();
     state.raw = data.shadow || {};
+    state.topData = data || {};
     state.lastLoadedAt = new Date();
     renderAll();
     renderSecurity(data, security);
