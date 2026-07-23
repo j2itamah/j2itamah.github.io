@@ -30,6 +30,53 @@ function valueOrUnavailable(value, formatter = safe) {
   }
   return formatter(value);
 }
+function parseProof(value) {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "object") return value;
+  if (typeof value === "string") {
+    try { return JSON.parse(value); } catch { return value; }
+  }
+  return value;
+}
+function firstPresent(...values) {
+  for (const value of values) {
+    if (value !== null && value !== undefined && value !== "") return value;
+  }
+  return null;
+}
+function proofValue(row, keys, proofObjects = []) {
+  const direct = firstPresent(...keys.map((key) => row?.[key]));
+  if (direct !== null) return direct;
+  for (const proof of proofObjects) {
+    if (!proof || typeof proof !== "object") continue;
+    const found = firstPresent(...keys.map((key) => proof?.[key]));
+    if (found !== null) return found;
+  }
+  return null;
+}
+function proofSummary(value) {
+  const proof = parseProof(value);
+  if (!proof) return unavailable();
+  if (typeof proof !== "object") return safe(proof);
+  const parts = [];
+  if (proof.verified !== undefined) parts.push(proof.verified ? "verified ✅" : "not verified ⚠️");
+  if (proof.source) parts.push(`source ${proof.source}`);
+  if (proof.observed_at) parts.push(`observed ${when(proof.observed_at)}`);
+  const ids = [
+    proof.parent_order_id ? `parent ${proof.parent_order_id}` : "",
+    proof.tp_order_id ? `TP ${proof.tp_order_id}` : "",
+    proof.sl_order_id ? `SL ${proof.sl_order_id}` : "",
+  ].filter(Boolean).join(" / ");
+  if (ids) parts.push(ids);
+  const statuses = [
+    proof.parent_status ? `parent ${proof.parent_status}` : "",
+    proof.tp_status ? `TP ${proof.tp_status}` : "",
+    proof.sl_status ? `SL ${proof.sl_status}` : "",
+  ].filter(Boolean).join(" / ");
+  if (statuses) parts.push(statuses);
+  if (proof.execution_mode) parts.push(`mode ${proof.execution_mode}`);
+  return parts.length ? safe(parts.join(" · ")) : safe(JSON.stringify(proof));
+}
 function timestampOrUnavailable(value) { return value ? when(value) : unavailable(); }
 function moneyOrUnavailable(value) { return value === null || value === undefined || value === "" ? unavailable() : money(value); }
 function normalizedMoneyOrUnavailable(value, normalizedValue) {
@@ -427,11 +474,21 @@ function renderDecisionFeed(real) {
             evidenceItem("Hold time", r.hold_duration_min == null ? unavailable() : `${Number(r.hold_duration_min).toFixed(1)}m`),
           ])}
           ${evidencePanel("Bracket proof", [
-            evidenceItem("Parent order ID", valueOrUnavailable(r.parent_order_id || r.parent_order_ref, safe), "warn"),
-            evidenceItem("TP order ID", valueOrUnavailable(r.tp_order_id || r.take_profit_order_id, safe), "warn"),
-            evidenceItem("SL order ID", valueOrUnavailable(r.sl_order_id || r.stop_loss_order_id, safe), "warn"),
-            evidenceItem("Initial bracket", valueOrUnavailable(r.initial_bracket_proof || r.bracket_initial_state, safe), "warn"),
-            evidenceItem("Fill-adjusted bracket", valueOrUnavailable(r.fill_adjusted_bracket_proof || r.bracket_adjusted_state, safe), "warn"),
+            (() => {
+              const initialProof = parseProof(r.initial_bracket_proof || r.bracket_initial_state);
+              const adjustedProof = parseProof(r.fill_adjusted_bracket_proof || r.bracket_adjusted_state);
+              const proofs = [adjustedProof, initialProof];
+              const parentId = proofValue(r, ["parent_order_id", "parent_order_ref"], proofs);
+              const tpId = proofValue(r, ["tp_order_id", "take_profit_order_id"], proofs);
+              const slId = proofValue(r, ["sl_order_id", "stop_loss_order_id"], proofs);
+              return [
+                evidenceItem("Parent order ID", valueOrUnavailable(parentId, safe), parentId ? "" : "warn"),
+                evidenceItem("TP order ID", valueOrUnavailable(tpId, safe), tpId ? "" : "warn"),
+                evidenceItem("SL order ID", valueOrUnavailable(slId, safe), slId ? "" : "warn"),
+                evidenceItem("Initial bracket", proofSummary(r.initial_bracket_proof || r.bracket_initial_state), (r.initial_bracket_proof || r.bracket_initial_state) ? "" : "warn"),
+                evidenceItem("Fill-adjusted bracket", proofSummary(r.fill_adjusted_bracket_proof || r.bracket_adjusted_state), (r.fill_adjusted_bracket_proof || r.bracket_adjusted_state) ? "" : "warn"),
+              ].join("");
+            })(),
           ], "warn")}
         </div>
         <details class="quality-details">
