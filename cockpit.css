@@ -580,6 +580,18 @@ tr:last-child td { border-bottom: 0; }
 .info-tip:hover::after,
 .info-tip:focus-visible::after,
 .info-tip.help-open::after { opacity: 1; }
+.edge-heatmap td,
+.edge-heatmap th { min-width: 116px; }
+.edge-heatmap td:first-child,
+.edge-heatmap th:first-child {
+  min-width: 190px;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: rgba(7,17,31,.82);
+}
+.shadow-theme .edge-heatmap td:first-child,
+.shadow-theme .edge-heatmap th:first-child { background: rgba(13,20,37,.88); }
 
 @media (max-width: 760px) {
   .status-actions,

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Catalyst Edge · QuantPulse</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./cockpit.css" />
+</head>
+<body class="real-theme" data-page="catalyst">
+  <main class="shell">
+    <a class="backlink" href="./index.html">← Launcher · IBKR vs SHADOW</a>
+    <section class="topbar">
+      <div>
+        <div class="eyebrow">CATALYST EDGE · n≥30 guardrail</div>
+        <h1>Which catalyst lanes are actually working?</h1>
+        <p class="subtitle">
+          This page keeps REAL executions and SHADOW research separate. It can rank early evidence, but it will not call anything an edge until the clean source-specific sample reaches <strong>n≥30</strong>.
+        </p>
+      </div>
+      <div class="status-actions">
+        <button class="refresh-button" id="manual-refresh" type="button">Refresh now</button>
+        <div class="status-pill" id="refresh-status">Loading…</div>
+      </div>
+    </section>
+
+    <nav class="app-nav" aria-label="Dashboard navigation">
+      <a href="./index.html">Overview</a>
+      <a href="./real.html">IBKR / REAL</a>
+      <a href="./shadow.html">SHADOW</a>
+      <a href="./journal.html">Journal</a>
+      <a class="active" href="./catalyst.html">Catalyst Edge</a>
+      <a href="./sources.html">Sources</a>
+      <a href="./execution.html">Execution</a>
+    </nav>
+
+    <section class="hero-strip">
+      <div class="hero-card primary">
+        <div class="metric-label">Verdict</div>
+        <div class="metric-value" id="edge-verdict">—</div>
+        <div class="metric-sub" id="edge-verdict-sub">waiting for live data</div>
+      </div>
+      <div class="hero-card">
+        <div class="metric-label">REAL closed evidence</div>
+        <div class="metric-value" id="real-edge-n">—</div>
+        <div class="metric-sub">broker-backed, costed rows</div>
+      </div>
+      <div class="hero-card">
+        <div class="metric-label">SHADOW priced evidence</div>
+        <div class="metric-value" id="shadow-edge-n">—</div>
+        <div class="metric-sub">research marks, not executable</div>
+      </div>
+      <div class="hero-card">
+        <div class="metric-label">Completeness warning</div>
+        <div class="metric-value" id="edge-warning">—</div>
+        <div class="metric-sub" id="edge-warning-sub">no silent zero coverage</div>
+      </div>
+    </section>
+
+    <section class="grid two section-gap">
+      <div class="panel">
+        <div class="panel-header">
+          <h2 class="panel-title">REAL net expectancy by catalyst <span class="info-tip" tabindex="0" role="button" data-help="Net expectancy is net P&L divided by closed costed trade count. Below n=30 this remains early evidence, not a proven edge.">?</span></h2>
+          <span class="badge real">broker-backed</span>
+        </div>
+        <div id="real-expectancy-bars"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <h2 class="panel-title">SHADOW research return by catalyst <span class="info-tip" tabindex="0" role="button" data-help="Shadow returns are direction-adjusted percentage marks. They are research evidence only, not broker fills or real P&L.">?</span></h2>
+          <span class="badge shadow">research only</span>
+        </div>
+        <div id="shadow-expectancy-bars"></div>
+      </div>
+    </section>
+
+    <section class="panel section-gap">
+      <div class="panel-header"><h2 class="panel-title">Catalyst × horizon heatmap</h2><span class="badge shadow">5m · 15m · 1h · EOD · +1d · +3d · +5d</span></div>
+      <div id="horizon-heatmap"></div>
+    </section>
+
+    <section class="grid two section-gap">
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">Evidence funnel</h2><span class="badge info">seen → priced → rule-eligible</span></div>
+        <div id="edge-funnel"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">Win-rate confidence</h2><span class="badge warn">Wilson interval</span></div>
+        <div id="confidence-intervals"></div>
+      </div>
+    </section>
+
+    <section class="grid two section-gap">
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">MFE / MAE distributions</h2><span class="badge info">available rows only</span></div>
+        <div id="mfe-mae"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">Fee-drag waterfall</h2><span class="badge real">REAL only</span></div>
+        <div id="fee-drag"></div>
+      </div>
+    </section>
+
+    <section class="grid two section-gap">
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">Early TP versus EOD hold</h2><span class="badge warn">separate evidence</span></div>
+        <div id="tp-vs-eod"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">TP / SL optimization matrix</h2><span class="badge warn">fail-closed</span></div>
+        <div id="tp-sl-matrix"></div>
+      </div>
+    </section>
+
+    <section class="panel section-gap">
+      <div class="panel-header"><h2 class="panel-title">Source quality and completeness</h2><span class="badge info">edge depends on coverage</span></div>
+      <div id="source-quality-bars"></div>
+    </section>
+
+    <section class="panel section-gap">
+      <div class="panel-header"><h2 class="panel-title">Catalyst guardrails</h2><span class="badge warn">plain English</span></div>
+      <div id="edge-guardrails" class="decision-feed"></div>
+    </section>
+
+    <div class="footer">
+      Catalyst Edge reads the same live backend contract as the other pages. It does not use mock data and does not mix REAL broker fills with SHADOW research marks.
+    </div>
+  </main>
+  <script>window.API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";</script>
+  <script src="./cockpit-common.js"></script>
+  <script src="./catalyst.js"></script>
+</body>
+</html>

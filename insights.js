@@ -91,6 +91,7 @@
       ["./real.html", "Real trades", "real"],
       ["./shadow.html", "Shadow research", "shadow"],
       ["./journal.html", "Journal", "journal"],
+      ["./catalyst.html", "Catalyst Edge", "catalyst"],
       ["./sources.html", "Sources", "sources"],
       ["./execution.html", "Execution", "execution"],
     ];
