@@ -80,6 +80,17 @@
     </section>
 
     <section class="panel section-gap">
+      <div class="panel-header">
+        <h2 class="panel-title">Live data contract</h2>
+        <span class="badge info">day-by-day evidence, not mock data</span>
+      </div>
+      <div class="grid two">
+        <div id="real-contract-state"><div class="loading">Loading REAL contract evidence…</div></div>
+        <div id="shadow-contract-state"><div class="loading">Loading SHADOW contract evidence…</div></div>
+      </div>
+    </section>
+
+    <section class="panel section-gap">
       <div class="panel-header"><h2 class="panel-title" id="day-detail-title">Day detail</h2><span class="badge real">vs prior day</span></div>
       <div class="grid three" id="day-detail"><div class="loading">Loading day detail…</div></div>
     </section>
@@ -109,7 +120,7 @@
     </div>
   </main>
   <script>window.API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";</script>
-  <script src="./cockpit-common.js"></script>
-  <script src="./journal.js"></script>
+  <script src="./cockpit-common.js?v=20260723-catalyst-journal-contract"></script>
+  <script src="./journal.js?v=20260723-catalyst-journal-contract"></script>
 </body>
 </html>

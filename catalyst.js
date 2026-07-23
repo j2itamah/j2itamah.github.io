@@ -326,6 +326,16 @@ async function loadCatalystEdge() {
     const data = await fetchDashboard();
     edgeState.raw = data;
     edgeState.loadedAt = new Date();
+    renderDataContractPanel("real-contract-state", data.real || {}, data, {
+      population: "REAL",
+      venue: "IBKR/PAPER",
+      table: "public.agent_trades / catalyst edge projection",
+    });
+    renderDataContractPanel("shadow-contract-state", data.shadow || {}, data, {
+      population: "SHADOW_RESEARCH",
+      venue: "SHADOW",
+      table: "public.agent_shadow_trades / catalyst edge projection",
+    });
     renderHero(data);
     renderRealBars(data);
     renderShadowBars(data);

@@ -254,6 +254,16 @@ function renderAll() {
   const days = visibleDays(allDays);
   renderFilter(data);
   renderDateNav(allDays);
+  renderDataContractPanel("real-contract-state", data.real || {}, data, {
+    population: "REAL",
+    venue: "IBKR/PAPER",
+    table: "public.agent_trades / daily journal projection",
+  });
+  renderDataContractPanel("shadow-contract-state", data.shadow || {}, data, {
+    population: "SHADOW_RESEARCH",
+    venue: "SHADOW",
+    table: "public.agent_shadow_trades / daily journal projection",
+  });
   renderHero(days);
   renderDayDetail(allDays, days);
   renderCurve(allDays);
