@@ -263,7 +263,7 @@
       letter-spacing:.12em;
     }
     .dot{width:7px;height:7px;background:var(--cream-ok)}
-    .status-wrap{text-align:left}
+    .status-wrap{text-align:left;order:3}
     .status{
       width:100%;
       justify-content:space-between;
@@ -277,6 +277,9 @@
       font-family:"Fraunces",Georgia,serif;
       font-size:1rem;
       font-weight:600;
+      flex-wrap:wrap;
+      justify-content:flex-start;
+      line-height:1.45;
     }
     .status.ok{background:linear-gradient(180deg,#e8f4e7,#d7ead7);border-color:#b8d6ba;color:#2f7148}
     .status.bad{background:linear-gradient(180deg,#f7e3dd,#f1d2c9);border-color:#ddb1a7;color:#8d392e}
@@ -345,7 +348,7 @@
     .guard-badge.warn{background:var(--cream-warn-soft);border-color:#e8c879;color:#765719}
     .guard-badge.bad{background:#f7e3dd;border-color:#ddb1a7;color:#8d392e}
     .headline-grid{
-      order:5;
+      order:6;
       grid-template-columns:repeat(4,minmax(0,1fr));
       gap:14px;
       margin:18px 0;
@@ -369,7 +372,7 @@
       letter-spacing:-.04em;
     }
     .selector{
-      order:4;
+      order:5;
       position:sticky;
       top:10px;
       z-index:10;
@@ -402,7 +405,7 @@
       color:#fffefa;
     }
     .charts{
-      order:6;
+      order:7;
       grid-template-columns:1.35fr .85fr;
       gap:16px;
       margin-bottom:18px;
@@ -420,7 +423,7 @@
     .bar-fill{background:linear-gradient(90deg,#b7dfbe,var(--cream-ok))}
     .bar-fill.neg{background:linear-gradient(90deg,#e9b0a2,var(--cream-bad))}
     .book-grid{
-      order:3;
+      order:4;
       grid-template-columns:1.16fr 1fr 1fr;
       gap:16px;
     }
@@ -968,7 +971,16 @@ async function load(){
     renderHeadlines(DATA); renderCurve(DATA); renderCatalysts(DATA);
     renderTop(); renderCards();
     $("siteStatus").className = "status " + (freshnessKind === "live" ? "ok" : "warn");
-    $("siteStatus").textContent = `${freshnessKind === "live" ? "Live" : "Stale/Warning"} · REAL n=${num(DATA.real?.n)} · SHADOW priced n=${num(DATA.shadow?.priced_n)} · ${DATA.generated_at ? new Date(DATA.generated_at).toLocaleTimeString() : "missing timestamp"}`;
+    const refreshAge = DATA.generated_at ? `${Math.max(0, ageMinutes(DATA.generated_at) || 0).toFixed(1)}m old` : "missing timestamp";
+    $("siteStatus").textContent = [
+      freshnessKind === "live" ? "✅ Agent LIVE" : "⚠️ Agent STALE/WATCH",
+      `IBKR ${$("ibkrState").textContent.replace(/^.*?\\s/, "")}`,
+      `NDAX ${$("ndaxState").textContent.replace(/^.*?\\s/, "")}`,
+      `Refresh ${refreshAge}`,
+      $("marketState").textContent,
+      $("ownerState").textContent,
+      `REAL n=${num(DATA.real?.n)} · SHADOW priced n=${num(DATA.shadow?.priced_n)}`,
+    ].join(" · ");
   }catch(e){
     DATA = null;
     $("siteStatus").className = "status bad";
