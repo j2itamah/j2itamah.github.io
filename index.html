@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Trading Analyst · Trading Lab</title>
+  <title>QuantPulse · Live Agent</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./cockpit.css?v=20260723-cockpit" />
+  <link rel="stylesheet" href="./cockpit.css?v=20260723-lovable-main-shell" />
   <style>
     body {
       background:
         radial-gradient(circle at 18% 12%, rgba(51,102,255,.10), transparent 28%),
         radial-gradient(circle at 82% 16%, rgba(245,181,63,.13), transparent 26%),
-        linear-gradient(180deg, #fbfaf6 0%, #f5f1e7 52%, #efe9dc 100%);
+        linear-gradient(180deg, #fbfaf6 0%, #f7f3ea 52%, #eee7d8 100%);
       color: #141827;
     }
     .overview-shell { width: min(1360px, calc(100vw - 28px)); margin: 0 auto; padding: 24px 0 54px; }
@@ -586,7 +586,7 @@
     }
 
     /* Lovable-inspired landing shell: clean, centered, off-white, minimal. */
-    .overview-shell.lovable-landing { width: min(960px, calc(100vw - 32px)); padding: clamp(40px, 7vw, 86px) 0 64px; }
+    .overview-shell.lovable-landing { width: min(1080px, calc(100vw - 32px)); padding: clamp(34px, 6vw, 74px) 0 64px; }
     .overview-shell.lovable-landing .overview-hero {
       background: transparent;
       border: 0;
@@ -623,13 +623,13 @@
       margin: 12px auto 0;
       font-size: clamp(42px, 8vw, 82px);
       line-height: .92;
-      letter-spacing: -.07em;
+      letter-spacing: -.075em;
       color: #171827;
     }
     .lovable-landing .overview-hero h1 .accent { color: #2563eb; }
     .lovable-landing .subtitle {
       margin: 20px auto 0;
-      max-width: 680px;
+      max-width: 700px;
       color: #687085;
       font-size: 16px;
       line-height: 1.7;
@@ -644,7 +644,7 @@
       box-shadow: 0 10px 28px rgba(34,29,19,.07);
     }
     .lovable-topbook {
-      margin-top: 44px;
+      margin-top: 24px;
       text-align: left;
       color: #f8fafc;
       background: linear-gradient(145deg, #151723 0%, #070913 100%);
@@ -693,7 +693,7 @@
     .lovable-landing .capital-alert {
       text-align: left;
     }
-    .lovable-landing .operating-strip { margin-top: 22px; }
+    .lovable-landing .operating-strip { margin-top: 18px; }
     .lovable-landing .account-truth-title { text-align: left; margin-top: 24px; }
     .lovable-landing .tabs {
       justify-content: center;
@@ -746,6 +746,17 @@
       color: #171827;
       box-shadow: 0 20px 58px rgba(34,29,19,.12);
     }
+    .lovable-landing .launch-card:first-child {
+      background: linear-gradient(145deg, #111420 0%, #080a12 100%);
+      color: #f8fafc;
+      border-color: rgba(255,255,255,.12);
+      border-top: 4px solid #f7c948;
+    }
+    .lovable-landing .launch-card:first-child p,
+    .lovable-landing .launch-card:first-child .metric-line span { color: rgba(226,232,240,.72); }
+    .lovable-landing .launch-card:first-child .metric-line { border-top-color: rgba(255,255,255,.10); }
+    .lovable-landing .launch-card:first-child .metric-line strong,
+    .lovable-landing .launch-card:first-child .go { color: #fff; }
     .lovable-landing .launch-card h2 { font-family: Fraunces, Georgia, serif; letter-spacing: -.035em; }
     .lovable-landing .footer { color: #687085; text-align: center; }
     @media (max-width: 760px) {
@@ -768,10 +779,10 @@
           <path d="M16 11 22 24H10L16 11Z" fill="#f7c948"></path>
         </svg>
       </div>
-      <div class="eyebrow">Trading Analyst · Trading Lab</div>
-      <h1>Quant<span class="accent">Pulse</span> · Trading Lab</h1>
+      <div class="eyebrow">Trading Analyst · live agent</div>
+      <h1>Quant<span class="accent">Pulse</span> · Live Agent</h1>
       <p class="subtitle">
-        One simple place to open the live IBKR/NDAX cockpit, the SHADOW research cockpit, and the top-book daily view.
+        One live build, two navigable cockpits: IBKR / REAL executable trades vs SHADOW research observations.
         Real money and research stay separated; missing evidence stays visible.
       </p>
       <div class="hero-top">
@@ -784,28 +795,22 @@
         </div>
       </div>
 
-      <div class="operating-strip" id="operatingStrip" aria-label="Operating picture">
-        <div class="operating-card"><div class="operating-label">Safety</div><div class="operating-value">Checking…</div><div class="operating-sub">verified-only public accounting</div></div>
-        <div class="operating-card"><div class="operating-label">Broker</div><div class="operating-value">Checking…</div><div class="operating-sub">IBKR / NDAX state</div></div>
-        <div class="operating-card"><div class="operating-label">Sources</div><div class="operating-value">Checking…</div><div class="operating-sub">coverage and freshness</div></div>
-        <div class="operating-card"><div class="operating-label">Owner</div><div class="operating-value">Checking…</div><div class="operating-sub">who needs to act</div></div>
-      </div>
-      <div id="capitalAlert" class="capital-alert" role="status" aria-live="polite">
-        <div class="capital-alert-icon">💵</div>
-        <div>
-          <div class="capital-alert-title">Checking broker cash/equity snapshot…</div>
-          <div class="capital-alert-copy">If live broker balances are missing, the dashboard uses trade-level notional only and says so.</div>
-        </div>
-        <a href="./real.html">Open REAL cockpit →</a>
-      </div>
+      <nav class="tabs" aria-label="Population selector">
+        <a class="tab-link" href="./real.html">✅ IBKR PAPER</a>
+        <span class="tab-link" aria-disabled="true">⛔ NDAX REAL</span>
+        <a class="tab-link" href="./shadow.html">🔬 SHADOW RESEARCH</a>
+        <a class="tab-link" href="./journal.html">📖 Daily journal</a>
+        <a class="tab-link" href="./sources.html">🛰️ Sources</a>
+        <a class="tab-link" href="./execution.html">⚙️ Execution</a>
+      </nav>
 
       <section class="lovable-topbook" id="top-book" aria-label="Top book headline">
         <div class="gold-strip" aria-hidden="true"></div>
         <div class="lovable-topbook-head">
           <div>
-            <div class="eyebrow">Top book · verified rows only</div>
-            <h2>Today’s top book</h2>
-            <p>Fast answer first: net P&amp;L, capital used, live exposure, and fees. Open IBKR/NDAX or SHADOW for the full cockpit.</p>
+            <div class="eyebrow">Top book · live agent</div>
+            <h2>IBKR / REAL is the executable book</h2>
+            <p>Fast answer first: verified n, net P&amp;L, capital used, open exposure, and fees. Open SHADOW separately for research.</p>
           </div>
           <a class="tab-link" href="./real.html">Open IBKR / NDAX →</a>
         </div>
@@ -832,23 +837,6 @@
         </div>
       </div>
       </section>
-
-      <div class="account-truth-title">Account capital truth <span>— live broker balances fail closed; trade-level sizing proof stays separate</span></div>
-      <div class="account-truth-strip" id="accountTruthStrip" aria-label="Account capital truth">
-        <div class="operating-card warn"><div class="operating-label">Cash</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
-        <div class="operating-card warn"><div class="operating-label">Equity</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
-        <div class="operating-card warn"><div class="operating-label">Buying power</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
-        <div class="operating-card info"><div class="operating-label">Sizing evidence</div><div class="operating-value">Checking…</div><div class="operating-sub">entry-time proof from trade rows</div></div>
-      </div>
-
-      <nav class="tabs" aria-label="Population selector">
-        <a class="tab-link" href="./real.html">✅ IBKR PAPER / REAL</a>
-        <a class="tab-link" href="./shadow.html">🔬 SHADOW RESEARCH</a>
-        <a class="tab-link" href="./catalyst.html">📊 CATALYST EDGE</a>
-        <a class="tab-link" href="./sources.html">🛰️ SOURCES</a>
-        <a class="tab-link" href="./execution.html">💸 EXECUTION QUALITY</a>
-        <span class="tab-link" aria-disabled="true">🛑 NDAX REAL: gated until enabled</span>
-      </nav>
 
       <section class="launch-cards" aria-label="Primary dashboard cards">
         <a class="launch-card" href="#top-book" aria-label="Jump to the top book daily snapshot">
@@ -878,6 +866,29 @@
           <span class="go">Open SHADOW cockpit →</span>
         </a>
       </section>
+
+      <div class="operating-strip" id="operatingStrip" aria-label="Operating picture">
+        <div class="operating-card"><div class="operating-label">Safety</div><div class="operating-value">Checking…</div><div class="operating-sub">verified-only public accounting</div></div>
+        <div class="operating-card"><div class="operating-label">Broker</div><div class="operating-value">Checking…</div><div class="operating-sub">IBKR / NDAX state</div></div>
+        <div class="operating-card"><div class="operating-label">Sources</div><div class="operating-value">Checking…</div><div class="operating-sub">coverage and freshness</div></div>
+        <div class="operating-card"><div class="operating-label">Owner</div><div class="operating-value">Checking…</div><div class="operating-sub">who needs to act</div></div>
+      </div>
+      <div id="capitalAlert" class="capital-alert" role="status" aria-live="polite">
+        <div class="capital-alert-icon">💵</div>
+        <div>
+          <div class="capital-alert-title">Checking broker cash/equity snapshot…</div>
+          <div class="capital-alert-copy">If live broker balances are missing, the dashboard uses trade-level notional only and says so.</div>
+        </div>
+        <a href="./real.html">Open REAL cockpit →</a>
+      </div>
+
+      <div class="account-truth-title">Account capital truth <span>— live broker balances fail closed; trade-level sizing proof stays separate</span></div>
+      <div class="account-truth-strip" id="accountTruthStrip" aria-label="Account capital truth">
+        <div class="operating-card warn"><div class="operating-label">Cash</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
+        <div class="operating-card warn"><div class="operating-label">Equity</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
+        <div class="operating-card warn"><div class="operating-label">Buying power</div><div class="operating-value">Checking…</div><div class="operating-sub">trusted broker snapshot</div></div>
+        <div class="operating-card info"><div class="operating-label">Sizing evidence</div><div class="operating-value">Checking…</div><div class="operating-sub">entry-time proof from trade rows</div></div>
+      </div>
 
       <div class="reader-guide" aria-label="Plain English metric guide">
         <div class="guide-card">
