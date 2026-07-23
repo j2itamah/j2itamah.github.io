@@ -209,11 +209,13 @@
           ? (failureLike ? "DOWN / FAILING" : "ZERO COVERAGE")
           : "DATA UNAVAILABLE";
       const stateCls = hasRows ? "healthy" : (failureLike ? "down" : "degraded");
-      const zeroCopy = row
-        ? (failureLike
-          ? "Provider/status evidence indicates failure; rows remain excluded until recovered."
-          : "No observed rows in this dashboard window. This may mean disabled, not triggered, or not yet covered — not necessarily provider down.")
-        : "Expected source is missing from the live source-observability rows.";
+      const zeroCopy = hasRows
+        ? "Rows were observed in this dashboard window; freshness, eligibility, rate-limit visibility, and any failures are still shown below."
+        : row
+          ? (failureLike
+            ? "Provider/status evidence indicates failure; rows remain excluded until recovered."
+            : "No observed rows in this dashboard window. This may mean disabled, not triggered, or not yet covered — not necessarily provider down.")
+          : "Expected source is missing from the live source-observability rows.";
       const providers = (row?.observed_providers || []).slice(0, 4).map((provider) => `<span class="provider-chip">${htmlSafe(provider.value)} · n=${number(provider.n)}</span>`).join("");
       return `<div class="metric source-card ${stateCls}">
         <div class="metric-label">${htmlSafe(name)}</div>
