@@ -484,7 +484,7 @@ function renderForwardReturns(shadow) {
   }).join("");
 
   $("forward-table").innerHTML = table(
-    ["Time", "Symbol", "Catalyst", "Dir", "Test size", "Implied qty", "Entry", "Latest P/L", "5m", "15m", "1h", "EOD", "1d", "3d", "5d", "Status"],
+    ["Time", "Symbol", "Catalyst", "Dir", "Hypothetical size", "Scenario qty", "Entry ref", "Scenario P/L", "5m", "15m", "1h", "EOD", "1d", "3d", "5d", "Research status"],
     rows.slice(0, 24),
     (r) => {
       const latest = latestReturn(r);
