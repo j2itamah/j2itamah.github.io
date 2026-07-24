@@ -844,7 +844,7 @@
         const brokerValue = firstFinite(capital.current_equity, capital.current_cash);
         $("accountValue").textContent = brokerValue !== undefined
           ? money(brokerValue)
-          : "DATA UNAVAILABLE";
+          : "NO SNAPSHOT";
         $("todayPnl").textContent = money(topNet);
         setTone($("todayPnl"), topNet);
         $("sampleCount").textContent = `n=${num(real.closed_n ?? real.n)}`;
