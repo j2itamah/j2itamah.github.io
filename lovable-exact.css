@@ -1373,3 +1373,148 @@ body[data-page="execution"] .chart-wrap {
     width: min(100vw - 20px, 1120px);
   }
 }
+
+/* 2026-07-23 exact-reference consolidation
+   The landing page should read like the paid Lovable Trading Beacon shell at
+   first glance: light cream, compact command-center header, three obvious
+   cards, then the darker Trade Compass book/charts. Detail pages keep the
+   Trade Compass glass cockpit treatment.
+*/
+
+body.overview-page .overview-shell.lovable-landing {
+  width: min(1120px, calc(100vw - 32px)) !important;
+}
+
+body.overview-page .lovable-app-header {
+  margin-top: 2px;
+}
+
+body.overview-page .attention-pill,
+body.overview-page .tabs,
+body.overview-page .build-chip,
+body.overview-page .launch-card,
+body.overview-page .overview-panel.light,
+body.overview-page .operating-card,
+body.overview-page .source-snapshot-card,
+body.overview-page .action-card,
+body.overview-page .reader-guide .guide-card {
+  background-color: oklch(0.995 0.003 90 / .86) !important;
+  border-color: oklch(0.88 0.012 95) !important;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -12px rgb(40 30 20 / 0.08) !important;
+}
+
+body.overview-page .overview-hero {
+  margin-top: 18px !important;
+}
+
+body.overview-page .tabs {
+  margin-bottom: 16px !important;
+}
+
+body.overview-page .launch-cards {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  margin: 0 0 18px !important;
+}
+
+body.overview-page .launch-card {
+  min-height: 202px !important;
+  padding: 18px !important;
+  border-radius: 24px !important;
+}
+
+body.overview-page .launch-card:first-child {
+  background:
+    radial-gradient(420px 220px at 22% 0%, oklch(0.84 0.16 85 / .22), transparent 62%),
+    linear-gradient(135deg, #0f172a, #181634) !important;
+  border-color: oklch(1 0 0 / 12%) !important;
+  color: var(--tc-text) !important;
+}
+
+body.overview-page .launch-card.real {
+  background:
+    radial-gradient(320px 180px at 92% 100%, oklch(0.58 0.13 150 / .18), transparent 62%),
+    linear-gradient(180deg, oklch(0.995 0.003 90), var(--lv-ok-soft)) !important;
+}
+
+body.overview-page .launch-card.shadow {
+  background:
+    radial-gradient(320px 180px at 92% 100%, oklch(0.70 0.20 295 / .18), transparent 62%),
+    linear-gradient(180deg, oklch(0.995 0.003 90), oklch(0.93 0.05 305)) !important;
+}
+
+body.overview-page .launch-card h2 {
+  font-family: Fraunces, ui-serif, Georgia, serif !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+}
+
+body.overview-page .lovable-topbook {
+  margin-top: 0 !important;
+  border-radius: 28px !important;
+}
+
+body.overview-page .lovable-topbook-head {
+  padding: 20px 22px 0 !important;
+}
+
+body.overview-page .lovable-topbook h2 {
+  font-size: clamp(28px, 4.4vw, 52px) !important;
+  line-height: .95 !important;
+}
+
+body.overview-page .lovable-topbook .headline-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  padding: 20px 22px 22px !important;
+}
+
+body.overview-page .lovable-topbook .headline-card {
+  min-height: 118px !important;
+  padding: 16px !important;
+}
+
+body.overview-page .lovable-topbook .headline-card.primary {
+  grid-column: span 1 !important;
+}
+
+body.overview-page .lovable-topbook .headline-value {
+  font-size: clamp(24px, 3vw, 34px) !important;
+}
+
+body.overview-page .curve-panel {
+  margin-top: 16px !important;
+}
+
+body.real-theme .panel,
+body.real-theme .hero-card,
+body.real-theme .metric,
+body.real-theme .rule-card,
+body.real-theme .ladder-card,
+body.real-theme .decision-card,
+body.real-theme .gauge,
+body.shadow-theme .panel,
+body.shadow-theme .hero-card,
+body.shadow-theme .metric,
+body.shadow-theme .rule-card,
+body.shadow-theme .ladder-card,
+body.shadow-theme .decision-card,
+body.shadow-theme .gauge,
+body[data-page="catalyst"] .panel,
+body[data-page="sources"] .panel,
+body[data-page="execution"] .panel {
+  border-radius: 26px !important;
+}
+
+body.real-theme .metric-value,
+body.shadow-theme .metric-value {
+  letter-spacing: -.055em;
+}
+
+@media (max-width: 900px) {
+  body.overview-page .launch-cards,
+  body.overview-page .lovable-topbook .headline-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -769,7 +769,7 @@
       .lovable-landing .overview-hero h1 { font-size: clamp(38px, 15vw, 58px); }
     }
   </style>
-  <link rel="stylesheet" href="./lovable-exact.css?v=20260723-lovable-clone-pass" />
+  <link rel="stylesheet" href="./lovable-exact.css?v=20260723-exact-reference-consolidation" />
 </head>
 <body class="overview-page">
   <a class="skip-link" href="#main-content">Skip to dashboard content</a>
@@ -813,6 +813,35 @@
         <a class="tab-link" href="./sources.html">🛰️ Sources</a>
         <a class="tab-link" href="./execution.html">⚙️ Execution</a>
       </nav>
+
+      <section class="launch-cards" aria-label="Primary dashboard cards">
+        <a class="launch-card" href="#top-book" aria-label="Jump to the top book daily snapshot">
+          <span class="badge warn">TOP BOOK</span>
+          <h2>Daily snapshot</h2>
+          <p>One card for the current best answer: account status, net P&amp;L, trade spend, open risk, and Jon/Codex ownership.</p>
+          <div class="metric-line"><span>Primary source</span><strong>verified rows</strong></div>
+          <div class="metric-line"><span>Style</span><strong>10-sec read</strong></div>
+          <span class="go">Jump to top book ↑</span>
+        </a>
+        <a class="launch-card real" id="realCard" href="./real.html" aria-label="Open the IBKR REAL verified cockpit">
+          <span class="badge real">IBKR / NDAX</span>
+          <h2>Executable trades</h2>
+          <p>Verified, costed, broker-backed fills from <code>agent_trades</code>. IBKR is live/paper; NDAX stays gated until enabled.</p>
+          <div class="metric-line"><span>Verified closed</span><strong id="cardRealN">—</strong></div>
+          <div class="metric-line"><span>Open positions</span><strong id="cardRealOpen">—</strong></div>
+          <div class="metric-line"><span>Net P&L</span><strong id="cardRealNet">—</strong></div>
+          <span class="go">Open IBKR cockpit →</span>
+        </a>
+        <a class="launch-card shadow" id="shadowCard" href="./shadow.html" aria-label="Open the SHADOW research cockpit">
+          <span class="badge shadow">SHADOW / RESEARCH</span>
+          <h2>Research observations</h2>
+          <p>Forward marks and modeled scenarios from <code>agent_shadow_trades</code>. Research only — not broker P&L.</p>
+          <div class="metric-line"><span>Complete evidence n</span><strong id="cardShadowN">—</strong></div>
+          <div class="metric-line"><span>Modeled rows</span><strong id="cardShadowModeled">—</strong></div>
+          <div class="metric-line"><span>Best horizon</span><strong id="cardShadowHorizon">—</strong></div>
+          <span class="go">Open SHADOW cockpit →</span>
+        </a>
+      </section>
 
       <section class="lovable-topbook" id="top-book" aria-label="Top book headline">
         <div class="gold-strip" aria-hidden="true"></div>
@@ -888,35 +917,6 @@
         </div>
       <div id="warnings" class="warning-list"><div class="loading">Checking warnings…</div></div>
       </div>
-    </section>
-
-    <section class="launch-cards" aria-label="Primary dashboard cards">
-      <a class="launch-card" href="#top-book" aria-label="Jump to the top book daily snapshot">
-        <span class="badge warn">TOP BOOK</span>
-        <h2>Daily snapshot</h2>
-        <p>One card for the current best answer: account status, net P&amp;L, trade spend, open risk, and Jon/Codex ownership.</p>
-        <div class="metric-line"><span>Primary source</span><strong>verified rows</strong></div>
-        <div class="metric-line"><span>Style</span><strong>10-sec read</strong></div>
-        <span class="go">Jump to top book ↑</span>
-      </a>
-      <a class="launch-card real" id="realCard" href="./real.html" aria-label="Open the IBKR REAL verified cockpit">
-        <span class="badge real">IBKR / NDAX</span>
-        <h2>Executable trades</h2>
-        <p>Verified, costed, broker-backed fills from <code>agent_trades</code>. IBKR is live/paper; NDAX stays gated until enabled.</p>
-        <div class="metric-line"><span>Verified closed</span><strong id="cardRealN">—</strong></div>
-        <div class="metric-line"><span>Open positions</span><strong id="cardRealOpen">—</strong></div>
-        <div class="metric-line"><span>Net P&L</span><strong id="cardRealNet">—</strong></div>
-        <span class="go">Open IBKR cockpit →</span>
-      </a>
-      <a class="launch-card shadow" id="shadowCard" href="./shadow.html" aria-label="Open the SHADOW research cockpit">
-        <span class="badge shadow">SHADOW / RESEARCH</span>
-        <h2>Research observations</h2>
-        <p>Forward marks and modeled scenarios from <code>agent_shadow_trades</code>. Research only — not broker P&L.</p>
-        <div class="metric-line"><span>Complete evidence n</span><strong id="cardShadowN">—</strong></div>
-        <div class="metric-line"><span>Modeled rows</span><strong id="cardShadowModeled">—</strong></div>
-        <div class="metric-line"><span>Best horizon</span><strong id="cardShadowHorizon">—</strong></div>
-        <span class="go">Open SHADOW cockpit →</span>
-      </a>
     </section>
 
     <div class="operating-strip" id="operatingStrip" aria-label="Operating picture">
