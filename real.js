@@ -475,7 +475,7 @@ function renderDecisionFeed(real) {
         </div>
         ${contradiction ? `<div class="warning-row boundary-error">${esc(contradiction)}</div>` : ""}
         <div class="trade-evidence-grid">
-          ${evidencePanel("Money + venue", [
+          ${evidencePanel("Venue and money status", [
             evidenceItem("Venue", safe(r.venue)),
             evidenceItem("Money status", safe(r.money_status)),
             evidenceItem("Symbol", safe(r.symbol)),
@@ -483,23 +483,23 @@ function renderDecisionFeed(real) {
             evidenceItem("Validation", safe(r.validation_state)),
             evidenceItem("Local trading date", localTradingDate(r)),
             evidenceItem("Quantity", quantityText(r), hasQuantity(r) ? "" : "warn"),
-            evidenceItem("Entry notional", deployed ? money(deployed) : unavailable()),
+            evidenceItem("Amount spent / notional", deployed ? money(deployed) : unavailable()),
           ], "real")}
           ${evidencePanel("Entry / exit / P&L", [
-            evidenceItem("Entry fill", `${moneyOrUnavailable(r.entry_price)} · ${timestampOrUnavailable(r.entry_fill_ts)}`),
-            evidenceItem("Exit fill", isClosed ? `${moneyOrUnavailable(r.exit_price)} · ${timestampOrUnavailable(r.exit_ts)}` : unavailable("OPEN")),
+            evidenceItem("Entry price / timestamp", `${moneyOrUnavailable(r.entry_price)} · ${timestampOrUnavailable(r.entry_fill_ts)}`),
+            evidenceItem("Exit price / timestamp", isClosed ? `${moneyOrUnavailable(r.exit_price)} · ${timestampOrUnavailable(r.exit_ts)}` : unavailable("OPEN")),
             evidenceItem("Exit reason", isClosed ? safe(r.exit_reason) : unavailable("OPEN")),
             evidenceItem("Gross P&L", moneyOrUnavailable(r.gross_pnl), cls(grossValue(r))),
             evidenceItem("Commissions", normalizedMoneyOrUnavailable(r.commissions ?? r.commissions_cad ?? r._commissions, commissionValue(r)), "negative"),
             evidenceItem("Net P&L", moneyOrUnavailable(r.net_pnl), cls(net)),
-            evidenceItem("Price return", priceReturn == null ? unavailable() : pct3(priceReturn), priceReturn == null ? "warn" : cls(priceReturn)),
+            evidenceItem("Return percentage", priceReturn == null ? unavailable() : pct3(priceReturn), priceReturn == null ? "warn" : cls(priceReturn)),
             evidenceItem("Net return on capital", roc == null ? unavailable() : pct3(roc), roc == null ? "warn" : cls(roc)),
             evidenceItem("MFE / MAE", `${r.mfe_pct == null ? unavailable() : pct(r.mfe_pct)} / ${r.mae_pct == null ? unavailable() : pct(r.mae_pct)}`),
           ], "real")}
           ${evidencePanel("Catalyst + source", [
-            evidenceItem("Catalyst", catalystLabel(r)),
-            evidenceItem("Headline", safe(r.headline)),
-            evidenceItem("Source", sourceLink(r)),
+            evidenceItem("Catalyst type", catalystLabel(r)),
+            evidenceItem("Exact catalyst headline", safe(r.headline)),
+            evidenceItem("Source URL", sourceLink(r)),
             evidenceItem("Catalyst publication time", timestampOrUnavailable(catalystPublished)),
             evidenceItem("Decision time", timestampOrUnavailable(r.decision_ts)),
             evidenceItem("Decision reference", `${moneyOrUnavailable(r.decision_reference_price)} · ${timestampOrUnavailable(r.decision_reference_ts)}`),
