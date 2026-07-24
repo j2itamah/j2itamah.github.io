@@ -210,7 +210,7 @@
           <div class="headline-sub">live exposure, not finished P/L</div>
         </div>
         <div class="headline-card">
-          <div class="headline-label">Commission drag <span class="help-tip" tabindex="0" role="tooltip" title="Broker commissions shown in dollars and as a percentage of gross P/L so fees cannot hide.">?</span></div>
+          <div class="headline-label">Commission drag <span class="help-tip" tabindex="0" role="tooltip" title="Broker commissions shown in dollars and as a percentage of gross P/L. The subtext also surfaces slippage when the execution-quality contract exposes it.">?</span></div>
           <strong class="headline-value" id="quickFees">—</strong>
           <div class="headline-sub" id="quickFeesSub">costs as % of gross P/L</div>
         </div>
@@ -270,6 +270,7 @@
       : "—";
     const num = (n) => hasNumber(n) ? Number(n).toLocaleString() : "—";
     const pct = (n) => hasNumber(n) ? `${Number(n).toFixed(1)}%` : "—";
+    const pct3 = (n) => hasNumber(n) ? `${Number(n).toFixed(3)}%` : "—";
     const when = (ts) => ts ? new Date(ts).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "—";
     let dashboardData = null;
     let currentRange = "all";
@@ -305,6 +306,11 @@
     const bestHorizon = (ladder = []) => (Array.isArray(ladder) ? ladder : [])
       .filter((r) => Number.isFinite(Number(r.avg_direction_adjusted_return_pct ?? r.avg_return_pct)))
       .sort((a, b) => Number(b.avg_direction_adjusted_return_pct ?? b.avg_return_pct) - Number(a.avg_direction_adjusted_return_pct ?? a.avg_return_pct))[0];
+    const slippageSummary = (exec = {}) => {
+      const slip = exec.slippage_vs_reference;
+      if (!slip || typeof slip !== "object" || !hasNumber(slip.n)) return "slippage DATA UNAVAILABLE";
+      return `slip med ${pct3(slip.median)} · p95 ${pct3(slip.p95)} · n=${num(slip.n)}`;
+    };
     const rangeRows = (rows = [], range = "all") => {
       const sorted = [...rows].sort((a, b) => String(a.local_trading_date).localeCompare(String(b.local_trading_date)));
       if (range === "day") return sorted.slice(-1);
@@ -438,7 +444,7 @@
         $("quickDeployedSub").textContent = `${num(today.notional_n)} verified rows · avg ${money(today.avg_notional)}`;
         $("quickOpen").textContent = num(real.open_n);
         $("quickFees").textContent = money(today.commissions ?? exec.commissions);
-        $("quickFeesSub").textContent = `daily drag ${Number.isFinite(Number(today.gross_pnl)) && Number(today.gross_pnl) !== 0 ? `${((Number(today.commissions || 0) / Math.abs(Number(today.gross_pnl))) * 100).toFixed(1)}%` : pct(exec.commission_drag_pct_of_gross)} of gross P/L`;
+        $("quickFeesSub").textContent = `daily drag ${Number.isFinite(Number(today.gross_pnl)) && Number(today.gross_pnl) !== 0 ? `${((Number(today.commissions || 0) / Math.abs(Number(today.gross_pnl))) * 100).toFixed(1)}%` : pct(exec.commission_drag_pct_of_gross)} of gross P/L · ${slippageSummary(exec)}`;
 
         $("realClosed").textContent = num(real.closed_n ?? real.n);
         $("realDeployed").textContent = money(today.deployed);
