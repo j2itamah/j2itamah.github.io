@@ -870,9 +870,9 @@
           <div class="headline-sub">exit_ts is null</div>
         </div>
         <div class="headline-card">
-          <div class="headline-label">Commission drag <span class="info-tip" tabindex="0" role="button" aria-label="Help: Commission drag" data-help="Fees as dollars and as a share of gross P&L. If drag is high, the strategy has to overcome costs before it can be real edge.">?</span></div>
+          <div class="headline-label">Commission + slippage drag <span class="info-tip" tabindex="0" role="button" aria-label="Help: Commission and slippage drag" data-help="Fees as dollars and as a share of gross P&L, plus the live slippage distribution when the backend exposes it. If either drag is high, the strategy has to overcome execution costs before it can be real edge.">?</span></div>
           <div class="headline-value" id="todayFees">—</div>
-          <div class="headline-sub" id="todayFeesSub">fees versus gross P&L</div>
+          <div class="headline-sub" id="todayFeesSub">fees and slippage versus gross P&L</div>
         </div>
       </div>
       </section>
@@ -1992,6 +1992,11 @@
         const todaySpent = sumRows(todayRows, "spent") + sumRows(todayOpenRows, "spent");
         const openExposure = (real.open_positions || []).reduce((acc, row) => acc + Number(row.spent || row.entry_notional || row.amount_spent || (Number(row.quantity || 0) * Number(row.entry_price || 0)) || 0), 0);
         const feeDrag = Math.abs(todayGross) > 0 ? Math.abs(todayFees) / Math.abs(todayGross) * 100 : null;
+        const slippage = data.execution_quality?.slippage_vs_reference || {};
+        const slippageN = Number(slippage.n || 0);
+        const slippageText = slippageN
+          ? `slippage avg ${Number(slippage.avg || 0).toFixed(3)}% · median ${Number(slippage.median || 0).toFixed(3)}% · n=${num(slippageN)}`
+          : "slippage DATA UNAVAILABLE";
         const realFresh = freshnessLabel(real.source_updated_at, data.generated_at);
         const best = bestHorizon(shadow.horizon_ladder);
 
@@ -2001,7 +2006,7 @@
         $("todayDeployedSub").textContent = `${num(todayOpenRows.length)} open entries today included · total open exposure ${money(openExposure)}`;
         $("todayOpen").textContent = num(real.open_n);
         $("todayFees").innerHTML = `<span class="${todayFees > 0 ? "negative" : "muted"}">${money(todayFees)}</span>`;
-        $("todayFeesSub").textContent = feeDrag == null ? "gross P&L is zero/unavailable" : `${feeDrag.toFixed(1)}% of gross P&L`;
+        $("todayFeesSub").textContent = `${feeDrag == null ? "gross P&L is zero/unavailable" : `${feeDrag.toFixed(1)}% of gross P&L`} · ${slippageText}`;
 
         $("agentStatus").className = `soft-pill ${realFresh.cls}`;
         $("agentStatus").textContent = `Agent data: ${realFresh.text}`;
