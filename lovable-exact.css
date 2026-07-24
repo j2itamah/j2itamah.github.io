@@ -1518,3 +1518,205 @@ body.shadow-theme .metric-value {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* 2026-07-23 front-page Lovable tightening
+   Presentation-only: closer to the paid Lovable references while keeping live
+   backend data, verified-only filters, and fail-closed warnings untouched. */
+
+body.overview-page .overview-shell.lovable-landing {
+  width: min(1180px, calc(100vw - 34px)) !important;
+}
+
+body.overview-page .lovable-app-header h1 {
+  font-size: clamp(40px, 5.2vw, 64px) !important;
+}
+
+body.overview-page .app-title-group p {
+  max-width: 800px !important;
+  font-size: 15px !important;
+}
+
+body.overview-page .attention-pill {
+  min-height: 54px !important;
+  border-radius: 28px !important;
+}
+
+body.overview-page .build-state-bar {
+  gap: 10px !important;
+}
+
+body.overview-page .build-chip {
+  min-height: 58px !important;
+  border-radius: 18px !important;
+}
+
+body.overview-page .tabs {
+  margin-top: 18px !important;
+  border-radius: 999px !important;
+}
+
+body.overview-page .launch-cards {
+  grid-template-columns: 1.08fr 1fr 1fr !important;
+  gap: 18px !important;
+  margin-top: 20px !important;
+}
+
+body.overview-page .launch-card {
+  position: relative !important;
+  min-height: 330px !important;
+  padding: 26px 24px 22px !important;
+  border-radius: 30px !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+}
+
+body.overview-page .launch-card::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 18px 18px auto 18px !important;
+  height: 34px !important;
+  border-radius: 999px !important;
+  z-index: -1 !important;
+  opacity: .9 !important;
+}
+
+body.overview-page .launch-card::after {
+  width: 170px !important;
+  height: 170px !important;
+  right: -34px !important;
+  bottom: -34px !important;
+  opacity: .55 !important;
+}
+
+body.overview-page .launch-card:first-child {
+  background:
+    radial-gradient(220px 180px at 92% 92%, oklch(0.84 0.16 85 / .18), transparent 62%),
+    linear-gradient(135deg, #111827 0%, #111633 56%, #1e1b4b 100%) !important;
+}
+
+body.overview-page .launch-card:first-child::before {
+  background: oklch(0.84 0.16 85 / .20) !important;
+}
+
+body.overview-page .launch-card.real {
+  background:
+    radial-gradient(210px 170px at 94% 91%, oklch(0.58 0.13 150 / .17), transparent 62%),
+    linear-gradient(180deg, oklch(0.995 0.003 90), var(--lv-ok-soft)) !important;
+}
+
+body.overview-page .launch-card.real::before {
+  background: oklch(0.58 0.13 150 / .12) !important;
+}
+
+body.overview-page .launch-card.shadow {
+  background:
+    radial-gradient(210px 170px at 94% 91%, oklch(0.55 0.18 305 / .16), transparent 62%),
+    linear-gradient(180deg, oklch(0.995 0.003 90), oklch(0.94 0.05 305)) !important;
+}
+
+body.overview-page .launch-card.shadow::before {
+  background: oklch(0.55 0.18 305 / .10) !important;
+}
+
+body.overview-page .launch-card .badge {
+  display: inline-flex !important;
+  justify-content: center !important;
+  width: min(100%, 330px) !important;
+  min-height: 34px !important;
+  margin: -8px auto 12px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: oklch(1 0 0 / .42) !important;
+  color: currentColor !important;
+  letter-spacing: .14em !important;
+}
+
+body.overview-page .launch-card h2 {
+  margin-top: 8px !important;
+  font-size: clamp(26px, 2.6vw, 34px) !important;
+  line-height: .98 !important;
+  text-align: center !important;
+}
+
+body.overview-page .launch-card p {
+  max-width: 330px !important;
+  margin: 16px auto 18px !important;
+  text-align: center !important;
+  font-size: 15px !important;
+  line-height: 1.45 !important;
+}
+
+body.overview-page .launch-card .metric-line {
+  min-height: 46px !important;
+}
+
+body.overview-page .launch-card .go {
+  position: absolute !important;
+  left: 24px !important;
+  right: 24px !important;
+  bottom: 20px !important;
+  font-size: 16px !important;
+}
+
+body.overview-page .lovable-topbook {
+  margin-top: 20px !important;
+  border-radius: 32px !important;
+}
+
+body.overview-page .lovable-topbook-head {
+  padding: 28px 28px 8px !important;
+}
+
+body.overview-page .lovable-topbook h2 {
+  font-size: clamp(42px, 5.2vw, 70px) !important;
+  letter-spacing: -.072em !important;
+}
+
+body.overview-page .lovable-topbook .headline-grid {
+  gap: 14px !important;
+  padding: 16px 28px 28px !important;
+}
+
+body.overview-page .lovable-topbook .headline-card {
+  min-height: 150px !important;
+  border-radius: 24px !important;
+}
+
+body.overview-page .lovable-topbook .headline-value {
+  font-family: "Spline Sans", Inter, system-ui, sans-serif !important;
+  font-size: clamp(34px, 4.2vw, 54px) !important;
+}
+
+body.overview-page .curve-panel,
+body.overview-page .below > .overview-panel,
+body.overview-page .overview-panel.section-gap,
+body.overview-page .overview-panel.light {
+  border-radius: 30px !important;
+}
+
+body.overview-page .curve-panel {
+  margin-top: 18px !important;
+  padding: 22px !important;
+}
+
+body.overview-page .panel-title.serif {
+  font-size: clamp(26px, 2.4vw, 34px) !important;
+}
+
+body.overview-page .curve-mini,
+body.overview-page .operating-card,
+body.overview-page .reader-guide .guide-card,
+body.overview-page .action-card,
+body.overview-page .source-snapshot-card {
+  border-radius: 22px !important;
+}
+
+@media (max-width: 900px) {
+  body.overview-page .launch-cards,
+  body.overview-page .lovable-topbook .headline-grid {
+    grid-template-columns: 1fr !important;
+  }
+  body.overview-page .launch-card {
+    min-height: 292px !important;
+  }
+}
