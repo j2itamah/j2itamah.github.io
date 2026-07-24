@@ -26,6 +26,20 @@
       border: 1px solid var(--lv-border); border-radius: 999px; background: var(--lv-cream-card); padding: 8px 11px;
       box-shadow: var(--lv-shadow-card);
     }
+    .overview-page .help-tip {
+      display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: 6px;
+      border: 1px solid currentColor; border-radius: 999px; opacity: .72; font-size: 11px; line-height: 1;
+      cursor: help; vertical-align: middle;
+    }
+    .overview-page .help-tip:focus { outline: 3px solid rgba(37,99,235,.35); outline-offset: 2px; }
+    .overview-page .status-chip {
+      display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 4px 7px;
+      font-family: "Spline Sans Mono", monospace; font-size: 9px; font-weight: 900; letter-spacing: .08em;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .overview-page .status-chip.live { background: rgba(34,201,133,.14); color: #137a50; }
+    .overview-page .status-chip.stale { background: rgba(254,243,199,.9); color: #7a4d00; }
+    .overview-page .status-chip.unavailable { background: rgba(229,231,235,.8); color: #4b5563; }
     .overview-page .overview-panel { margin-top: 18px; }
     .overview-page .below {
       display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr); gap: 18px; margin-top: 18px;
@@ -96,7 +110,7 @@
           <span id="ibkrState">IBKR · checking</span>
           <span id="ndaxState">NDAX · gated</span>
           <span id="marketState">Market · checking</span>
-          <span>Owner · Jon</span>
+          <span id="ownerState">Owner · checking</span>
         </div>
       </div>
       <div class="app-header-actions">
@@ -181,22 +195,22 @@
       </div>
       <div class="headline-grid">
         <div class="headline-card primary">
-          <div class="headline-label">REAL net today</div>
+          <div class="headline-label">REAL net today <span class="help-tip" tabindex="0" role="tooltip" title="Closed verified REAL trades for the current local trading day after subtracting broker commissions.">?</span></div>
           <strong class="headline-value" id="quickNetToday">—</strong>
           <div class="headline-sub" id="quickNetSub">gross − commissions · daily n shown</div>
         </div>
         <div class="headline-card">
-          <div class="headline-label">Capital deployed today</div>
+          <div class="headline-label">Capital deployed today <span class="help-tip" tabindex="0" role="tooltip" title="Total verified notional placed into REAL trades today. This is not account equity.">?</span></div>
           <strong class="headline-value" id="quickDeployed">—</strong>
           <div class="headline-sub" id="quickDeployedSub">verified notional only</div>
         </div>
         <div class="headline-card">
-          <div class="headline-label">Open REAL positions</div>
+          <div class="headline-label">Open REAL positions <span class="help-tip" tabindex="0" role="tooltip" title="Broker-backed positions that have entry evidence and no exit timestamp yet.">?</span></div>
           <strong class="headline-value" id="quickOpen">—</strong>
           <div class="headline-sub">live exposure, not finished P/L</div>
         </div>
         <div class="headline-card">
-          <div class="headline-label">Commission drag</div>
+          <div class="headline-label">Commission drag <span class="help-tip" tabindex="0" role="tooltip" title="Broker commissions shown in dollars and as a percentage of gross P/L so fees cannot hide.">?</span></div>
           <strong class="headline-value" id="quickFees">—</strong>
           <div class="headline-sub" id="quickFeesSub">costs as % of gross P/L</div>
         </div>
@@ -250,11 +264,12 @@
   <script>
     const API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";
     const $ = (id) => document.getElementById(id);
-    const money = (n) => Number.isFinite(Number(n))
+    const hasNumber = (n) => n !== null && n !== undefined && n !== "" && Number.isFinite(Number(n));
+    const money = (n) => hasNumber(n)
       ? Number(n).toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 })
       : "—";
-    const num = (n) => Number.isFinite(Number(n)) ? Number(n).toLocaleString() : "—";
-    const pct = (n) => Number.isFinite(Number(n)) ? `${Number(n).toFixed(1)}%` : "—";
+    const num = (n) => hasNumber(n) ? Number(n).toLocaleString() : "—";
+    const pct = (n) => hasNumber(n) ? `${Number(n).toFixed(1)}%` : "—";
     const when = (ts) => ts ? new Date(ts).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "—";
     let dashboardData = null;
     let currentRange = "all";
@@ -266,6 +281,20 @@
     };
     const cleanLabel = (value) => String(value || "UNKNOWN").replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
     const firstFinite = (...values) => values.find((v) => v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v)));
+    const minutesOld = (updatedAt, generatedAt) => {
+      if (!updatedAt) return null;
+      const updated = new Date(updatedAt).getTime();
+      const generated = generatedAt ? new Date(generatedAt).getTime() : Date.now();
+      if (!Number.isFinite(updated) || !Number.isFinite(generated)) return null;
+      return Math.max(0, Math.round((generated - updated) / 60000));
+    };
+    const freshness = (updatedAt, generatedAt, maxLiveMinutes = 20) => {
+      const age = minutesOld(updatedAt, generatedAt);
+      if (age === null) return { label: "DATA UNAVAILABLE", cls: "unavailable", detail: "no trusted refresh timestamp" };
+      if (age <= maxLiveMinutes) return { label: "LIVE", cls: "live", detail: `${age}m old` };
+      return { label: "STALE", cls: "stale", detail: `${age}m old` };
+    };
+    const statusChip = ({ label, cls, detail }) => `<span class="status-chip ${cls}">${label}${detail ? ` · ${cleanLabel(detail)}` : ""}</span>`;
     const todayRow = (real = {}) => (real.daily_journal || []).find((r) => r.local_trading_date === real.local_trading_date) || (real.daily_journal || [])[0] || {};
     const bestHorizon = (ladder = []) => (Array.isArray(ladder) ? ladder : [])
       .filter((r) => Number.isFinite(Number(r.avg_direction_adjusted_return_pct ?? r.avg_return_pct)))
@@ -330,16 +359,20 @@
     function renderCatalysts(real = {}) {
       const expected = ["SEC_FILING", "8K_ITEM_2_02", "COMPANY_NEWS", "CRYPTO_NEWS", "X", "MACRO", "MOVERS"];
       const byKey = new Map((real.by_catalyst || []).map((r) => [String(r.value || r.catalyst_type || "").toUpperCase(), r]));
+      const sourceWarnings = ((dashboardData || {}).source_observability?.coverage?.warnings || []).map((w) => String(w).toUpperCase());
       const merged = expected.map((key) => byKey.get(key) || { value: key, n: 0, wins: 0, win_rate: null, net_pnl: null, data_quality_status: "NO COVERAGE" });
       const maxN = Math.max(...merged.map((r) => Number(r.n || 0)), 1);
       $("catalystBars").innerHTML = merged.map((r) => {
         const n = Number(r.n || 0);
         const width = Math.max(3, (n / maxN) * 100);
         const exp = n ? Number(r.net_pnl || 0) / n : null;
+        const key = String(r.value || r.catalyst_type || "").toUpperCase();
+        const warned = sourceWarnings.some((w) => w.includes(key.replace(/^8K_/, "8-K").replace(/_/g, " ")) || w.includes(key));
+        const status = n ? { label: "HAS SAMPLE", cls: "live", detail: `n=${num(n)}` } : warned ? { label: "NO COVERAGE", cls: "stale", detail: "visible gap" } : { label: "NO COVERAGE", cls: "unavailable", detail: "n=0" };
         return `<div class="bar-row">
           <div class="bar-name">${cleanLabel(r.value || r.catalyst_type)}</div>
           <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
-          <div class="bar-value">n=${num(n)} · win ${pct(r.win_rate)} · exp ${exp == null ? "—" : money(exp)}</div>
+          <div class="bar-value">${statusChip(status)} · win ${pct(r.win_rate)} · exp ${exp == null ? "—" : money(exp)}</div>
         </div>`;
       }).join("");
     }
@@ -371,12 +404,15 @@
         $("generatedAt").textContent = when(data.generated_at);
         $("backendSource").textContent = `${data.source || "live backend"} · ${data.schema_version || "schema unknown"}`;
         $("modeLine").textContent = `${real.venue || "IBKR/PAPER"} · ${real.data_quality_status || "status unknown"} · Rule 21 verified-only display`;
-        $("agentState").textContent = `Agent · ${real.data_quality_status || "unknown"}`;
-        $("ibkrState").textContent = `IBKR · ${capital.snapshot_status || "snapshot unknown"}`;
+        const realFresh = freshness(real.source_updated_at, data.generated_at, 20);
+        const shadowFresh = freshness(shadow.source_updated_at, data.generated_at, 45);
+        $("agentState").innerHTML = `Agent · ${statusChip(realFresh)}`;
+        $("ibkrState").innerHTML = `IBKR · ${capital.snapshot_status === "LIVE" ? statusChip(freshness(capital.source_updated_at, data.generated_at, 20)) : statusChip({ label: "DATA UNAVAILABLE", cls: "unavailable", detail: capital.snapshot_status || "no snapshot" })}`;
         $("ndaxState").textContent = "NDAX · gated";
         $("marketState").textContent = `Market · ${data.market_session || real.market_session || "unknown"}`;
+        $("ownerState").textContent = warnCount ? "Owner · Jon attention required" : "Owner · Codex handling";
         $("brokerChip").textContent = brokerValue !== undefined ? money(brokerValue) : "NO SNAPSHOT";
-        $("researchChip").textContent = `priced n=${num(shadow.priced_n)}`;
+        $("researchChip").innerHTML = `priced n=${num(shadow.priced_n)} · ${statusChip(shadowFresh)}`;
         $("feesChip").textContent = money(today.commissions ?? exec.commissions);
         $("warningChip").textContent = warnCount ? `${warnCount} visible` : "All clear";
         $("attentionPill").classList.toggle("good", warnCount === 0);
