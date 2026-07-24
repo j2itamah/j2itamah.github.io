@@ -294,7 +294,13 @@
       if (age <= maxLiveMinutes) return { label: "LIVE", cls: "live", detail: `${age}m old` };
       return { label: "STALE", cls: "stale", detail: `${age}m old` };
     };
-    const statusChip = ({ label, cls, detail }) => `<span class="status-chip ${cls}">${label}${detail ? ` · ${cleanLabel(detail)}` : ""}</span>`;
+    const chipDetail = (label, detail) => {
+      if (!detail) return "";
+      const raw = String(detail);
+      const normalized = raw.includes("_") ? cleanLabel(raw) : raw;
+      return normalized.toUpperCase() === String(label || "").toUpperCase() ? "" : ` · ${normalized}`;
+    };
+    const statusChip = ({ label, cls, detail }) => `<span class="status-chip ${cls}">${label}${chipDetail(label, detail)}</span>`;
     const todayRow = (real = {}) => (real.daily_journal || []).find((r) => r.local_trading_date === real.local_trading_date) || (real.daily_journal || [])[0] || {};
     const bestHorizon = (ladder = []) => (Array.isArray(ladder) ? ladder : [])
       .filter((r) => Number.isFinite(Number(r.avg_direction_adjusted_return_pct ?? r.avg_return_pct)))
