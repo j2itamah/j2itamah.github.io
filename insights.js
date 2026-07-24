@@ -168,6 +168,10 @@
     const derivedWarnings = missingExpectedRows.length ? [`EXPECTED_SOURCE_COVERAGE_MISSING: ${missingExpectedRows.map((row) => row.source || row.name).join(", ")}`] : [];
     return { rows, missingExpectedRows, expectedN, observedExpectedN, rowEvidenceN, visibleWarning: Boolean(src.coverage?.visible_warning) || missingExpectedRows.length > 0, derivedWarnings };
   }
+  function sourceFact(label, value, tone = "") {
+    const cls = tone ? ` ${tone}` : "";
+    return `<div class="source-fact${cls}"><span>${htmlSafe(label)}</span><strong>${value}</strong></div>`;
+  }
 
   function renderSources(data) {
     byId("insight-nav").innerHTML = renderNav("sources");
@@ -217,6 +221,11 @@
             : "No observed rows in this dashboard window. This may mean disabled, not triggered, or not yet covered — not necessarily provider down.")
           : "Expected source is missing from the live source-observability rows.";
       const providers = (row?.observed_providers || []).slice(0, 4).map((provider) => `<span class="provider-chip">${htmlSafe(provider.value)} · n=${number(provider.n)}</span>`).join("");
+      const lastSuccess = row?.last_successful_fetch ? whenLocal(row.last_successful_fetch) : "DATA UNAVAILABLE";
+      const lastFailure = warningText(row?.last_failure_reason || row?.last_failure || "none reported");
+      const rateLimit = readableCode(row?.rate_limit_usage || "NOT_EXPOSED");
+      const freshness = readableCode(row?.data_freshness || "DATA_UNAVAILABLE");
+      const status = readableCode(row?.status || "DATA_UNAVAILABLE");
       return `<div class="metric source-card ${stateCls}">
         <div class="metric-label">${htmlSafe(name)}</div>
         <div class="metric-value" style="font-size:22px">${htmlSafe(stateText)}</div>
@@ -226,10 +235,18 @@
           <span class="badge info">window n=${number(observedN)}</span>
         </div>
         <div class="metric-sub">${htmlSafe(zeroCopy)}</div>
-        <div class="metric-sub">REAL eligible ${number(row?.real_eligible_n)} · SHADOW eligible ${number(row?.shadow_eligible_n)}</div>
-        <div class="metric-sub">last success ${row?.last_successful_fetch ? whenLocal(row.last_successful_fetch) : "DATA UNAVAILABLE"} · freshness ${htmlSafe(readableCode(row?.data_freshness || "DATA_UNAVAILABLE"))}</div>
-        <div class="metric-sub">rate limit ${htmlSafe(readableCode(row?.rate_limit_usage || "NOT_EXPOSED"))} · status ${htmlSafe(readableCode(row?.status || "DATA_UNAVAILABLE"))}</div>
-        <div class="metric-sub">last failure ${htmlSafe(warningText(row?.last_failure_reason || row?.last_failure || "none reported"))}</div>
+        <div class="source-facts" aria-label="${htmlSafe(name)} source checklist">
+          ${sourceFact("Health", htmlSafe(stateText), hasRows ? "good" : failureLike ? "bad" : "warn")}
+          ${sourceFact("Events found today", number(row?.events_today), Number(row?.events_today || 0) > 0 ? "good" : "warn")}
+          ${sourceFact("Dashboard-window rows", number(observedN), hasRows ? "good" : "warn")}
+          ${sourceFact("REAL eligibility", `n=${number(row?.real_eligible_n)}`, Number(row?.real_eligible_n || 0) > 0 ? "good" : "muted")}
+          ${sourceFact("SHADOW eligibility", `n=${number(row?.shadow_eligible_n)}`, Number(row?.shadow_eligible_n || 0) > 0 ? "good" : "muted")}
+          ${sourceFact("Last successful fetch", htmlSafe(lastSuccess), row?.last_successful_fetch ? "good" : "warn")}
+          ${sourceFact("Data freshness", htmlSafe(freshness), /LIVE|FRESH|OK|OBSERVED|VERIFIED/i.test(freshness) ? "good" : "warn")}
+          ${sourceFact("Rate-limit usage", htmlSafe(rateLimit), /NOT EXPOSED|UNAVAILABLE|UNKNOWN/i.test(rateLimit) ? "warn" : "good")}
+          ${sourceFact("Backend status", htmlSafe(status), failureLike ? "bad" : hasRows ? "good" : "warn")}
+          ${sourceFact("Last failure", htmlSafe(lastFailure), /none reported/i.test(lastFailure) ? "good" : "bad")}
+        </div>
         <div class="provider-chips">${providers || `<span class="provider-chip">no observed provider rows</span>`}</div>
       </div>`;
     }).join("");
