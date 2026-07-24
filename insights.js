@@ -274,7 +274,7 @@
   function distributionCard(title, dist, unit = "s") {
     const n = Number(dist?.n || 0);
     const fmt = (v) => unit === "s" ? seconds(v) : (v == null ? "DATA UNAVAILABLE" : percent(v));
-    return `<div class="metric"><div class="metric-label">${htmlSafe(title)}</div><div class="metric-value" style="font-size:22px">${n ? fmt(dist.median) : "DATA UNAVAILABLE"}</div><div class="metric-sub">n=${number(n)} · avg ${dist?.avg == null ? "—" : fmt(dist.avg)} · p95 ${dist?.p95 == null ? "—" : fmt(dist.p95)}</div></div>`;
+    return `<div class="metric"><div class="metric-label">${htmlSafe(title)}</div><div class="metric-value" style="font-size:22px">${n ? fmt(dist.median) : `<span class="unavailable-value">DATA UNAVAILABLE</span>`}</div><div class="metric-sub">n=${number(n)} · avg ${dist?.avg == null ? "—" : fmt(dist.avg)} · p95 ${dist?.p95 == null ? "—" : fmt(dist.p95)}</div></div>`;
   }
   function localDateKey(value) {
     if (!value) return "unknown";
@@ -325,6 +325,10 @@
       eq?.latency?.order_to_entry_s,
       eq?.latency?.signal_to_entry_s
     );
+    const decisionToOrder = firstDist(eq?.latency?.decision_to_order_s, eq?.latency?.latency_decision_to_order_s);
+    const orderToFill = firstDist(eq?.latency?.order_to_fill_s, eq?.latency?.latency_order_to_fill_s);
+    const decisionToFill = firstDist(eq?.latency?.latency_decision_to_fill_s, eq?.latency?.decision_to_fill_s);
+    const catalystToDecision = firstDist(eq?.latency?.latency_catalyst_to_decision_s, eq?.latency?.news_to_decision_s);
     const field = (label, ok, detail, unavailableCopy = "Backend field is not exposed yet → fail-closed") => `<div class="metric"><div class="metric-label">${htmlSafe(label)}</div><div class="metric-value" style="font-size:20px"><span class="badge ${ok ? "real" : "warn"}">${ok ? "✅ LIVE" : "— DATA UNAVAILABLE"}</span></div><div class="metric-sub">${htmlSafe(ok ? detail : unavailableCopy)}</div></div>`;
     const concurrencyValue = firstValue(gaps.daily_max_concurrent_positions, gaps.max_concurrent_positions_today, eq?.daily_max_concurrent_positions, derivedConcurrency?.max);
     byId("execution-contract").innerHTML = `<div class="grid three">
@@ -332,8 +336,10 @@
       ${field("Commission drag %", hasNumber(dragValue), hasNumber(dragValue) ? `${percent(dragValue)} of gross P&L` : "")}
       ${field("Slippage distribution", hasDist(eq?.slippage_vs_reference), hasDist(eq?.slippage_vs_reference) ? `n=${number(eq.slippage_vs_reference.n)} · median ${percent(eq.slippage_vs_reference.median)} · p95 ${percent(eq.slippage_vs_reference.p95)}` : "")}
       ${field("Entry latency", Boolean(entryLatency), entryLatency ? `n=${number(entryLatency.n)} · median ${seconds(entryLatency.median)} · p95 ${seconds(entryLatency.p95)}` : "", "Backend does not expose entry-latency distribution yet → fail-closed")}
-      ${field("Decision/fill latency", hasDist(eq?.latency?.order_to_fill_s) || hasDist(eq?.latency?.latency_decision_to_fill_s), "backend exposes a latency distribution")}
-      ${field("Catalyst → decision latency", hasDist(eq?.latency?.latency_catalyst_to_decision_s) || hasDist(eq?.latency?.news_to_decision_s), "backend exposes catalyst-to-decision timing")}
+      ${field("Decision → order latency", Boolean(decisionToOrder), decisionToOrder ? `n=${number(decisionToOrder.n)} · median ${seconds(decisionToOrder.median)} · p95 ${seconds(decisionToOrder.p95)}` : "")}
+      ${field("Order → fill latency", Boolean(orderToFill), orderToFill ? `n=${number(orderToFill.n)} · median ${seconds(orderToFill.median)} · p95 ${seconds(orderToFill.p95)}` : "")}
+      ${field("Decision → fill latency", Boolean(decisionToFill), decisionToFill ? `n=${number(decisionToFill.n)} · median ${seconds(decisionToFill.median)} · p95 ${seconds(decisionToFill.p95)}` : "")}
+      ${field("Catalyst → decision latency", Boolean(catalystToDecision), catalystToDecision ? `n=${number(catalystToDecision.n)} · median ${seconds(catalystToDecision.median)} · p95 ${seconds(catalystToDecision.p95)}` : "")}
       ${field("Bracket completeness", hasNumber(eq?.bracket?.bracket_complete_pct), `${percent(eq?.bracket?.bracket_complete_pct)} complete · proof ${percent(eq?.bracket?.fill_adjusted_proof_pct)} · rows n=${number(eq?.bracket?.rows_n)}`)}
       ${field("Rejections / skip counts", Object.keys(gaps).length > 0, Object.entries(gaps).map(([key, value]) => `${key.replaceAll("_", " ")}=${number(value)}`).join(" · "))}
       ${field("Average notional", hasNumber(eq?.notional?.avg_closed_notional), `${dollars(eq?.notional?.avg_closed_notional)} · closed notional n=${number(eq?.notional?.n)}`)}
@@ -407,6 +413,10 @@
     const derivedConcurrency = deriveDailyMaxConcurrent(real, data.generated_at);
     const latency = eq?.latency || {};
     const entryLatency = latency.entry_latency_s || latency.latency_entry_to_fill_s || latency.entry_to_fill_s || latency.decision_to_entry_s || latency.order_to_entry_s || latency.signal_to_entry_s;
+    const decisionToOrder = latency.decision_to_order_s || latency.latency_decision_to_order_s;
+    const orderToFill = latency.order_to_fill_s || latency.latency_order_to_fill_s;
+    const decisionToFill = latency.latency_decision_to_fill_s || latency.decision_to_fill_s;
+    const catalystToDecision = latency.latency_catalyst_to_decision_s || latency.news_to_decision_s;
     byId("execution-summary").innerHTML = [
       metricCard("Gross P&L", dollars(gross), `closed n=${number(closed)}`, signed(gross)),
       metricCard("Commissions", dollars(fees), `drag ${drag == null ? "DATA UNAVAILABLE" : percent(drag)}`, "negative"),
@@ -422,9 +432,11 @@
       bar("Net after fees", real.net_pnl, "trusted public accounting", maxAbs),
     ].join("");
     byId("latency-quality").innerHTML = eq ? `<div class="grid two">
-      ${distributionCard("Catalyst → decision", eq.latency?.latency_catalyst_to_decision_s || eq.latency?.news_to_decision_s)}
+      ${distributionCard("Catalyst → decision", catalystToDecision)}
+      ${distributionCard("Decision → order", decisionToOrder)}
+      ${distributionCard("Order → fill", orderToFill)}
+      ${distributionCard("Decision → fill", decisionToFill)}
       ${distributionCard("Entry latency", entryLatency)}
-      ${distributionCard("Decision → fill", eq.latency?.latency_decision_to_fill_s || eq.latency?.order_to_fill_s)}
       ${distributionCard("Slippage vs reference", eq.slippage_vs_reference, "%")}
       ${distributionCard("Spread at entry", eq.spread_at_entry, "%")}
     </div><div class="grid two section-gap">
