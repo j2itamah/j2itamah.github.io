@@ -43,7 +43,7 @@
       <div class="panel"><div class="panel-header"><h2 class="panel-title">Latency / slippage contract</h2><span class="badge info">fail-closed</span></div><div id="latency-quality"></div></div>
     </section>
     <section class="grid two section-gap">
-      <div class="panel"><div class="panel-header"><h2 class="panel-title">Open exposure concentration</h2><span class="badge warn">capacity risk</span></div><div id="open-concentration"></div></div>
+      <div class="panel"><div class="panel-header"><h2 class="panel-title">Position concentration + daily maximum concurrent</h2><span class="badge warn">capacity risk</span></div><div id="open-concentration"></div></div>
       <div class="panel"><div class="panel-header"><h2 class="panel-title">Rejections, skips, and accounting gaps</h2><span class="badge info">fail-closed counts</span></div><div id="execution-gaps"></div></div>
     </section>
     <section class="panel section-gap"><div class="panel-header"><h2 class="panel-title">Broker + alert operations</h2><span class="badge warn">fail-closed ops</span></div><div id="execution-ops"></div></section>
@@ -53,6 +53,6 @@
   </main>
   <script>window.API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";</script>
   <script src="./cockpit-common.js?v=20260723-catalyst-source-trust"></script>
-  <script src="./insights.js?v=20260723-execution-latency-chain"></script>
+  <script src="./insights.js?v=20260723-concurrency-labels"></script>
 </body>
 </html>

@@ -441,13 +441,15 @@
       ${distributionCard("Spread at entry", eq.spread_at_entry, "%")}
     </div><div class="grid two section-gap">
       ${metricCard("Bracket completeness", percent(eq.bracket?.bracket_complete_pct), `complete n=${number(eq.bracket?.bracket_complete_n)} / rows n=${number(eq.bracket?.rows_n)} · fill-adjusted proof ${percent(eq.bracket?.fill_adjusted_proof_pct)}`)}
-      ${metricCard("Open concentration", htmlSafe(eq.open_concentration?.[0]?.symbol || "none"), `open notional ${dollars(eq.notional?.open_notional)} · top share ${percent(eq.open_concentration?.[0]?.share_pct)}`)}
+      ${metricCard("Position concentration", htmlSafe(eq.open_concentration?.[0]?.symbol || "none"), `open notional ${dollars(eq.notional?.open_notional)} · top share ${percent(eq.open_concentration?.[0]?.share_pct)}`)}
+      ${metricCard("Daily maximum concurrent positions", eq.daily_max_concurrent_positions == null ? "DATA UNAVAILABLE" : number(eq.daily_max_concurrent_positions), eq.daily_max_concurrent_positions == null ? "Backend does not expose the daily max concurrent field yet → fail-closed" : "highest simultaneous REAL open positions today", eq.daily_max_concurrent_positions == null ? "muted" : "positive")}
     </div><div class="section-gap"><div class="panel-header"><h3 class="panel-title">Exit reasons</h3><span class="badge info">closed n=${number(eq.closed_n)}</span></div>${(eq.exit_reasons || []).map((row) => countBar(row.reason, row.n, `n=${number(row.n)}`, Math.max(1, ...(eq.exit_reasons || []).map((x) => Number(x.n || 0))))).join("") || emptyCard("No exit reasons", "No closed execution rows available.")}</div>` : emptyCard("Detailed execution-quality schema", "Backend currently returns execution_quality=null. No slippage/latency distribution is inferred.");
     const openRows = eq?.open_concentration || [];
     const maxOpen = Math.max(1, ...openRows.map((row) => Number(row.open_notional || 0)));
     byId("open-concentration").innerHTML = eq ? `<div class="grid two">
       ${metricCard("Open notional", dollars(eq.notional?.open_notional), `open n=${number(eq.open_n || eq.notional?.open_notional_n)}`)}
-      ${metricCard("Top concentration", htmlSafe(openRows[0]?.symbol || "none"), `${dollars(openRows[0]?.open_notional)} · ${percent(openRows[0]?.share_pct)} of open notional`)}
+      ${metricCard("Top position concentration", htmlSafe(openRows[0]?.symbol || "none"), `${dollars(openRows[0]?.open_notional)} · ${percent(openRows[0]?.share_pct)} of open notional`)}
+      ${metricCard("Daily maximum concurrent positions", eq.daily_max_concurrent_positions == null ? "DATA UNAVAILABLE" : number(eq.daily_max_concurrent_positions), eq.daily_max_concurrent_positions == null ? "Not exposed by execution_quality; do not infer from current open positions." : "highest simultaneous REAL open positions today", eq.daily_max_concurrent_positions == null ? "muted" : "positive")}
     </div><div class="section-gap">${openRows.length ? openRows.map((row) => bar(row.symbol, row.open_notional, `${percent(row.share_pct)} of open exposure`, maxOpen)).join("") : emptyCard("No open exposure", "No open positions in execution_quality.")}</div>` : emptyCard("DATA UNAVAILABLE", "execution_quality schema is not available; concentration is not inferred.");
     renderExecutionGaps(eq, real, derivedConcurrency);
     const rows = recentRows.slice(0, 25);

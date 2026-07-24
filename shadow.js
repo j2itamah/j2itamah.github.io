@@ -278,7 +278,7 @@ function renderResearchCompleteness(shadow) {
   const catalysts = groupedCounts(rows, (row) => catalystDisplay(catalystKey(row))).slice(0, 8);
   $("research-completeness").innerHTML = `
     <div class="grid three">
-      ${metric("Observation rows", num(total), total, "deduped visible live rows")}
+      ${metric("Observation count", num(total), total, "deduped visible live rows")}
       ${metric("Data completeness", completeness === null ? "DATA UNAVAILABLE" : `<span class="${completeness >= 80 ? "positive" : completeness >= 50 ? "muted" : "negative"}">${pct(completeness)}</span>`, priced, `${num(priced)} priced / ${num(total)} visible rows`)}
       ${metric("Clean COMPLETE", num(buckets.complete), buckets.complete, "complete rows used in complete-observation panels", buckets.complete ? "positive" : "muted")}
     </div>
