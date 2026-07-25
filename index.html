@@ -12,6 +12,14 @@
   <link rel="stylesheet" href="./lovable-exact.css?v=20260723-lovable-dashboard-replica" />
   <style>
     body.overview-page .overview-shell.lovable-landing { padding-top: 22px; }
+    body.overview-page.simple-launch .context-bar,
+    body.overview-page.simple-launch .evidence-grid,
+    body.overview-page.simple-launch .evidence-lanes-panel,
+    body.overview-page.simple-launch .edge-stack-panel,
+    body.overview-page.simple-launch .daily-evidence-panel,
+    body.overview-page.simple-launch .do-dont {
+      display: none !important;
+    }
     .overview-page .skip-link {
       position: fixed; left: 16px; top: 12px; z-index: 9999; transform: translateY(-150%);
       border: 2px solid rgba(15,17,23,.22); border-radius: 999px; background: #fff; color: #0f1117;
@@ -167,7 +175,7 @@
     }
   </style>
 </head>
-<body class="overview-page">
+<body class="overview-page simple-launch">
   <a class="skip-link" href="#main-content">Skip to dashboard content</a>
   <main class="overview-shell lovable-landing" id="main-content">
     <header class="lovable-app-header" aria-label="System header">
@@ -266,7 +274,7 @@
       </article>
     </section>
 
-    <section class="overview-panel light" aria-label="Evidence lanes">
+    <section class="overview-panel light evidence-lanes-panel" aria-label="Evidence lanes">
       <div class="panel-head">
         <div>
           <h2 class="panel-title serif">Three evidence lanes</h2>
@@ -296,7 +304,7 @@
       </div>
     </section>
 
-    <section class="overview-panel light" aria-label="Edge Stack">
+    <section class="overview-panel light edge-stack-panel" aria-label="Edge Stack">
       <div class="panel-head">
         <div>
           <h2 class="panel-title serif">Edge Stack</h2>
@@ -324,7 +332,7 @@
       </div>
     </section>
 
-    <section class="overview-panel light" aria-label="Daily evidence table">
+    <section class="overview-panel light daily-evidence-panel" aria-label="Daily evidence table">
       <div class="panel-head">
         <div>
           <h2 class="panel-title serif">Daily evidence journal</h2>
