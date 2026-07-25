@@ -79,12 +79,85 @@
       color: #6f4700; font-size: 13px; line-height: 1.4;
     }
     .overview-page .warning.good { border-color: rgba(34,201,133,.25); background: rgba(219,252,231,.72); color: #137a50; }
+    .overview-page .context-bar {
+      display: flex; flex-wrap: wrap; gap: 9px; align-items: center; justify-content: space-between;
+      margin: 18px 0 0; padding: 13px 14px; border-radius: 20px;
+      border: 1px solid rgba(24,32,51,.10); background: rgba(255,255,255,.78);
+      box-shadow: 0 16px 42px rgba(40,30,20,.10); color: #172033;
+    }
+    .overview-page .context-copy {
+      color: #3d475d; font-size: 13px; font-weight: 850; line-height: 1.35;
+    }
+    .overview-page .context-copy strong { color: #172033; }
+    .overview-page .context-ranges { display: inline-flex; flex-wrap: wrap; gap: 7px; }
+    .overview-page .context-ranges .range-btn {
+      border-color: rgba(24,32,51,.10); background: rgba(24,32,51,.05); color: #3d475d;
+    }
+    .overview-page .context-ranges .range-btn.active {
+      background: #172033; color: #fff; border-color: #172033;
+    }
+    .overview-page .evidence-grid {
+      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-top: 18px;
+    }
+    .overview-page .evidence-card, .overview-page .lane-card, .overview-page .do-card {
+      border: 1px solid rgba(24,32,51,.10); background: rgba(255,255,255,.82);
+      color: #172033; border-radius: 22px; padding: 16px; box-shadow: 0 18px 50px rgba(40,30,20,.10);
+      min-width: 0;
+    }
+    .overview-page .evidence-card.primary {
+      background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(219,234,254,.78) 58%, rgba(254,243,199,.70));
+    }
+    .overview-page .evidence-label, .overview-page .lane-label {
+      color: #69748a; font: 900 10px "Spline Sans Mono", monospace; letter-spacing: .11em; text-transform: uppercase;
+    }
+    .overview-page .evidence-value {
+      margin-top: 10px; color: #172033; font-size: 20px; line-height: 1.08; font-weight: 950; letter-spacing: -.03em;
+    }
+    .overview-page .evidence-sub { margin-top: 9px; color: #69748a; font-size: 12px; line-height: 1.38; }
+    .overview-page .lane-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+    .overview-page .lane-card.real { border-color: rgba(34,201,133,.24); }
+    .overview-page .lane-card.shadow { border-color: rgba(139,164,255,.30); }
+    .overview-page .lane-card.research { border-color: rgba(242,163,58,.30); }
+    .overview-page .lane-title { margin-top: 8px; font-size: 24px; font-weight: 950; letter-spacing: -.045em; }
+    .overview-page .lane-copy { margin-top: 8px; color: #5d6679; font-size: 13px; line-height: 1.42; }
+    .overview-page .lane-stats { display: grid; gap: 8px; margin-top: 12px; }
+    .overview-page .lane-stats div { display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid rgba(24,32,51,.08); padding-top: 8px; font-size: 12px; color: #69748a; }
+    .overview-page .lane-stats strong { color: #172033; font-variant-numeric: tabular-nums; text-align: right; }
+    .overview-page .table-wrap { overflow-x: auto; border-radius: 18px; border: 1px solid rgba(24,32,51,.10); background: rgba(255,255,255,.62); }
+    .overview-page .evidence-table { width: 100%; border-collapse: collapse; min-width: 820px; }
+    .overview-page .evidence-table th, .overview-page .evidence-table td {
+      padding: 12px 13px; border-bottom: 1px solid rgba(24,32,51,.08); text-align: left; vertical-align: top;
+      font-size: 12px; line-height: 1.35;
+    }
+    .overview-page .evidence-table th {
+      color: #69748a; font: 900 10px "Spline Sans Mono", monospace; letter-spacing: .10em; text-transform: uppercase;
+      background: rgba(24,32,51,.04);
+    }
+    .overview-page .evidence-table td strong { color: #172033; }
+    .overview-page .trust-badge {
+      display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 8px; margin-top: 4px;
+      font: 900 10px "Spline Sans Mono", monospace; letter-spacing: .06em; text-transform: uppercase;
+      background: rgba(229,231,235,.85); color: #4b5563;
+    }
+    .overview-page .trust-badge.anecdote { background: rgba(255,228,230,.88); color: #9f1239; }
+    .overview-page .trust-badge.hypothesis { background: rgba(254,243,199,.92); color: #7a4d00; }
+    .overview-page .trust-badge.watch { background: rgba(219,234,254,.92); color: #1d4ed8; }
+    .overview-page .trust-badge.reviewable { background: rgba(220,252,231,.92); color: #137a50; }
+    .overview-page .trust-badge.rejected { background: rgba(31,41,55,.12); color: #374151; }
+    .overview-page .do-dont {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px;
+    }
+    .overview-page .do-card ul { margin: 10px 0 0; padding-left: 18px; color: #5d6679; font-size: 13px; line-height: 1.55; }
+    .overview-page .do-card strong { color: #172033; }
     .overview-page .footer { margin: 36px 0 0; color: var(--lv-cream-muted); text-align: center; font-size: 12px; line-height: 1.55; }
     .overview-page .positive { color: var(--lv-ok) !important; }
     .overview-page .negative { color: var(--lv-bad) !important; }
     .overview-page .neutral { color: inherit; }
     @media (max-width: 900px) {
       .overview-page .below,
+      .overview-page .evidence-grid,
+      .overview-page .lane-grid,
+      .overview-page .do-dont,
       body.overview-page .lovable-topbook .headline-grid,
       body.overview-page .launch-cards { grid-template-columns: 1fr !important; }
       .overview-page .bar-row { grid-template-columns: 1fr; }
@@ -153,6 +226,132 @@
       </p>
     </section>
 
+    <section class="context-bar" aria-label="Evidence context">
+      <div class="context-copy" id="contextBar">
+        <strong>As of —</strong> · Edmonton time · REAL broker rows, SHADOW research rows, and outside ideas stay separated.
+      </div>
+      <div class="context-ranges" aria-label="Evidence period">
+        <button class="range-btn" type="button" data-period="today">Today</button>
+        <button class="range-btn active" type="button" data-period="week">This week</button>
+        <button class="range-btn" type="button" data-period="30">30 days</button>
+        <button class="range-btn" type="button" data-period="all">All time</button>
+      </div>
+    </section>
+
+    <section class="evidence-grid" aria-label="What do I know today">
+      <article class="evidence-card primary">
+        <div class="evidence-label">What do I know today?</div>
+        <div class="evidence-value" id="knowEvidence">Loading evidence level…</div>
+        <div class="evidence-sub" id="knowEvidenceSub">n and trust labels will appear here.</div>
+      </article>
+      <article class="evidence-card">
+        <div class="evidence-label">Best current hypothesis</div>
+        <div class="evidence-value" id="knowHypothesis">—</div>
+        <div class="evidence-sub" id="knowHypothesisSub">Gross and net stay separate.</div>
+      </article>
+      <article class="evidence-card">
+        <div class="evidence-label">Biggest blocker</div>
+        <div class="evidence-value" id="knowBlocker">—</div>
+        <div class="evidence-sub" id="knowBlockerSub">The one thing most likely to distort learning.</div>
+      </article>
+      <article class="evidence-card">
+        <div class="evidence-label">Changed recently</div>
+        <div class="evidence-value" id="knowChanged">—</div>
+        <div class="evidence-sub" id="knowChangedSub">Latest backend snapshot only.</div>
+      </article>
+      <article class="evidence-card">
+        <div class="evidence-label">Next useful sample</div>
+        <div class="evidence-value" id="knowSample">—</div>
+        <div class="evidence-sub" id="knowSampleSub">No conclusion language below n≥30.</div>
+      </article>
+    </section>
+
+    <section class="overview-panel light" aria-label="Evidence lanes">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title serif">Three evidence lanes</h2>
+          <div class="small">REAL, SHADOW, and RESEARCH IDEAS are visually and numerically separate. No blended P/L, no blended win rate.</div>
+        </div>
+        <span class="badge warn">Never mix populations</span>
+      </div>
+      <div class="lane-grid">
+        <a class="lane-card real" href="./real.html" aria-label="Open REAL broker cockpit">
+          <div class="lane-label">REAL — IBKR source of truth</div>
+          <div class="lane-title" id="laneRealTitle">Broker fills</div>
+          <div class="lane-copy" id="laneRealCopy">Actual fills only. Costs and missing-cost rows stay visible.</div>
+          <div class="lane-stats" id="laneRealStats"></div>
+        </a>
+        <a class="lane-card shadow" href="./shadow.html" aria-label="Open SHADOW research cockpit">
+          <div class="lane-label">SHADOW — research only</div>
+          <div class="lane-title" id="laneShadowTitle">Priced observations</div>
+          <div class="lane-copy" id="laneShadowCopy">Forward marks are research evidence, not executable money.</div>
+          <div class="lane-stats" id="laneShadowStats"></div>
+        </a>
+        <a class="lane-card research" href="./catalyst.html" aria-label="Open Catalyst Edge research page">
+          <div class="lane-label">RESEARCH IDEAS — not yet shadow</div>
+          <div class="lane-title">Hypotheses to test</div>
+          <div class="lane-copy">Outside ideas need a source clock, validation plan, and clean SHADOW test before they become evidence.</div>
+          <div class="lane-stats" id="laneResearchStats"></div>
+        </a>
+      </div>
+    </section>
+
+    <section class="overview-panel light" aria-label="Edge Stack">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title serif">Edge Stack</h2>
+          <div class="small">This is the “does the idea survive reality?” table: clock → sample → gross → costs → execution haircut → action.</div>
+        </div>
+        <span class="badge shadow">n + trust on every row</span>
+      </div>
+      <div class="table-wrap">
+        <table class="evidence-table">
+          <thead>
+            <tr>
+              <th>Candidate</th>
+              <th>Source clock</th>
+              <th>Sample</th>
+              <th>Gross outcome</th>
+              <th>Costed outcome</th>
+              <th>Execution haircut</th>
+              <th>Next action</th>
+            </tr>
+          </thead>
+          <tbody id="edgeStackRows">
+            <tr><td colspan="7">Loading edge stack…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="overview-panel light" aria-label="Daily evidence table">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title serif">Daily evidence journal</h2>
+          <div class="small">Clicking a day opens the full journal so you can see every trade and catalyst from that date.</div>
+        </div>
+        <a class="tab-link" href="./journal.html">Open journal →</a>
+      </div>
+      <div class="table-wrap">
+        <table class="evidence-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>REAL trades</th>
+              <th>Wins / losses</th>
+              <th>Gross</th>
+              <th>Fees</th>
+              <th>Net</th>
+              <th>SHADOW complete</th>
+            </tr>
+          </thead>
+          <tbody id="dailyEvidenceRows">
+            <tr><td colspan="7">Loading daily journal…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <section class="launch-cards" aria-label="Main dashboard cards">
       <a class="launch-card" href="./real.html" aria-label="Open top performer / IBKR dashboard">
         <span class="badge">Top book</span>
@@ -163,7 +362,7 @@
         <div class="metric-line"><span>Open</span><strong id="topCardOpen">—</strong></div>
         <span class="go">Open top book →</span>
       </a>
-      <a class="launch-card real" href="./real.html" aria-label="Open IBKR real cockpit">
+      <a class="launch-card real" id="realCard" href="./real.html" aria-label="Open IBKR real cockpit">
         <span class="badge">IBKR paper</span>
         <h2>Real fills</h2>
         <p>Executable trades only. Net P/L is gross minus commissions, with n on every figure.</p>
@@ -172,7 +371,7 @@
         <div class="metric-line"><span>Win rate</span><strong id="realWin">—</strong></div>
         <span class="go">Open IBKR cockpit →</span>
       </a>
-      <a class="launch-card shadow" href="./shadow.html" aria-label="Open Shadow research cockpit">
+      <a class="launch-card shadow" id="shadowCard" href="./shadow.html" aria-label="Open Shadow research cockpit">
         <span class="badge">Shadow research</span>
         <h2>Research marks</h2>
         <p>Forward observed ideas only. It shows evidence, not executable cash P/L.</p>
@@ -255,6 +454,27 @@
       <div id="warnings" class="warning-list"></div>
     </section>
 
+    <section class="do-dont" aria-label="Do and don't guidance">
+      <article class="do-card">
+        <div class="evidence-label">Do</div>
+        <ul>
+          <li>Collect more trusted REAL closes and priced SHADOW observations.</li>
+          <li>Compare gross vs net at the current ~$10k / ~$2.5k position frame.</li>
+          <li>Inspect winners and losers by catalyst, direction, source, session, and exit reason.</li>
+          <li>Graduate only clean hypotheses into SHADOW or PAPER tests.</li>
+        </ul>
+      </article>
+      <article class="do-card">
+        <div class="evidence-label">Don’t</div>
+        <ul>
+          <li>Change strategy from one or two trades, or from any segment below <strong>n=30</strong>.</li>
+          <li>Mix REAL broker P/L with SHADOW research returns.</li>
+          <li>Treat gross-only results as edge if commissions, spread, or slippage erase them.</li>
+          <li>Call win rate an edge without expectancy, profit factor, and cost survival.</li>
+        </ul>
+      </article>
+    </section>
+
     <div class="footer">
       Paper/live monitoring only · Rule 21 verified-only display · REAL and SHADOW stay separated.
       <br />Backend snapshot: <span id="backendSource">—</span>
@@ -274,6 +494,7 @@
     const when = (ts) => ts ? new Date(ts).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "—";
     let dashboardData = null;
     let currentRange = "all";
+    let currentPeriod = "week";
 
     const setTone = (el, value) => {
       if (!el) return;
@@ -282,6 +503,7 @@
     };
     const cleanLabel = (value) => String(value || "UNKNOWN").replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
     const firstFinite = (...values) => values.find((v) => v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v)));
+    const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
     const minutesOld = (updatedAt, generatedAt) => {
       if (!updatedAt) return null;
       const updated = new Date(updatedAt).getTime();
@@ -326,6 +548,211 @@
         return { label: r.local_trading_date, gross, net };
       });
     };
+    const confidenceInfo = (n, blockers = false, rejected = false) => {
+      n = Number(n || 0);
+      if (rejected) return { label: "Rejected", cls: "rejected" };
+      if (n < 8) return { label: "Anecdote", cls: "anecdote" };
+      if (n < 30) return { label: "Hypothesis only", cls: "hypothesis" };
+      if (blockers) return { label: "Watch", cls: "watch" };
+      return { label: "Reviewable evidence", cls: "reviewable" };
+    };
+    const trustBadge = (n, blockers = false, rejected = false) => {
+      const info = confidenceInfo(n, blockers, rejected);
+      return `<span class="trust-badge ${info.cls}">n=${num(n)} · ${info.label}</span>`;
+    };
+    const periodRows = (rows = [], period = currentPeriod) => {
+      const sorted = [...rows].sort((a, b) => String(b.local_trading_date || b.date || "").localeCompare(String(a.local_trading_date || a.date || "")));
+      if (period === "today") return sorted.slice(0, 1);
+      if (period === "week") return sorted.slice(0, 7);
+      if (period === "30") return sorted.slice(0, 30);
+      return sorted;
+    };
+    const shadowDateKey = (row = {}) => {
+      const raw = row.local_trading_date || row.date || row.entry_date || row.catalyst_date || row.observed_date || row.entry_ts || row.entry_time || row.catalyst_ts || row.created_at;
+      if (!raw) return null;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(String(raw))) return String(raw);
+      const d = new Date(raw);
+      return Number.isFinite(d.getTime()) ? d.toISOString().slice(0, 10) : null;
+    };
+    const shadowDailyCounts = (shadow = {}) => {
+      const counts = {};
+      const rows = Array.isArray(shadow.recent_priced) ? shadow.recent_priced : Array.isArray(shadow.observations) ? shadow.observations : [];
+      rows.forEach((row) => {
+        const key = shadowDateKey(row);
+        if (!key) return;
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      return counts;
+    };
+    const bestShadowRead = (shadow = {}) => {
+      const ladder = Array.isArray(shadow.horizon_ladder) ? shadow.horizon_ladder : [];
+      return ladder
+        .map((row) => ({
+          horizon: String(row.horizon || row.field || "horizon").toUpperCase(),
+          n: Number(row.priced_n ?? row.n ?? 0),
+          ret: Number(row.avg_direction_adjusted_return_pct ?? row.avg_return_pct ?? row.median_return_pct ?? 0),
+          hit: Number(row.hit_rate ?? row.win_rate ?? 0),
+        }))
+        .filter((row) => Number.isFinite(row.ret) && row.n > 0)
+        .sort((a, b) => b.ret - a.ret)[0];
+    };
+    const costDragText = (gross, costs) => {
+      gross = Number(gross || 0);
+      costs = Number(costs || 0);
+      if (!Number.isFinite(gross) || !Number.isFinite(costs) || gross === 0) return "cost drag unknown";
+      return `${((Math.abs(costs) / Math.abs(gross)) * 100).toFixed(1)}% cost drag`;
+    };
+    const dollarsPerTrade = (value, n) => Number(n || 0) ? money(Number(value || 0) / Number(n || 1)) : "—";
+
+    function renderDailyEvidence(data = {}) {
+      const real = data.real || {};
+      const shadowCounts = shadowDailyCounts(data.shadow || {});
+      const rows = periodRows(real.daily_journal || []);
+      if (!rows.length) {
+        $("dailyEvidenceRows").innerHTML = `<tr><td colspan="7">No daily rows for this period.</td></tr>`;
+        return;
+      }
+      $("dailyEvidenceRows").innerHTML = rows.map((row) => {
+        const date = row.local_trading_date || row.date || "—";
+        const wins = Number(row.wins ?? row.win_count ?? 0);
+        const losses = Number(row.losses ?? row.loss_count ?? Math.max(0, Number(row.n || 0) - wins));
+        return `<tr>
+          <td><a href="./journal.html#${esc(date)}"><strong>${esc(date)}</strong></a></td>
+          <td>${num(row.n)} ${trustBadge(row.n, Number(row.n || 0) < 30)}</td>
+          <td>${num(wins)} / ${num(losses)}</td>
+          <td class="${Number(row.gross_pnl || 0) >= 0 ? "positive" : "negative"}">${money(row.gross_pnl)}</td>
+          <td>${money(row.commissions)}</td>
+          <td class="${Number(row.net_pnl || 0) >= 0 ? "positive" : "negative"}">${money(row.net_pnl)}</td>
+          <td>${num(shadowCounts[date] || 0)} priced</td>
+        </tr>`;
+      }).join("");
+    }
+
+    function renderEdgeStack(data = {}) {
+      const real = data.real || {};
+      const shadow = data.shadow || {};
+      const exec = data.execution_quality || {};
+      const best = bestShadowRead(shadow);
+      const realN = Number(real.closed_n ?? real.n ?? 0);
+      const shadowN = Number(shadow.priced_n || 0);
+      const missingCost = Number(real.uncosted_closed_n || 0);
+      const realBlockers = missingCost > 0 || String(real.data_quality_status || "").toUpperCase() !== "VERIFIED" || Number(real.net_pnl || 0) <= 0;
+      const shadowBlockers = String(shadow.data_quality_status || "").toUpperCase().includes("RESEARCH") || true;
+      const rows = [
+        {
+          candidate: "REAL broker / IBKR paper",
+          clock: String(real.data_quality_status || "WARN").toUpperCase(),
+          sample: `${num(realN)} closed · ${num(missingCost)} missing cost`,
+          gross: `${money(real.gross_pnl)} gross · ${dollarsPerTrade(real.gross_pnl, realN)} / trade`,
+          costed: `${money(real.net_pnl)} net · ${costDragText(real.gross_pnl, real.commissions)}`,
+          haircut: `${pct3(exec.slippage_vs_reference?.median)} median slippage · spread ${pct3(exec.spread_at_entry?.median)}`,
+          action: Number(real.net_pnl || 0) > 0 ? "keep collecting; do not conclude below clean n/robustness" : "cost audit + collect; gross is not enough",
+          n: realN,
+          blockers: realBlockers,
+        },
+        {
+          candidate: `SHADOW research${best ? ` · best ${best.horizon}` : ""}`,
+          clock: "priced marks only; source clocks still need lane-level proof",
+          sample: `${num(shadowN)} priced · ${num(shadow.pending_or_unpriced_n)} pending/unpriced`,
+          gross: best ? `${pct3(best.ret)} direction-adjusted · hit ${pct(best.hit)} · horizon n=${num(best.n)}` : "No usable horizon exposed",
+          costed: "Not executable P/L · estimate $2,500 costs before paper-test",
+          haircut: "REAL↔SHADOW matched-pair haircut not proven",
+          action: "rank subtypes; promote only clean source-clock slices into paper tests",
+          n: shadowN,
+          blockers: shadowBlockers,
+        },
+        {
+          candidate: "RESEARCH IDEAS / outside sources",
+          clock: "must prove publish clock before entry",
+          sample: "not in SHADOW yet",
+          gross: "not measured",
+          costed: "not measured",
+          haircut: "not tested",
+          action: "design source-clock-valid SHADOW tests first",
+          n: 0,
+          blockers: true,
+        },
+      ];
+      $("edgeStackRows").innerHTML = rows.map((row) => `<tr>
+        <td><strong>${esc(row.candidate)}</strong>${trustBadge(row.n, row.blockers)}</td>
+        <td>${esc(row.clock)}</td>
+        <td>${esc(row.sample)}</td>
+        <td>${esc(row.gross)}</td>
+        <td>${esc(row.costed)}</td>
+        <td>${esc(row.haircut)}</td>
+        <td>${esc(row.action)}</td>
+      </tr>`).join("");
+    }
+
+    function renderEvidenceCockpit(data = {}) {
+      const real = data.real || {};
+      const shadow = data.shadow || {};
+      const capital = data.account_capital || {};
+      const exec = data.execution_quality || {};
+      const best = bestShadowRead(shadow);
+      const realN = Number(real.closed_n ?? real.n ?? 0);
+      const shadowN = Number(shadow.priced_n || 0);
+      const missingCost = Number(real.uncosted_closed_n || 0);
+      const warnings = warningRows(data);
+      const generated = data.generated_at ? new Date(data.generated_at) : new Date();
+      const edmonton = generated.toLocaleString("en-CA", { timeZone: "America/Edmonton", dateStyle: "medium", timeStyle: "short" });
+      $("contextBar").innerHTML = `<strong>As of ${esc(edmonton)} Edmonton</strong> · ${esc(currentPeriod === "today" ? "Today" : currentPeriod === "week" ? "This week" : currentPeriod === "30" ? "30 days" : "All time")} · ${num(real.open_n)} open REAL positions · ${num(shadow.pending_or_unpriced_n)} SHADOW marks pending`;
+
+      const level = realN >= 30 || shadowN >= 30 ? "Watch, not proven" : realN >= 8 || shadowN >= 8 ? "Hypothesis only" : "Anecdote only";
+      $("knowEvidence").textContent = level;
+      $("knowEvidenceSub").innerHTML = `REAL closed n=${num(realN)} · SHADOW priced n=${num(shadowN)} · no conclusion until source/cost/robustness checks pass.`;
+
+      if (Number(real.gross_pnl || 0) > 0 && Number(real.net_pnl || 0) <= 0) {
+        $("knowHypothesis").textContent = "Gross drift exists, net edge does not";
+        $("knowHypothesisSub").textContent = `${money(real.gross_pnl)} gross became ${money(real.net_pnl)} net after ${money(real.commissions)} commissions.`;
+      } else if (best && best.ret > 0) {
+        $("knowHypothesis").textContent = `${best.horizon} SHADOW drift is positive`;
+        $("knowHypothesisSub").textContent = `${pct3(best.ret)} direction-adjusted · horizon n=${num(best.n)} · research only.`;
+      } else {
+        $("knowHypothesis").textContent = "No positive clean hypothesis yet";
+        $("knowHypothesisSub").textContent = "Collect more before changing strategy.";
+      }
+
+      if (capital.snapshot_status !== "LIVE") {
+        $("knowBlocker").textContent = "Broker cash/equity snapshot missing";
+        $("knowBlockerSub").textContent = "Row-level sizing exists, but current cash/equity/buying power stay fail-closed.";
+      } else if (missingCost > 0) {
+        $("knowBlocker").textContent = "Some REAL closes missing costs";
+        $("knowBlockerSub").textContent = `${num(missingCost)} closed rows excluded or weakened until commissions are complete.`;
+      } else if (Number(real.commissions || 0) > Math.abs(Number(real.gross_pnl || 0))) {
+        $("knowBlocker").textContent = "Commission drag bigger than gross";
+        $("knowBlockerSub").textContent = `${costDragText(real.gross_pnl, real.commissions)}: wins need larger gross move or lower cost path.`;
+      } else {
+        $("knowBlocker").textContent = warnings[0] ? "Visible data-quality warning" : "Sample + robustness";
+        $("knowBlockerSub").textContent = warnings[0] || "Need out-of-sample proof and source-clock audit before conclusion.";
+      }
+
+      const daily = Array.isArray(real.daily_journal) ? real.daily_journal : [];
+      const latest = [...daily].sort((a, b) => String(b.local_trading_date || "").localeCompare(String(a.local_trading_date || "")))[0] || {};
+      const prev = [...daily].sort((a, b) => String(b.local_trading_date || "").localeCompare(String(a.local_trading_date || "")))[1] || {};
+      $("knowChanged").textContent = `${num(latest.n || 0)} REAL rows · ${num(shadowN)} SHADOW priced`;
+      $("knowChangedSub").textContent = prev.local_trading_date ? `Latest net ${money(latest.net_pnl)} vs prior ${money(prev.net_pnl)}; backend snapshot ${when(data.generated_at)}.` : `Latest backend snapshot ${when(data.generated_at)}.`;
+
+      const nextNeeded = Math.max(0, 30 - Math.min(realN || 0, 30));
+      $("knowSample").textContent = nextNeeded ? `${num(nextNeeded)} more clean REAL closes to n=30` : "Segment drilldown needed";
+      $("knowSampleSub").textContent = "Then split by catalyst, direction, session, exit reason, and cost survival.";
+
+      $("laneRealStats").innerHTML = `
+        <div><span>Closed / open</span><strong>${num(realN)} / ${num(real.open_n)}</strong></div>
+        <div><span>Gross → net</span><strong>${money(real.gross_pnl)} → ${money(real.net_pnl)}</strong></div>
+        <div><span>Win rate</span><strong>${pct(real.win_rate)} · ${confidenceInfo(realN, true).label}</strong></div>`;
+      $("laneShadowStats").innerHTML = `
+        <div><span>Priced / pending</span><strong>${num(shadowN)} / ${num(shadow.pending_or_unpriced_n)}</strong></div>
+        <div><span>Best read</span><strong>${best ? `${best.horizon} ${pct3(best.ret)}` : "—"}</strong></div>
+        <div><span>Status</span><strong>Research only</strong></div>`;
+      $("laneResearchStats").innerHTML = `
+        <div><span>State</span><strong>Idea only</strong></div>
+        <div><span>Required proof</span><strong>source clock + marks</strong></div>
+        <div><span>Next</span><strong>SHADOW test design</strong></div>`;
+
+      renderEdgeStack(data);
+      renderDailyEvidence(data);
+    }
 
     function warningRows(data = {}) {
       const real = data.real || {};
@@ -453,6 +880,7 @@
         $("shadowRows").textContent = num(shadow.total_rows_diagnostic);
         $("shadowHorizon").textContent = bh ? `${String(bh.horizon || bh.field || "").toUpperCase()} ${Number(bh.avg_direction_adjusted_return_pct ?? bh.avg_return_pct).toFixed(2)}%` : "—";
 
+        renderEvidenceCockpit(data);
         renderCurve(real);
         renderCatalysts(real);
         renderWarnings(data);
@@ -471,6 +899,13 @@
         currentRange = btn.dataset.range || "all";
         document.querySelectorAll("[data-range]").forEach((b) => b.classList.toggle("active", b === btn));
         if (dashboardData) renderCurve(dashboardData.real || {});
+      });
+    });
+    document.querySelectorAll("[data-period]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentPeriod = btn.dataset.period || "week";
+        document.querySelectorAll("[data-period]").forEach((b) => b.classList.toggle("active", b === btn));
+        if (dashboardData) renderEvidenceCockpit(dashboardData);
       });
     });
 
