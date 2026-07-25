@@ -12,14 +12,23 @@
   <link rel="stylesheet" href="./lovable-exact.css?v=20260723-lovable-dashboard-replica" />
   <style>
     body.overview-page .overview-shell.lovable-landing { padding-top: 22px; }
-    body.overview-page.simple-launch .context-bar,
-    body.overview-page.simple-launch .evidence-grid,
+    body.overview-page .overview-shell.lovable-landing {
+      display: flex;
+      flex-direction: column;
+    }
     body.overview-page.simple-launch .evidence-lanes-panel,
     body.overview-page.simple-launch .edge-stack-panel,
-    body.overview-page.simple-launch .daily-evidence-panel,
     body.overview-page.simple-launch .do-dont {
       display: none !important;
     }
+    body.overview-page.simple-launch .launch-cards { order: 7; }
+    body.overview-page.simple-launch .context-bar { order: 8; }
+    body.overview-page.simple-launch .evidence-grid { order: 9; }
+    body.overview-page.simple-launch .lovable-topbook { order: 10; }
+    body.overview-page.simple-launch .below { order: 11; }
+    body.overview-page.simple-launch .daily-evidence-panel { order: 12; }
+    body.overview-page.simple-launch .overview-panel[aria-label="Visible warnings"] { order: 13; }
+    body.overview-page.simple-launch .footer { order: 14; }
     .overview-page .skip-link {
       position: fixed; left: 16px; top: 12px; z-index: 9999; transform: translateY(-150%);
       border: 2px solid rgba(15,17,23,.22); border-radius: 999px; background: #fff; color: #0f1117;
