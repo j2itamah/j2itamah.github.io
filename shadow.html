@@ -9,38 +9,43 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Spline+Sans:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./cockpit.css?v=20260723-accessibility-pass" />
   <link rel="stylesheet" href="./lovable-exact.css?v=20260723-exact-reference-consolidation" />
+  <link rel="stylesheet" href="./compact-exact.css?v=20260729-lovable-parity" />
 </head>
-<body class="shadow-theme">
+<body class="shadow-theme lovable-compact">
   <a class="skip-link" href="#main-content">Skip to dashboard content</a>
   <main class="shell" id="main-content">
     <a class="backlink" href="./index.html">← Trading Analyst · IBKR vs SHADOW</a>
     <section class="topbar">
       <div>
         <div class="eyebrow">SHADOW / RESEARCH · agent_shadow_trades</div>
-        <h1>Shadow Research Cockpit</h1>
+        <h1>Trading Analyst</h1>
         <p class="subtitle">
-          Research-only forward marks from <code>agent_shadow_trades</code>. Percentage returns are the truth here. Dollar values, when shown, are explicitly labeled hypothetical sizing scenarios — not real cash, not broker equity, and not executable P&L.
+          SHADOW / Research — not executable
         </p>
       </div>
       <div class="status-pill" id="refresh-status">Loading…</div>
     </section>
 
     <nav class="app-nav" aria-label="Dashboard navigation">
-      <a href="./index.html">Overview</a>
-      <a href="./real.html">IBKR / REAL</a>
-      <a class="active" href="./shadow.html">SHADOW</a>
-      <a href="./journal.html">Journal</a>
-      <a href="./catalyst.html">Catalyst Edge</a>
-      <a href="./sources.html">Sources</a>
-      <a href="./execution.html">Execution</a>
+      <a class="active" href="#shadow-overview">Overview</a>
+      <a href="#shadow-horizons">Horizon returns</a>
+      <a href="#shadow-variants">Research variants</a>
+      <a href="#shadow-priced">Priced observations</a>
+      <a href="#shadow-pending">Pending marks</a>
     </nav>
 
     <div class="research-banner">
       <span>RESEARCH — NOT EXECUTABLE</span>
-      <span>Percentage returns are evidence. Scenario dollars are hypothetical. No broker fills, no real cash, no realized P&L.</span>
+      <span>Priced observations are evidence. Pending rows are diagnostic only.</span>
     </div>
 
-    <section class="hero-strip">
+    <section class="shadow-summary-hero" id="shadow-overview">
+      <small>SHADOW / RESEARCH — NOT EXECUTABLE</small>
+      <h2>Shadow research summary</h2>
+      <p>Forward-observed percentage returns, kept separate from REAL broker trades.</p>
+    </section>
+
+    <section class="hero-strip" id="shadow-priced">
       <div class="hero-card primary">
         <div class="metric-label">Primary research return</div>
         <div class="metric-value" id="hero-net">—</div>
@@ -63,7 +68,7 @@
       </div>
     </section>
 
-    <section class="panel filter-panel">
+    <section class="panel filter-panel compact-hide">
       <div class="panel-header">
         <div>
           <h2 class="panel-title">Catalyst filter</h2>
@@ -74,12 +79,12 @@
       <div class="filter-pills" id="catalyst-filter"></div>
     </section>
 
-    <section class="panel section-gap">
+    <section class="panel section-gap compact-hide">
       <div class="panel-header"><h2 class="panel-title">Live data contract</h2><span class="badge shadow">generated · source · schema</span></div>
       <div id="data-contract-state"><div class="loading">Loading contract evidence…</div></div>
     </section>
 
-    <section class="panel section-gap">
+    <section class="panel section-gap compact-hide">
       <div class="panel-header">
         <div>
           <h2 class="panel-title">Confidence guard</h2>
@@ -90,7 +95,7 @@
       <div id="confidence-guard"><div class="loading">Loading confidence guard…</div></div>
     </section>
 
-    <section class="panel section-gap">
+    <section class="panel section-gap compact-hide">
       <div class="panel-header">
         <div>
           <h2 class="panel-title">Research completeness</h2>
@@ -101,7 +106,7 @@
       <div id="research-completeness"><div class="loading">Loading completeness buckets…</div></div>
     </section>
 
-    <section class="panel section-gap">
+    <section class="panel section-gap compact-hide">
       <div class="panel-header">
         <div>
           <h2 class="panel-title">Hypothetical sizing scenario</h2>
@@ -117,12 +122,12 @@
       </div>
     </section>
 
-    <section class="panel">
+    <section class="panel compact-shadow-metrics">
       <div class="panel-header"><h2 class="panel-title">SHADOW · research metrics</h2><span class="badge shadow">research only · n shown</span></div>
       <div class="grid three" id="real-metrics"><div class="loading">Loading research metrics…</div></div>
     </section>
 
-    <section class="panel section-gap">
+    <section class="panel section-gap compact-hide">
       <div class="panel-header">
         <h2 class="panel-title" id="forward-title">Filing forward returns</h2>
         <span class="badge shadow">5m · 15m · 1h · EOD · 1d · 3d · 5d %</span>
@@ -134,18 +139,22 @@
       <div class="section-gap" id="forward-table"><div class="loading">Loading forward-return rows…</div></div>
     </section>
 
-    <section class="grid two section-gap">
-      <div class="panel">
+    <section class="grid two section-gap compact-shadow-grid">
+      <div class="panel compact-hide">
         <div class="panel-header"><h2 class="panel-title">Research P/L curve</h2><span class="badge shadow">complete rows</span></div>
         <div class="chart-wrap" id="equity-curve"></div>
       </div>
-      <div class="panel">
+      <div class="panel" id="shadow-horizons">
         <div class="panel-header"><h2 class="panel-title">Horizon ladder</h2><span class="badge shadow">filtered priced n</span></div>
         <div id="shadow-horizon-ladder"></div>
       </div>
+      <div class="panel" id="shadow-variants">
+        <div class="panel-header"><h2 class="panel-title">Research variants</h2><span class="badge shadow">priced n</span></div>
+        <div id="shadow-by-rule"></div>
+      </div>
     </section>
 
-    <section class="grid two section-gap">
+    <section class="grid two section-gap compact-hide">
       <div class="panel">
         <div class="panel-header"><h2 class="panel-title">MFE / MAE distribution</h2><span class="badge shadow">excursion marks</span></div>
         <div id="mfe-mae-diagnostics"></div>
@@ -156,7 +165,7 @@
       </div>
     </section>
 
-    <section class="grid two section-gap">
+    <section class="grid two section-gap compact-hide">
       <div class="panel">
         <div class="panel-header"><h2 class="panel-title">Scenario P/L composition</h2><span class="badge warn">HYPOTHETICAL SIZING — RESEARCH ONLY</span></div>
         <div id="pnl-bars"></div>
@@ -167,18 +176,18 @@
       </div>
     </section>
 
-    <section class="grid two section-gap">
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">By rule_id</h2><span class="badge shadow">rule cards · n shown</span></div>
-        <div id="shadow-by-rule"></div>
-      </div>
+    <section class="grid two section-gap compact-hide">
       <div class="panel">
         <div class="panel-header"><h2 class="panel-title">By catalyst</h2><span class="badge shadow">leaderboard · n shown</span></div>
         <div id="shadow-by-catalyst"></div>
       </div>
+      <div class="panel">
+        <div class="panel-header"><h2 class="panel-title">Scenario P&amp;L composition</h2><span class="badge warn">research only</span></div>
+        <div class="small">Percentage returns stay primary; scenario dollars remain hypothetical.</div>
+      </div>
     </section>
 
-    <section class="grid two section-gap">
+    <section class="grid two section-gap compact-hide">
       <div class="panel">
         <div class="panel-header"><h2 class="panel-title">By direction</h2><span class="badge shadow">n shown</span></div>
         <div id="shadow-by-direction"></div>
@@ -195,7 +204,7 @@
       </div>
     </section>
 
-    <section class="grid two section-gap">
+    <section class="grid two section-gap compact-hide" id="shadow-pending">
       <div class="panel">
         <div class="panel-header"><h2 class="panel-title">Pending marks</h2><span class="badge warn">waiting for later horizons</span></div>
         <div id="pending-marks" class="loading">Loading pending marks…</div>
@@ -206,22 +215,22 @@
       </div>
     </section>
 
-    <section class="panel section-gap">
+    <section class="panel section-gap compact-hide">
       <div class="panel-header"><h2 class="panel-title">Shadow status</h2><span class="badge warn">research only</span></div>
       <div id="shadow-status"><div class="loading">Loading shadow status…</div></div>
     </section>
 
-    <section class="panel section-gap">
+    <section class="panel section-gap compact-hide">
       <div class="panel-header"><h2 class="panel-title">Observation feed</h2><span class="badge shadow">returns · gain/loss · catalyst</span></div>
       <div id="decision-feed"></div>
     </section>
 
-    <section class="panel section-gap">
+    <section class="panel section-gap compact-hide">
       <div class="panel-header"><h2 class="panel-title">Research contract / wiring</h2><span class="badge warn">fail closed</span></div>
       <div id="security-state" class="small">Loading security state…</div>
     </section>
 
-    <div class="footer">
+    <div class="footer compact-hide">
       SHADOW cockpit reads only <code>public.agent_shadow_trades</code> via the verified backend API. It uses observed forward marks only. Percentage returns are primary; dollar values are labeled hypothetical sizing scenarios, not real fills or cash equity.
     </div>
   </main>

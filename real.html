@@ -9,15 +9,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./cockpit.css?v=20260723-accessibility-pass" />
   <link rel="stylesheet" href="./lovable-exact.css?v=20260723-exact-reference-consolidation" />
+  <link rel="stylesheet" href="./compact-exact.css?v=20260729-lovable-parity" />
 </head>
-<body class="real-theme">
+<body class="real-theme lovable-compact">
   <a class="skip-link" href="#main-content">Skip to dashboard content</a>
   <main class="shell" id="main-content">
-    <a class="backlink" href="./index.html">← Trading Analyst · IBKR vs SHADOW</a>
+    <a class="backlink" href="./index.html"><span>✣</span><span>TRADING ANALYST<small>REAL · LIVE EXECUTION</small></span></a>
     <section class="topbar">
       <div>
         <div class="eyebrow">IBKR / REAL · agent_trades</div>
-        <h1>Verified Live-Agent Cockpit</h1>
+        <h1>Live Agent · IBKR</h1>
         <p class="subtitle">
           Executable, broker-backed fills only — public <code>agent_trades</code>. <strong>Rule 21:</strong>
           every figure here is verified, costed net-of-commission, and shows its sample <code>n</code>.
@@ -28,13 +29,7 @@
     </section>
 
     <nav class="app-nav" aria-label="Dashboard navigation">
-      <a href="./index.html">Overview</a>
-      <a class="active" href="./real.html">IBKR / REAL</a>
-      <a href="./shadow.html">SHADOW</a>
-      <a href="./journal.html">Journal</a>
-      <a href="./catalyst.html">Catalyst Edge</a>
-      <a href="./sources.html">Sources</a>
-      <a href="./execution.html">Execution</a>
+      <a class="active" href="./real.html">⌁ Overview</a>
     </nav>
 
     <section class="hero-strip">
@@ -60,7 +55,18 @@
       </div>
     </section>
 
-    <section class="panel filter-panel">
+    <section class="account-snapshot">
+      <h2>IBKR Account Snapshot</h2>
+      <p class="account-note" id="account-note">Loading broker-backed account values…</p>
+      <div class="account-grid">
+        <div class="account-cell"><span>Account equity</span><strong id="account-equity">—</strong></div>
+        <div class="account-cell"><span>Cash</span><strong id="account-cash">—</strong></div>
+        <div class="account-cell"><span>Buying power</span><strong id="account-buying-power">—</strong></div>
+        <div class="account-cell"><span>Open notional</span><strong id="account-open-notional">—</strong></div>
+      </div>
+    </section>
+
+    <section class="panel filter-panel compact-hide">
       <div class="panel-header">
         <div>
           <h2 class="panel-title">Catalyst filter</h2>
@@ -71,38 +77,38 @@
       <div class="filter-pills" id="catalyst-filter"></div>
     </section>
 
-    <section class="panel section-gap" id="reconciliation-panel">
+    <section class="panel section-gap compact-hide" id="reconciliation-panel">
       <div class="panel-header"><h2 class="panel-title">Broker / ledger reconciliation</h2><span class="badge warn">fail-closed</span></div>
       <div id="reconciliation-state" class="small">Loading reconciliation state…</div>
     </section>
 
-    <section class="panel section-gap">
+    <section class="panel section-gap compact-hide">
       <div class="panel-header"><h2 class="panel-title">Live data contract</h2><span class="badge real">generated · source · schema</span></div>
       <div id="data-contract-state"><div class="loading">Loading contract evidence…</div></div>
     </section>
 
-    <section class="panel">
+    <section class="panel compact-execution">
       <div class="panel-header"><h2 class="panel-title">REAL · verified metrics</h2><span class="badge real">Rule 21 · n shown</span></div>
       <div class="grid three" id="real-metrics"><div class="loading">Loading verified metrics…</div></div>
     </section>
 
-    <section class="panel section-gap" id="tp-contradiction-panel">
+    <section class="panel section-gap compact-hide" id="tp-contradiction-panel">
       <div class="panel-header"><h2 class="panel-title">TP contradiction guard</h2><span class="badge warn">take-profit sanity</span></div>
       <div id="tp-contradiction-state" class="small">Checking take-profit exits against entry prices…</div>
     </section>
 
-    <section class="grid two section-gap">
+    <section class="grid two section-gap compact-chart-row">
       <div class="panel">
         <div class="panel-header"><h2 class="panel-title">Verified net P&L curve</h2><span class="badge real">closed n</span></div>
         <div class="chart-wrap" id="equity-curve"></div>
       </div>
       <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">P&L composition</h2><span class="badge real">gross / comm / net</span></div>
-        <div id="pnl-bars"></div>
+        <div class="panel-header"><h2 class="panel-title">Rule leaderboard</h2><span class="badge real">n shown</span></div>
+        <div id="real-by-rule"></div>
       </div>
     </section>
 
-    <section class="grid two section-gap">
+    <section class="grid two section-gap compact-hide">
       <div class="panel">
         <div class="panel-header"><h2 class="panel-title">Win gauges</h2><span class="badge real">n shown</span></div>
         <div class="gauges" id="win-gauges"></div>
@@ -113,10 +119,10 @@
       </div>
     </section>
 
-    <section class="grid two section-gap">
+    <section class="grid two section-gap compact-hide">
       <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">By rule_id</h2><span class="badge real">rule cards · n shown</span></div>
-        <div id="real-by-rule"></div>
+        <div class="panel-header"><h2 class="panel-title">P&amp;L composition</h2><span class="badge real">gross / comm / net</span></div>
+        <div id="pnl-bars"></div>
       </div>
       <div class="panel">
         <div class="panel-header"><h2 class="panel-title">By catalyst</h2><span class="badge real">leaderboard · n shown</span></div>
@@ -124,7 +130,7 @@
       </div>
     </section>
 
-    <section class="grid two section-gap">
+    <section class="grid two section-gap compact-hide">
       <div class="panel">
         <div class="panel-header"><h2 class="panel-title">By direction</h2><span class="badge real">n shown</span></div>
         <div id="real-by-direction"></div>
@@ -135,17 +141,17 @@
       </div>
     </section>
 
-    <section class="panel section-gap">
+    <section class="panel section-gap compact-hide">
       <div class="panel-header"><h2 class="panel-title">Decision feed</h2><span class="badge real">catalyst · reason · MFE/MAE</span></div>
       <div id="decision-feed"></div>
     </section>
 
-    <section class="panel section-gap">
+    <section class="panel section-gap compact-hide">
       <div class="panel-header"><h2 class="panel-title">Security / wiring</h2><span class="badge warn">fail closed</span></div>
       <div id="security-state" class="small">Loading security state…</div>
     </section>
 
-    <div class="footer">
+    <div class="footer compact-hide">
       REAL cockpit reads only <code>public.agent_trades</code> via the verified backend API. No Supabase credentials live in this
       static page — data is served by the backend using an env-only anon key with RLS.
     </div>

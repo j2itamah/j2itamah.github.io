@@ -310,6 +310,20 @@ function renderHero(real) {
   $("hero-win-sub").textContent = `${num(real.wins)} wins / ${num(real.losses)} losses · n=${num(real.n)}`;
 }
 
+function renderAccountSnapshot(capital = {}) {
+  const available = (value) => value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
+  const status = String(capital.snapshot_status || "DATA_UNAVAILABLE").toUpperCase();
+  const currentEquity = capital.current_equity;
+  const fallbackEquity = capital.latest_account_equity_at_entry;
+  $("account-equity").textContent = available(currentEquity) ? money(currentEquity) : "DATA UNAVAILABLE";
+  $("account-cash").textContent = available(capital.current_cash) ? money(capital.current_cash) : "DATA UNAVAILABLE";
+  $("account-buying-power").textContent = available(capital.buying_power) ? money(capital.buying_power) : "DATA UNAVAILABLE";
+  $("account-open-notional").textContent = available(capital.open_notional) ? money(capital.open_notional) : "DATA UNAVAILABLE";
+  $("account-note").textContent = status === "AVAILABLE"
+    ? "Current broker-backed account values."
+    : `Current snapshot unavailable${available(fallbackEquity) ? ` · latest equity at entry ${money(fallbackEquity)}` : ""}.`;
+}
+
 function renderMetrics(real) {
   const costed = (real.recent_costed_closed && real.recent_costed_closed.length ? real.recent_costed_closed : real.recent_closed) || [];
   const deployed = costed.reduce((sum, row) => sum + deployedValue(row), 0);
@@ -572,6 +586,7 @@ async function load() {
     state.topData = data || {};
     state.lastLoadedAt = new Date();
     renderAll();
+    renderAccountSnapshot(data.account_capital || {});
     renderSecurity(data, security);
   } catch (error) { showError(error); }
 }
