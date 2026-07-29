@@ -16,19 +16,40 @@
       display: flex;
       flex-direction: column;
     }
+    body.overview-page.simple-launch .attention-pill,
+    body.overview-page.simple-launch .build-state-bar,
+    body.overview-page.simple-launch .tabs,
+    body.overview-page.simple-launch .overview-hero,
+    body.overview-page.simple-launch .context-bar,
+    body.overview-page.simple-launch .evidence-grid,
     body.overview-page.simple-launch .evidence-lanes-panel,
     body.overview-page.simple-launch .edge-stack-panel,
-    body.overview-page.simple-launch .do-dont {
+    body.overview-page.simple-launch .lovable-topbook,
+    body.overview-page.simple-launch .below,
+    body.overview-page.simple-launch .daily-evidence-panel,
+    body.overview-page.simple-launch .overview-panel[aria-label="Visible warnings"],
+    body.overview-page.simple-launch .do-dont,
+    body.overview-page.simple-launch .footer {
       display: none !important;
     }
-    body.overview-page.simple-launch .launch-cards { order: 7; }
-    body.overview-page.simple-launch .context-bar { order: 8; }
-    body.overview-page.simple-launch .evidence-grid { order: 9; }
-    body.overview-page.simple-launch .lovable-topbook { order: 10; }
-    body.overview-page.simple-launch .below { order: 11; }
-    body.overview-page.simple-launch .daily-evidence-panel { order: 12; }
-    body.overview-page.simple-launch .overview-panel[aria-label="Visible warnings"] { order: 13; }
-    body.overview-page.simple-launch .footer { order: 14; }
+    body.overview-page.simple-launch .lovable-landing {
+      min-height: 100vh;
+      justify-content: center;
+    }
+    body.overview-page.simple-launch .lovable-app-header {
+      order: 1;
+      margin-bottom: 30px;
+    }
+    body.overview-page.simple-launch .hero-meta-row {
+      display: none;
+    }
+    body.overview-page.simple-launch .launch-cards {
+      order: 2;
+      margin-top: 0;
+    }
+    body.overview-page.simple-launch .launch-card {
+      min-height: 330px;
+    }
     .overview-page .skip-link {
       position: fixed; left: 16px; top: 12px; z-index: 9999; transform: translateY(-150%);
       border: 2px solid rgba(15,17,23,.22); border-radius: 999px; background: #fff; color: #0f1117;
@@ -194,7 +215,7 @@
           <h1>Trading Analyst</h1>
           <span class="app-version-chip">LIVE LAB</span>
         </div>
-        <p id="modeLine">Verified public dashboard for the live agent, IBKR paper book, NDAX gate, and SHADOW research.</p>
+        <p id="modeLine">Choose the current verified leader, IBKR / REAL, or SHADOW research.</p>
         <div class="hero-meta-row" aria-label="Live system status">
           <span id="agentState">Agent · checking</span>
           <span id="ibkrState">IBKR · checking</span>
@@ -370,27 +391,27 @@
     </section>
 
     <section class="launch-cards" aria-label="Main dashboard cards">
-      <a class="launch-card" href="./real.html" aria-label="Open top performer / IBKR dashboard">
-        <span class="badge">Top book</span>
+      <a class="launch-card" href="./real.html" aria-label="Open current better performer / IBKR dashboard">
+        <span class="badge">Better performer</span>
         <h2 id="topCardTitle">IBKR REAL</h2>
-        <p>Broker-backed book. This card answers “what happened with real fills?” first.</p>
+        <p>Current verified executable leader. SHADOW research is never mixed into this ranking.</p>
         <div class="metric-line"><span>Net P/L</span><strong id="topCardNet">—</strong></div>
         <div class="metric-line"><span>Sample</span><strong id="topCardSample">—</strong></div>
         <div class="metric-line"><span>Open</span><strong id="topCardOpen">—</strong></div>
         <span class="go">Open top book →</span>
       </a>
       <a class="launch-card real" id="realCard" href="./real.html" aria-label="Open IBKR real cockpit">
-        <span class="badge">IBKR paper</span>
-        <h2>Real fills</h2>
+        <span class="badge">Build 1 · IBKR paper</span>
+        <h2>IBKR / REAL</h2>
         <p>Executable trades only. Net P/L is gross minus commissions, with n on every figure.</p>
-        <div class="metric-line"><span>Closed n</span><strong id="realClosed">—</strong></div>
+        <div class="metric-line"><span>Verified rows</span><strong id="realClosed">—</strong></div>
         <div class="metric-line"><span>Capital today</span><strong id="realDeployed">—</strong></div>
         <div class="metric-line"><span>Win rate</span><strong id="realWin">—</strong></div>
         <span class="go">Open IBKR cockpit →</span>
       </a>
       <a class="launch-card shadow" id="shadowCard" href="./shadow.html" aria-label="Open Shadow research cockpit">
-        <span class="badge">Shadow research</span>
-        <h2>Research marks</h2>
+        <span class="badge">Build 2 · Shadow research</span>
+        <h2>SHADOW</h2>
         <p>Forward observed ideas only. It shows evidence, not executable cash P/L.</p>
         <div class="metric-line"><span>Priced n</span><strong id="shadowPriced">—</strong></div>
         <div class="metric-line"><span>Total diagnostic</span><strong id="shadowRows">—</strong></div>
@@ -860,7 +881,7 @@
 
         $("generatedAt").textContent = when(data.generated_at);
         $("backendSource").textContent = `${data.source || "live backend"} · ${data.schema_version || "schema unknown"}`;
-        $("modeLine").textContent = `${real.venue || "IBKR/PAPER"} · ${real.data_quality_status || "status unknown"} · Rule 21 verified-only display`;
+        $("modeLine").textContent = `Choose a dashboard · ${real.venue || "IBKR/PAPER"} ${real.data_quality_status || "status unknown"} · Rule 21 verified-only`;
         const realFresh = freshness(real.source_updated_at, data.generated_at, 20);
         const shadowFresh = freshness(shadow.source_updated_at, data.generated_at, 45);
         $("agentState").innerHTML = `Agent · ${statusChip(realFresh)}`;
