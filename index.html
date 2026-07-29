@@ -405,7 +405,7 @@
         <span class="badge">Build 1 · IBKR paper</span>
         <h2>IBKR / REAL</h2>
         <p>Executable trades only. Net P/L is gross minus commissions, with n on every figure.</p>
-        <div class="metric-line"><span>Verified rows</span><strong id="realClosed">—</strong></div>
+        <div class="metric-line"><span>Costed rows</span><strong id="realClosed">—</strong></div>
         <div class="metric-line"><span>Capital today</span><strong id="realDeployed">—</strong></div>
         <div class="metric-line"><span>Win rate</span><strong id="realWin">—</strong></div>
         <span class="go">Open IBKR cockpit →</span>
@@ -902,7 +902,7 @@
         $("topCardTitle").textContent = real.venue || "IBKR REAL";
         $("topCardNet").textContent = money(real.net_pnl);
         setTone($("topCardNet"), real.net_pnl);
-        $("topCardSample").textContent = `n=${num(real.closed_n ?? real.n)}`;
+        $("topCardSample").textContent = `n=${num(real.n)}`;
         $("topCardOpen").textContent = num(real.open_n);
         $("quickNetToday").textContent = money(today.net_pnl);
         setTone($("quickNetToday"), today.net_pnl);
@@ -913,7 +913,7 @@
         $("quickFees").textContent = money(today.commissions ?? exec.commissions);
         $("quickFeesSub").textContent = `daily drag ${Number.isFinite(Number(today.gross_pnl)) && Number(today.gross_pnl) !== 0 ? `${((Number(today.commissions || 0) / Math.abs(Number(today.gross_pnl))) * 100).toFixed(1)}%` : pct(exec.commission_drag_pct_of_gross)} of gross P/L · ${slippageSummary(exec)}`;
 
-        $("realClosed").textContent = num(real.closed_n ?? real.n);
+        $("realClosed").textContent = num(real.n);
         $("realDeployed").textContent = money(today.deployed);
         $("realWin").textContent = pct(real.win_rate);
         $("shadowPriced").textContent = num(shadow.priced_n);
