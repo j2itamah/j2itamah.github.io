@@ -294,11 +294,175 @@ function renderAll() {
   renderDataContractPanel("data-contract-state", state.raw || {}, state.topData || {}, { population: "REAL", venue: "IBKR/PAPER", table: "public.agent_trades" });
   renderHero(real); renderMetrics(real); renderPnlBars(real); renderGauges(real);
   renderEquity(real); renderGroups(real); renderOpenPositions(real);
+  renderReferenceHeader(real);
+  renderReferenceBooks(real);
+  renderReferenceAllocation(real);
+  renderReferenceSnapshot(real, state.topData?.account_capital || {});
   renderTpContradictionGuard(real);
   renderCryptoStatus(real); renderDecisionFeed(real); renderReconciliation(real);
   $("refresh-status").className = "status-pill ok";
   const filterText = state.filter === "ALL" ? "" : ` · ${catalystDisplay(state.filter)}`;
   $("refresh-status").innerHTML = `<strong>Live${filterText}</strong> · REAL n=${num(real.n)} · updated ${state.lastLoadedAt?.toLocaleTimeString?.() || "now"}`;
+}
+
+function costedReferenceRows(real) {
+  const rows = (real.recent_costed_closed?.length ? real.recent_costed_closed : real.recent_closed) || [];
+  return rows
+    .filter((row) => row?.exit_ts && row?.exit_price !== null && row?.exit_price !== undefined)
+    .slice()
+    .sort((a, b) => new Date(a.exit_ts || 0) - new Date(b.exit_ts || 0));
+}
+
+function cumulativeValues(rows, valueGetter) {
+  let total = 0;
+  return rows.map((row) => {
+    total += Number(valueGetter(row) || 0);
+    return total;
+  });
+}
+
+function rollingWinValues(rows) {
+  let wins = 0;
+  return rows.map((row, index) => {
+    wins += netValue(row) > 0 ? 1 : 0;
+    return wins / (index + 1) * 100;
+  });
+}
+
+function referenceSpark(values, color) {
+  const clean = (values || []).map(Number).filter(Number.isFinite);
+  const points = clean.length > 1 ? clean : [clean[0] || 0, clean[0] || 0];
+  const width = 220;
+  const height = 54;
+  const pad = 3;
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const span = Math.max(max - min, 1);
+  const path = points.map((value, index) => {
+    const x = pad + index / Math.max(points.length - 1, 1) * (width - pad * 2);
+    const y = height - pad - (value - min) / span * (height - pad * 2);
+    return `${index ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  const area = `${path} L${width - pad},${height - pad} L${pad},${height - pad} Z`;
+  return `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Verified historical trend">
+    <path d="${area}" fill="${color}" opacity=".11"></path>
+    <path d="${path}" fill="none" stroke="${color}" stroke-width="2.2" vector-effect="non-scaling-stroke"></path>
+  </svg>`;
+}
+
+function referenceBook({ code, title, label, value, donut, donutLabel, footer, footerValue, values, color, leader = false }) {
+  const safeDonut = Math.max(0, Math.min(100, Number(donut || 0)));
+  return `<article class="reference-book-card ${leader ? "leader" : ""}" style="--accent:${color}">
+    ${leader ? `<span class="reference-leader">VERIFIED</span>` : ""}
+    <div class="reference-book-code">${esc(code)}</div>
+    <div class="reference-book-title">${esc(title)}</div>
+    <div class="reference-book-body">
+      <div>
+        <div class="reference-book-label">${esc(label)}</div>
+        <div class="reference-book-value">${value}</div>
+      </div>
+      <div class="mini-donut" style="--donut:${safeDonut}"><span>${esc(donutLabel)}</span></div>
+    </div>
+    <div class="reference-spark">${referenceSpark(values, color)}</div>
+    <div class="reference-book-footer"><span>${esc(footer)}</span><strong>${esc(footerValue)}</strong></div>
+  </article>`;
+}
+
+function renderReferenceHeader(real) {
+  const value = $("portfolio-value");
+  const change = $("portfolio-change");
+  if (!value || !change) return;
+  value.className = cls(real.net_pnl);
+  value.textContent = money(real.net_pnl);
+  change.className = cls(real.net_pnl);
+  change.textContent = `${money(real.gross_pnl)} gross · ${money(real.commissions)} fees · n=${num(real.n)}`;
+}
+
+function renderReferenceBooks(real) {
+  const target = $("closed-trades");
+  if (!target) return;
+  const rows = costedReferenceRows(real);
+  const deployed = rows.map(deployedValue);
+  const deployedTotal = deployed.reduce((sum, value) => sum + value, 0);
+  const avgDeployed = rows.length ? deployedTotal / rows.length : 0;
+  const coverage = real.closed_n ? Number(real.n || 0) / Number(real.closed_n) * 100 : 0;
+  const netSeries = cumulativeValues(rows, netValue);
+  const grossSeries = cumulativeValues(rows, grossValue);
+  const feeSeries = cumulativeValues(rows, commissionValue);
+  const winSeries = rollingWinValues(rows);
+  target.innerHTML = [
+    referenceBook({
+      code: "NET", title: "Costed Net", label: "Verified P&L", value: `<span class="${cls(real.net_pnl)}">${money(real.net_pnl)}</span>`,
+      donut: real.win_rate, donutLabel: `${Number(real.win_rate || 0).toFixed(0)}%`, footer: `${num(real.wins)}W / ${num(real.losses)}L`, footerValue: `n=${num(real.n)}`,
+      values: netSeries, color: "#69d5ff", leader: true,
+    }),
+    referenceBook({
+      code: "GROSS", title: "Gross P&L", label: "Before fees", value: `<span class="${cls(real.gross_pnl)}">${money(real.gross_pnl)}</span>`,
+      donut: real.win_rate, donutLabel: `${Number(real.win_rate || 0).toFixed(0)}%`, footer: "broker fills", footerValue: `n=${num(real.n)}`,
+      values: grossSeries, color: "#a78bfa",
+    }),
+    referenceBook({
+      code: "FEES", title: "Commissions", label: "IBKR reported", value: `<span class="negative">${money(real.commissions)}</span>`,
+      donut: coverage, donutLabel: `${coverage.toFixed(0)}%`, footer: `costed ${num(real.n)}/${num(real.closed_n)}`, footerValue: `n=${num(real.n)}`,
+      values: feeSeries, color: "#fb7185",
+    }),
+    referenceBook({
+      code: "WIN", title: "Win Rate", label: "Net winners", value: pct(real.win_rate),
+      donut: real.win_rate, donutLabel: `${Number(real.win_rate || 0).toFixed(0)}%`, footer: `${num(real.wins)} wins`, footerValue: `n=${num(real.n)}`,
+      values: winSeries, color: "#35d399",
+    }),
+    referenceBook({
+      code: "SIZE", title: "Capital Used", label: "Avg entry notional", value: money(avgDeployed),
+      donut: coverage, donutLabel: `${rows.length}`, footer: `${money(deployedTotal)} sampled`, footerValue: `n=${num(rows.length)}`,
+      values: deployed, color: "#f6c343",
+    }),
+  ].join("");
+}
+
+function renderReferenceAllocation(real) {
+  const target = $("reference-allocation");
+  if (!target) return;
+  const groups = {};
+  for (const row of real.open_positions || []) {
+    const key = String(row.symbol || "UNKNOWN");
+    groups[key] = (groups[key] || 0) + deployedValue(row);
+  }
+  const rows = Object.entries(groups).sort((a, b) => b[1] - a[1]);
+  const total = rows.reduce((sum, [, value]) => sum + value, 0);
+  if (!rows.length) {
+    target.innerHTML = `<div class="empty">No open REAL positions · n=0</div>`;
+    return;
+  }
+  const largestShare = total ? rows[0][1] / total * 100 : 0;
+  target.innerHTML = `<div class="reference-allocation">
+    <div class="allocation-ring" style="--slice:${largestShare}%">
+      <span><strong>${num(rows.length)}</strong>OPEN</span>
+    </div>
+    <div class="allocation-list">
+      ${rows.map(([symbol, value], index) => `<div>
+        <span><i style="--dot:${index ? "#a78bfa" : "#69d5ff"}"></i>${esc(symbol)}</span>
+        <strong>${money(value)} · ${total ? (value / total * 100).toFixed(0) : 0}%</strong>
+      </div>`).join("")}
+      <div class="allocation-total"><span>Total notional</span><strong>${money(total)} · n=${num(real.open_n)}</strong></div>
+    </div>
+  </div>`;
+}
+
+function renderReferenceSnapshot(real, capital) {
+  const target = $("reference-snapshot");
+  if (!target) return;
+  const catalysts = real.by_catalyst || [];
+  const topCatalyst = catalysts.slice().sort((a, b) => Number(b.n || 0) - Number(a.n || 0))[0];
+  const openNotional = (real.open_positions || []).reduce((sum, row) => sum + deployedValue(row), 0);
+  const snapshotAvailable = String(capital.snapshot_status || "").toUpperCase() === "AVAILABLE";
+  target.innerHTML = `<div class="reference-snapshot-grid">
+    <div class="reference-snapshot-cell"><span>Closed trades</span><strong>${num(real.closed_n)}</strong><small>costed n=${num(real.n)}</small></div>
+    <div class="reference-snapshot-cell"><span>Open positions</span><strong>${num(real.open_n)}</strong><small>${money(openNotional)} notional · n=${num(real.open_n)}</small></div>
+    <div class="reference-snapshot-cell"><span>Catalyst mix</span><strong>${num(catalysts.length)}</strong><small>${topCatalyst ? `${catalystDisplay(topCatalyst.value)} n=${num(topCatalyst.n)}` : "n=0"}</small></div>
+    <div class="reference-snapshot-cell"><span>Account snapshot</span><strong>${snapshotAvailable ? money(capital.current_equity) : "UNAVAILABLE"}</strong><small>${snapshotAvailable ? "broker current equity" : "IBKR bridge has not supplied current balances"}</small></div>
+    <div class="reference-snapshot-cell"><span>Reconciliation</span><strong>${esc(real.reconciliation_status || "UNKNOWN")}</strong><small>${num(real.stale_open_n)} stale · ${num(real.anomalous_closed_missing_exit_n)} anomalous</small></div>
+    <div class="reference-snapshot-cell"><span>Updated</span><strong>${state.lastLoadedAt?.toLocaleTimeString?.([], { hour: "2-digit", minute: "2-digit" }) || "—"}</strong><small>live API · REAL only</small></div>
+  </div>`;
 }
 
 function renderHero(real) {
@@ -409,7 +573,7 @@ function leaderboard(rows, emptyText) {
 }
 
 function renderGroups(real) {
-  $("real-by-rule").innerHTML = ruleCards(real.by_rule, "No verified REAL trades by rule yet.");
+  $("real-by-rule").innerHTML = leaderboard(real.by_rule, "No verified REAL trades by rule yet.");
   $("real-by-catalyst").innerHTML = leaderboard(real.by_catalyst, "No verified REAL trades by catalyst yet.");
   const headers = ["Direction", "n", "Win", "Gross", "Comm.", "Net"];
   $("real-by-direction").innerHTML = table(headers, real.by_direction || [], (r) => `
@@ -573,7 +737,8 @@ function showError(error) {
   $("refresh-status").className = "status-pill bad";
   $("refresh-status").innerHTML = `<strong>Blocked</strong> · ${new Date().toLocaleTimeString()}`;
   ["data-contract-state", "real-metrics", "pnl-bars", "win-gauges", "equity-curve", "real-by-rule", "real-by-catalyst",
-    "real-by-direction", "open-positions", "decision-feed", "crypto-status", "tp-contradiction-state"].forEach((id) => {
+    "real-by-direction", "open-positions", "decision-feed", "crypto-status", "tp-contradiction-state", "closed-trades",
+    "reference-allocation", "reference-snapshot"].forEach((id) => {
     if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`;
   });
 }

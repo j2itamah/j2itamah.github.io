@@ -11,14 +11,17 @@
   <link rel="stylesheet" href="./lovable-exact.css?v=20260723-exact-reference-consolidation" />
   <link rel="stylesheet" href="./compact-exact.css?v=20260729-lovable-parity" />
 </head>
-<body class="real-theme lovable-compact">
+<body class="real-theme lovable-compact lovable-reference">
   <a class="skip-link" href="#main-content">Skip to dashboard content</a>
   <main class="shell" id="main-content">
-    <a class="backlink" href="./index.html"><span>✣</span><span>TRADING ANALYST<small>REAL · LIVE EXECUTION</small></span></a>
+    <a class="backlink" href="./index.html"><span class="brand-mark">✣</span><span>TRADING ANALYST<small>IBKR PAPER · REAL</small></span></a>
     <section class="topbar">
       <div>
-        <div class="eyebrow">IBKR / REAL · agent_trades</div>
-        <h1>Live Agent · IBKR</h1>
+        <div class="eyebrow">VERIFIED NET P&amp;L</div>
+        <div class="portfolio-line">
+          <strong id="portfolio-value">—</strong>
+          <span id="portfolio-change">Loading broker-backed results…</span>
+        </div>
         <p class="subtitle">
           Executable, broker-backed fills only — public <code>agent_trades</code>. <strong>Rule 21:</strong>
           every figure here is verified, costed net-of-commission, and shows its sample <code>n</code>.
@@ -29,10 +32,20 @@
     </section>
 
     <nav class="app-nav" aria-label="Dashboard navigation">
-      <a class="active" href="./real.html">⌁ Overview</a>
+      <a class="active" href="#overview">⌁ Overview</a>
+      <a href="#closed-trades">⌗ Closed Trades</a>
+      <a href="#rule-leaderboard">▥ Rules</a>
+      <a href="./catalyst.html">⌁ Catalysts</a>
+      <a href="#open-allocation">◴ Open Positions</a>
+      <a href="./execution.html">⌁ Execution</a>
     </nav>
 
-    <section class="hero-strip">
+    <div class="rail-status">
+      <strong>● AGENT LIVE</strong>
+      <span>IBKR PAPER</span>
+    </div>
+
+    <section class="hero-strip compact-hide">
       <div class="hero-card primary">
         <div class="metric-label">Verified net (gross − commissions)</div>
         <div class="metric-value" id="hero-net">—</div>
@@ -55,7 +68,7 @@
       </div>
     </section>
 
-    <section class="account-snapshot">
+    <section class="account-snapshot compact-hide">
       <h2>IBKR Account Snapshot</h2>
       <p class="account-note" id="account-note">Loading broker-backed account values…</p>
       <div class="account-grid">
@@ -87,7 +100,7 @@
       <div id="data-contract-state"><div class="loading">Loading contract evidence…</div></div>
     </section>
 
-    <section class="panel compact-execution">
+    <section class="panel compact-execution compact-hide">
       <div class="panel-header"><h2 class="panel-title">REAL · verified metrics</h2><span class="badge real">Rule 21 · n shown</span></div>
       <div class="grid three" id="real-metrics"><div class="loading">Loading verified metrics…</div></div>
     </section>
@@ -97,14 +110,29 @@
       <div id="tp-contradiction-state" class="small">Checking take-profit exits against entry prices…</div>
     </section>
 
-    <section class="grid two section-gap compact-chart-row">
+    <section class="reference-book-grid" id="closed-trades" aria-label="Verified REAL measures">
+      <div class="loading">Loading verified REAL measures…</div>
+    </section>
+
+    <section class="grid two section-gap compact-chart-row reference-chart-row" id="overview">
       <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">Verified net P&L curve</h2><span class="badge real">closed n</span></div>
+        <div class="panel-header"><div><h2 class="panel-title">Verified P&amp;L Curve</h2><div class="small">Costed closes · separated by rule</div></div><span class="badge real">● LIVE</span></div>
         <div class="chart-wrap" id="equity-curve"></div>
       </div>
-      <div class="panel">
+      <div class="panel" id="rule-leaderboard">
         <div class="panel-header"><h2 class="panel-title">Rule leaderboard</h2><span class="badge real">n shown</span></div>
         <div id="real-by-rule"></div>
+      </div>
+    </section>
+
+    <section class="reference-lower-grid section-gap">
+      <div class="panel" id="open-allocation">
+        <div class="panel-header"><div><h2 class="panel-title">Open Allocation</h2><div class="small">Verified current positions</div></div></div>
+        <div id="reference-allocation"></div>
+      </div>
+      <div class="panel reference-snapshot-panel">
+        <div class="panel-header"><div><h2 class="panel-title">Evidence Snapshot</h2><div class="small">Live verified population</div></div><span class="badge real">● LIVE</span></div>
+        <div id="reference-snapshot"></div>
       </div>
     </section>
 
@@ -158,6 +186,6 @@
   </main>
   <script>window.API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";</script>
   <script src="./cockpit-common.js?v=20260723-catalyst-source-trust"></script>
-  <script src="./real.js?v=20260723-evidence-labels"></script>
+  <script src="./real.js?v=20260729-lovable-reference"></script>
 </body>
 </html>
