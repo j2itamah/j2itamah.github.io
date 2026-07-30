@@ -200,8 +200,51 @@ export async function loadDashboard() {
 3. Missing, stale, WARN or failed reconciliation data remains visible.
 4. No edge claim below the approved sample and concentration gates.
 5. No mock/fallback financial values on a live page.
-6. A failed request renders `DATA UNAVAILABLE`; it does not preserve an old number as current.
+6. A failed refresh may retain the last verified response only when it is visibly labelled `Last verified snapshot`; if no verified snapshot exists, render `DATA UNAVAILABLE`.
 7. Display `generated_at` and each section's `source_updated_at`.
 8. Do not infer fills or broker activity from decisions, intents or SHADOW rows.
 9. Keep every page no denser than its selected original Lovable reference.
 10. When backend and frontend disagree, backend evidence wins and the page must show the mismatch.
+
+## Typed adapter and exact REAL rule mapping
+
+The production pages load `dashboard-data-adapter.js` before any renderer. It validates the complete response once and exposes the raw datasets plus a safe `DashboardViewModel`. Do not duplicate field conversion inside individual cards.
+
+Exact five displayed rule groups:
+
+1. `RULE_SEC_FILING_DEFAULT_LONG` → SEC Filing Long
+2. `RULE_SEC_424B_DILUTION_SHORT` → 424B Dilution Short
+3. `RULE_SEC_8K_202_DEFAULT_LONG` → 8-K 2.02 Long
+4. `RULE_NAMED_POSITIVE_CATALYST` → Named Catalyst
+5. `RULE_CATALYST_DEFAULT_LONG` → Catalyst Long
+
+Unknown rules go to `unmappedRules`; do not create new visual cards automatically.
+
+The adapter also provides:
+
+- finite-number and timestamp validation;
+- `net_pnl ≈ gross_pnl - commissions` within $0.03;
+- rule sample, win/loss and win-rate reconciliation;
+- chronological cumulative rule series;
+- open-position concentration validation;
+- separately labelled REAL and SHADOW source eligibility;
+- a 15-second timeout, limited retry/backoff, request cancellation and one shared in-flight request;
+- an in-memory last-success response and a compact persistent summary for a clearly labelled last-verified fallback.
+
+Run the production contract check with:
+
+```bash
+node verify-dashboard-contract.cjs
+```
+
+## Current live verification (2026-07-29)
+
+- Environment: PAPER.
+- REAL: 34 closed, 32 costed, 2 open; gross $46.04; commissions $86.25; net −$40.21.
+- Five mapped rule groups total costed n=32; unmapped rules: none.
+- SHADOW: priced n=704; pending/unpriced n=296; research only.
+- REAL quality: WARN; reconciliation: WARN.
+- Current IBKR account snapshot: DATA_UNAVAILABLE.
+- Verification verdict: `PASS_WITH_WARNINGS`.
+
+These values are evidence notes, not hardcoded UI data. Production figures must always come from the endpoint or a visibly labelled last verified snapshot.

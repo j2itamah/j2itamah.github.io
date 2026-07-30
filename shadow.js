@@ -633,9 +633,12 @@ function renderAll() {
   renderMfeMaeDiagnostics(shadow); renderBracketHoldDiagnostics(shadow);
   renderGroups(shadow); renderSourceBreakdown(shadow); renderPending(shadow); renderShadowStatus(shadow);
   renderDecisionFeed(shadow);
-  $("refresh-status").className = "status-pill ok";
+  const transport = state.topData?.__dashboardMeta;
+  const verifiedLive = transport?.source === "live_endpoint" && transport?.viewModel?.status === "live";
+  const statusLabel = verifiedLive ? "Live" : transport ? "Last verified snapshot · WATCH" : "Data unavailable";
+  $("refresh-status").className = `status-pill ${verifiedLive ? "ok" : "bad"}`;
   const filterText = state.filter === "ALL" ? "" : ` · ${catalystDisplay(state.filter)}`;
-  $("refresh-status").innerHTML = `<strong>Live · research only${filterText}</strong> · priced n=${num(shadow.priced_n)} · updated ${state.lastLoadedAt?.toLocaleTimeString?.() || "now"}`;
+  $("refresh-status").innerHTML = `<strong>${esc(statusLabel)} · research only${filterText}</strong> · priced n=${num(shadow.priced_n)} · updated ${state.lastLoadedAt?.toLocaleTimeString?.() || "now"}`;
 }
 function renderSecurity(data, security) {
   const apiSec = data.security || {};
@@ -648,19 +651,29 @@ function renderSecurity(data, security) {
 function showError(error) {
   const msg = `SHADOW cockpit is fail-closed: ${error.message}`;
   $("refresh-status").className = "status-pill bad";
-  $("refresh-status").innerHTML = `<strong>Blocked</strong> · ${new Date().toLocaleTimeString()}`;
+  $("refresh-status").innerHTML = `<strong>Data unavailable</strong> · ${new Date().toLocaleTimeString()}`;
   ["data-contract-state", "real-metrics", "forward-summary", "forward-table", "pnl-bars", "win-gauges", "equity-curve", "research-completeness", "shadow-horizon-ladder", "mfe-mae-diagnostics", "bracket-hold-diagnostics", "shadow-by-rule", "shadow-by-catalyst", "shadow-by-direction", "shadow-by-source", "pending-marks", "decision-feed", "shadow-status"].forEach((id) => { if ($(id)) $(id).innerHTML = `<div class="empty">${esc(msg)}</div>`; });
   if ($("security-state")) $("security-state").innerHTML = `<div class="empty">${esc(msg)} Security/RLS status is unavailable until the backend responds.</div>`;
 }
+let activeLoadController = null;
 async function load() {
+  activeLoadController?.abort();
+  const controller = new AbortController();
+  activeLoadController = controller;
   try {
-    const security = await fetchSecurity();
-    const data = await fetchDashboard();
+    const [security, data] = await Promise.all([
+      fetchSecurity(),
+      fetchDashboard({ signal: controller.signal }),
+    ]);
+    if (controller.signal.aborted) return;
     state.raw = data.shadow || {};
     state.topData = data || {};
     state.lastLoadedAt = new Date();
     renderAll();
     renderSecurity(data, security);
-  } catch (error) { showError(error); }
+  } catch (error) {
+    if (!controller.signal.aborted) showError(error);
+  }
 }
-document.addEventListener("DOMContentLoaded", () => { load(); setInterval(load, 30000); });
+document.addEventListener("DOMContentLoaded", () => { load(); setInterval(load, 120000); });
+window.addEventListener("beforeunload", () => activeLoadController?.abort(), { once: true });

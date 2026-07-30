@@ -688,6 +688,33 @@ body.real-theme.lovable-reference .reference-chart-row .chart-wrap {
   min-height: 300px;
 }
 
+body.real-theme.lovable-reference .rule-curve .line-chart {
+  height: 240px;
+}
+
+body.real-theme.lovable-reference .rule-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 13px;
+  padding: 5px 4px 0;
+  color: #9ba5bc;
+  font: 600 9px/1.25 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+body.real-theme.lovable-reference .rule-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+body.real-theme.lovable-reference .rule-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--legend);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--legend), transparent 35%);
+}
+
 body.real-theme.lovable-reference .reference-chart-row .bar-row {
   grid-template-columns: minmax(92px, 1.3fr) minmax(70px, 1fr) 62px;
   gap: 10px;

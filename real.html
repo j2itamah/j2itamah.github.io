@@ -17,7 +17,7 @@
     <a class="backlink" href="./index.html"><span class="brand-mark">✣</span><span>TRADING ANALYST<small>IBKR PAPER · REAL</small></span></a>
     <section class="topbar">
       <div>
-        <div class="eyebrow">VERIFIED NET P&amp;L</div>
+        <div class="eyebrow">VERIFIED PAPER EXECUTION · IBKR</div>
         <div class="portfolio-line">
           <strong id="portfolio-value">—</strong>
           <span id="portfolio-change">Loading broker-backed results…</span>
@@ -110,8 +110,8 @@
       <div id="tp-contradiction-state" class="small">Checking take-profit exits against entry prices…</div>
     </section>
 
-    <section class="reference-book-grid" id="closed-trades" aria-label="Verified REAL measures">
-      <div class="loading">Loading verified REAL measures…</div>
+    <section class="reference-book-grid" id="closed-trades" aria-label="Verified REAL trading rules">
+      <div class="loading">Loading verified trading rules…</div>
     </section>
 
     <section class="grid two section-gap compact-chart-row reference-chart-row" id="overview">
@@ -131,7 +131,7 @@
         <div id="reference-allocation"></div>
       </div>
       <div class="panel reference-snapshot-panel">
-        <div class="panel-header"><div><h2 class="panel-title">Evidence Snapshot</h2><div class="small">Live verified population</div></div><span class="badge real">● LIVE</span></div>
+        <div class="panel-header"><div><h2 class="panel-title">News Source Activity</h2><div class="small">REAL and SHADOW eligibility remain separate</div></div><span class="badge real">● VERIFIED</span></div>
         <div id="reference-snapshot"></div>
       </div>
     </section>
@@ -184,8 +184,12 @@
       static page — data is served by the backend using an env-only anon key with RLS.
     </div>
   </main>
-  <script>window.API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";</script>
-  <script src="./cockpit-common.js?v=20260723-catalyst-source-trust"></script>
-  <script src="./real.js?v=20260729-lovable-reference"></script>
+  <script>
+    window.API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";
+    window.DASHBOARD_API_URL = window.API_BASE + "/api/live-agent/dashboard";
+  </script>
+  <script src="./dashboard-data-adapter.js?v=20260729-full-contract"></script>
+  <script src="./cockpit-common.js?v=20260729-full-contract"></script>
+  <script src="./real.js?v=20260729-full-contract"></script>
 </body>
 </html>

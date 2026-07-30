@@ -300,9 +300,12 @@ function renderAll() {
   renderReferenceSnapshot(real, state.topData?.account_capital || {});
   renderTpContradictionGuard(real);
   renderCryptoStatus(real); renderDecisionFeed(real); renderReconciliation(real);
-  $("refresh-status").className = "status-pill ok";
+  const transport = state.topData?.__dashboardMeta;
+  const verifiedLive = transport?.source === "live_endpoint" && transport?.viewModel?.status === "live";
+  const statusLabel = verifiedLive ? "Live" : transport ? "Last verified snapshot · WATCH" : "Data unavailable";
+  $("refresh-status").className = `status-pill ${verifiedLive ? "ok" : "bad"}`;
   const filterText = state.filter === "ALL" ? "" : ` · ${catalystDisplay(state.filter)}`;
-  $("refresh-status").innerHTML = `<strong>Live${filterText}</strong> · REAL n=${num(real.n)} · updated ${state.lastLoadedAt?.toLocaleTimeString?.() || "now"}`;
+  $("refresh-status").innerHTML = `<strong>${esc(statusLabel)}${filterText}</strong> · REAL n=${num(real.n)} · updated ${state.lastLoadedAt?.toLocaleTimeString?.() || "now"}`;
 }
 
 function costedReferenceRows(real) {
@@ -375,48 +378,33 @@ function renderReferenceHeader(real) {
   value.className = cls(real.net_pnl);
   value.textContent = money(real.net_pnl);
   change.className = cls(real.net_pnl);
-  change.textContent = `${money(real.gross_pnl)} gross · ${money(real.commissions)} fees · n=${num(real.n)}`;
+  change.textContent = `${money(real.gross_pnl)} gross · ${money(real.commissions)} fees · ${num(real.closed_n)} closed`;
 }
 
 function renderReferenceBooks(real) {
   const target = $("closed-trades");
   if (!target) return;
-  const rows = costedReferenceRows(real);
-  const deployed = rows.map(deployedValue);
-  const deployedTotal = deployed.reduce((sum, value) => sum + value, 0);
-  const avgDeployed = rows.length ? deployedTotal / rows.length : 0;
-  const coverage = real.closed_n ? Number(real.n || 0) / Number(real.closed_n) * 100 : 0;
-  const netSeries = cumulativeValues(rows, netValue);
-  const grossSeries = cumulativeValues(rows, grossValue);
-  const feeSeries = cumulativeValues(rows, commissionValue);
-  const winSeries = rollingWinValues(rows);
-  target.innerHTML = [
-    referenceBook({
-      code: "NET", title: "Costed Net", label: "Verified P&L", value: `<span class="${cls(real.net_pnl)}">${money(real.net_pnl)}</span>`,
-      donut: real.win_rate, donutLabel: `${Number(real.win_rate || 0).toFixed(0)}%`, footer: `${num(real.wins)}W / ${num(real.losses)}L`, footerValue: `n=${num(real.n)}`,
-      values: netSeries, color: "#69d5ff", leader: true,
-    }),
-    referenceBook({
-      code: "GROSS", title: "Gross P&L", label: "Before fees", value: `<span class="${cls(real.gross_pnl)}">${money(real.gross_pnl)}</span>`,
-      donut: real.win_rate, donutLabel: `${Number(real.win_rate || 0).toFixed(0)}%`, footer: "broker fills", footerValue: `n=${num(real.n)}`,
-      values: grossSeries, color: "#a78bfa",
-    }),
-    referenceBook({
-      code: "FEES", title: "Commissions", label: "IBKR reported", value: `<span class="negative">${money(real.commissions)}</span>`,
-      donut: coverage, donutLabel: `${coverage.toFixed(0)}%`, footer: `costed ${num(real.n)}/${num(real.closed_n)}`, footerValue: `n=${num(real.n)}`,
-      values: feeSeries, color: "#fb7185",
-    }),
-    referenceBook({
-      code: "WIN", title: "Win Rate", label: "Net winners", value: pct(real.win_rate),
-      donut: real.win_rate, donutLabel: `${Number(real.win_rate || 0).toFixed(0)}%`, footer: `${num(real.wins)} wins`, footerValue: `n=${num(real.n)}`,
-      values: winSeries, color: "#35d399",
-    }),
-    referenceBook({
-      code: "SIZE", title: "Capital Used", label: "Avg entry notional", value: money(avgDeployed),
-      donut: coverage, donutLabel: `${rows.length}`, footer: `${money(deployedTotal)} sampled`, footerValue: `n=${num(rows.length)}`,
-      values: deployed, color: "#f6c343",
-    }),
-  ].join("");
+  const rules = state.topData?.__dashboardMeta?.viewModel?.rules || [];
+  const colors = ["#69d5ff", "#a78bfa", "#fb7185", "#35d399", "#f6c343"];
+  const codes = ["SEC-L", "424B-S", "8K-L", "NAMED", "CAT-L"];
+  const bestNet = Math.max(...rules.map((rule) => Number(rule.netPnl ?? -Infinity)));
+  if (!rules.length) {
+    target.innerHTML = `<div class="empty">Verified trading-rule data unavailable.</div>`;
+    return;
+  }
+  target.innerHTML = rules.map((rule, index) => referenceBook({
+    code: codes[index] || `RULE-${index + 1}`,
+    title: rule.name,
+    label: "Net P&L",
+    value: rule.netPnl === null ? unavailable() : `<span class="${cls(rule.netPnl)}">${money(rule.netPnl)}</span>`,
+    donut: rule.winRate,
+    donutLabel: rule.winRate === null ? "—" : `${Number(rule.winRate).toFixed(0)}%`,
+    footer: `${num(rule.wins)}W / ${num(rule.losses)}L`,
+    footerValue: `n=${num(rule.closedTrades)}`,
+    values: (rule.series || []).map((point) => point.cumulativeNetPnl),
+    color: colors[index] || "#69d5ff",
+    leader: rule.netPnl !== null && Number(rule.netPnl) === bestNet,
+  })).join("");
 }
 
 function renderReferenceAllocation(real) {
@@ -451,17 +439,21 @@ function renderReferenceAllocation(real) {
 function renderReferenceSnapshot(real, capital) {
   const target = $("reference-snapshot");
   if (!target) return;
-  const catalysts = real.by_catalyst || [];
-  const topCatalyst = catalysts.slice().sort((a, b) => Number(b.n || 0) - Number(a.n || 0))[0];
-  const openNotional = (real.open_positions || []).reduce((sum, row) => sum + deployedValue(row), 0);
-  const snapshotAvailable = String(capital.snapshot_status || "").toUpperCase() === "AVAILABLE";
+  const sourceData = state.topData?.source_observability || {};
+  const sources = (sourceData.observed_sources || [])
+    .slice()
+    .sort((a, b) => Number(b.events_in_dashboard_window || 0) - Number(a.events_in_dashboard_window || 0))
+    .slice(0, 6);
+  if (!sources.length) {
+    target.innerHTML = `<div class="empty">News source activity unavailable.</div>`;
+    return;
+  }
   target.innerHTML = `<div class="reference-snapshot-grid">
-    <div class="reference-snapshot-cell"><span>Closed trades</span><strong>${num(real.closed_n)}</strong><small>costed n=${num(real.n)}</small></div>
-    <div class="reference-snapshot-cell"><span>Open positions</span><strong>${num(real.open_n)}</strong><small>${money(openNotional)} notional · n=${num(real.open_n)}</small></div>
-    <div class="reference-snapshot-cell"><span>Catalyst mix</span><strong>${num(catalysts.length)}</strong><small>${topCatalyst ? `${catalystDisplay(topCatalyst.value)} n=${num(topCatalyst.n)}` : "n=0"}</small></div>
-    <div class="reference-snapshot-cell"><span>Account snapshot</span><strong>${snapshotAvailable ? money(capital.current_equity) : "UNAVAILABLE"}</strong><small>${snapshotAvailable ? "broker current equity" : "IBKR bridge has not supplied current balances"}</small></div>
-    <div class="reference-snapshot-cell"><span>Reconciliation</span><strong>${esc(real.reconciliation_status || "UNKNOWN")}</strong><small>${num(real.stale_open_n)} stale · ${num(real.anomalous_closed_missing_exit_n)} anomalous</small></div>
-    <div class="reference-snapshot-cell"><span>Updated</span><strong>${state.lastLoadedAt?.toLocaleTimeString?.([], { hour: "2-digit", minute: "2-digit" }) || "—"}</strong><small>live API · REAL only</small></div>
+    ${sources.map((source) => `<div class="reference-snapshot-cell">
+      <span>${safe(source.source)}</span>
+      <strong>${num(source.events_in_dashboard_window)}</strong>
+      <small>REAL n=${num(source.real_eligible_n)} · SHADOW n=${num(source.shadow_eligible_n)}</small>
+    </div>`).join("")}
   </div>`;
 }
 
@@ -544,7 +536,37 @@ function renderGauges(real) {
 }
 
 function renderEquity(real) {
-  $("equity-curve").innerHTML = lineChart(real.equity_curve || [], "cumulative_net_pnl", "Verified net P&L curve");
+  const rules = state.topData?.__dashboardMeta?.viewModel?.rules || [];
+  if (!rules.length) {
+    $("equity-curve").innerHTML = `<div class="empty">Verified rule curves unavailable.</div>`;
+    return;
+  }
+  const colors = ["#69d5ff", "#a78bfa", "#fb7185", "#35d399", "#f6c343"];
+  const allValues = rules.flatMap((rule) => (rule.series || []).map((point) => Number(point.cumulativeNetPnl)));
+  if (!allValues.length) {
+    $("equity-curve").innerHTML = `<div class="empty">Verified rule curves have not started.</div>`;
+    return;
+  }
+  const width = 720, height = 240, left = 44, right = 16, top = 18, bottom = 42;
+  const min = Math.min(0, ...allValues), max = Math.max(0, ...allValues);
+  const spread = Math.max(max - min, 1);
+  const y = (value) => top + ((max - value) / spread) * (height - top - bottom);
+  const paths = rules.map((rule, ruleIndex) => {
+    const series = rule.series || [];
+    if (!series.length) return "";
+    const x = (index) => left + (series.length === 1 ? (width - left - right) / 2 : index / (series.length - 1) * (width - left - right));
+    const path = series.map((point, index) => `${index ? "L" : "M"}${x(index).toFixed(1)},${y(point.cumulativeNetPnl).toFixed(1)}`).join(" ");
+    return `<path d="${path}" fill="none" stroke="${colors[ruleIndex]}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>`;
+  }).join("");
+  $("equity-curve").innerHTML = `<div class="rule-curve">
+    <svg class="line-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Cumulative net P&L by trading rule">
+      <line x1="${left}" y1="${y(0).toFixed(1)}" x2="${width - right}" y2="${y(0).toFixed(1)}" stroke="rgba(148,163,184,.28)" stroke-dasharray="4 5"></line>
+      ${paths}
+      <text x="${left}" y="13" fill="#93a4ba" font-size="11">${money(max)}</text>
+      <text x="${left}" y="${height - 25}" fill="#93a4ba" font-size="11">${money(min)}</text>
+    </svg>
+    <div class="rule-legend">${rules.map((rule, index) => `<span><i style="--legend:${colors[index]}"></i>${safe(rule.name)} · n=${num(rule.closedTrades)}</span>`).join("")}</div>
+  </div>`;
 }
 
 function ruleCards(rows, emptyText) {
@@ -735,7 +757,7 @@ function renderSecurity(data, security) {
 function showError(error) {
   const msg = `IBKR/REAL cockpit is fail-closed: ${error.message}`;
   $("refresh-status").className = "status-pill bad";
-  $("refresh-status").innerHTML = `<strong>Blocked</strong> · ${new Date().toLocaleTimeString()}`;
+  $("refresh-status").innerHTML = `<strong>Data unavailable</strong> · ${new Date().toLocaleTimeString()}`;
   ["data-contract-state", "real-metrics", "pnl-bars", "win-gauges", "equity-curve", "real-by-rule", "real-by-catalyst",
     "real-by-direction", "open-positions", "decision-feed", "crypto-status", "tp-contradiction-state", "closed-trades",
     "reference-allocation", "reference-snapshot"].forEach((id) => {
@@ -743,17 +765,27 @@ function showError(error) {
   });
 }
 
+let activeLoadController = null;
 async function load() {
+  activeLoadController?.abort();
+  const controller = new AbortController();
+  activeLoadController = controller;
   try {
-    const security = await fetchSecurity();
-    const data = await fetchDashboard();
+    const [security, data] = await Promise.all([
+      fetchSecurity(),
+      fetchDashboard({ signal: controller.signal }),
+    ]);
+    if (controller.signal.aborted) return;
     state.raw = data.real || {};
     state.topData = data || {};
     state.lastLoadedAt = new Date();
     renderAll();
     renderAccountSnapshot(data.account_capital || {});
     renderSecurity(data, security);
-  } catch (error) { showError(error); }
+  } catch (error) {
+    if (!controller.signal.aborted) showError(error);
+  }
 }
 
-document.addEventListener("DOMContentLoaded", () => { load(); setInterval(load, 30000); });
+document.addEventListener("DOMContentLoaded", () => { load(); setInterval(load, 120000); });
+window.addEventListener("beforeunload", () => activeLoadController?.abort(), { once: true });

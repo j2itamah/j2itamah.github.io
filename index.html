@@ -520,6 +520,7 @@
     </div>
   </main>
 
+  <script src="./dashboard-data-adapter.js?v=20260729-full-contract"></script>
   <script>
     const API_BASE = "https://live-agent-dashboard-web-production.up.railway.app";
     const $ = (id) => document.getElementById(id);
@@ -867,9 +868,9 @@
 
     async function load() {
       try {
-        const res = await fetch(`${API_BASE}/api/live-agent/dashboard`, { cache: "no-store" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+        const data = await TradeDashboardData.fetchDashboard({
+          endpoint: `${API_BASE}/api/live-agent/dashboard`,
+        });
         dashboardData = data;
         const real = data.real || {};
         const shadow = data.shadow || {};

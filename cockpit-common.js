@@ -111,11 +111,14 @@ function renderCatalystFilter(id, selected, types, counts = {}, variant = "real"
   }).join("");
 }
 
-async function fetchDashboard() {
-  const res = await fetch(API_BASE + "/api/live-agent/dashboard", { cache: "no-store" });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.detail || data.error || `HTTP ${res.status}`);
-  return data;
+async function fetchDashboard(options = {}) {
+  if (typeof TradeDashboardData === "undefined") {
+    throw new Error("Verified dashboard adapter is unavailable");
+  }
+  return TradeDashboardData.fetchDashboard({
+    endpoint: (typeof window !== "undefined" && window.DASHBOARD_API_URL) || `${API_BASE}/api/live-agent/dashboard`,
+    signal: options.signal,
+  });
 }
 async function fetchSecurity() {
   try {
