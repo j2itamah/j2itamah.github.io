@@ -1085,6 +1085,18 @@ body.shadow-theme.lovable-compact .footer {
 }
 
 @media (max-width: 760px) {
+  body.real-theme.lovable-reference .topbar {
+    height: auto;
+    min-width: 0;
+  }
+  body.real-theme.lovable-reference .topbar > * {
+    min-width: 0;
+  }
+  body.real-theme.lovable-reference .status-pill {
+    width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
   body.overview-page.lovable-compact .overview-shell.lovable-landing {
     padding-top: 32px;
   }
